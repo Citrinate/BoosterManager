@@ -103,7 +103,7 @@ namespace BoosterCreator {
 					//Wait until specified time
 					DateTime availableAtTime;
 					if (DateTime.TryParseExact(bi.AvailableAtTime, "d MMM @ h:mmtt", CultureInfo.InvariantCulture, DateTimeStyles.None, out availableAtTime)) {
-						gameIDs.TryUpdate(gameID.Key, DateTime.Parse(bi.AvailableAtTime), DateTime.Parse(bi.AvailableAtTime));
+						gameIDs.TryUpdate(gameID.Key, availableAtTime, availableAtTime);
 					} else {
 						ASF.ArchiLogger.LogGenericInfo("Unable to parse time \""+ bi.AvailableAtTime+"\", please report this.");
 					}
