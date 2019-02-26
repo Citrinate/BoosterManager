@@ -17,7 +17,6 @@ using JetBrains.Annotations;
 namespace BoosterCreator {
 	internal sealed class BoosterHandler : IDisposable {
 		private readonly Bot Bot;
-		//private readonly IReadOnlyCollection<uint> GameIDs;
 		private readonly ConcurrentDictionary<uint,DateTime?> GameIDs = new ConcurrentDictionary<uint, DateTime?>();
 		private readonly Timer BoosterTimer;
 
@@ -84,8 +83,9 @@ namespace BoosterCreator {
 				if (!boosterInfos.ContainsKey(gameID.Key)) {
 					response.AppendLine(Commands.FormatBotResponse(bot, string.Format(Strings.BotAddLicense, gameID, "NotEligible")));
 					//If we are not eligible - wait 8 hours, just in case game will be added to account later
-					gameIDs.TryUpdate(gameID.Key, DateTime.Now.AddHours(8), DateTime.Now.AddHours(8)); 
-
+					if (gameID.Value.HasValue) { //if source is timer, not command
+						gameIDs.TryUpdate(gameID.Key, DateTime.Now.AddHours(8), DateTime.Now.AddHours(8));
+					}
 					continue;
 				}
 
@@ -94,7 +94,9 @@ namespace BoosterCreator {
 				if (gooAmount < bi.Price) {
 					response.AppendLine(Commands.FormatBotResponse(bot, string.Format(Strings.BotAddLicense, gameID, "NotEnoughGems")));
 					//If we have not enough gems - wait 8 hours, just in case gems will be added to account later
-					gameIDs.TryUpdate(gameID.Key, DateTime.Now.AddHours(8), DateTime.Now.AddHours(8));
+					if (gameID.Value.HasValue) { //if source is timer, not command
+						gameIDs.TryUpdate(gameID.Key, DateTime.Now.AddHours(8), DateTime.Now.AddHours(8));
+					}
 					continue;
 				}
 
@@ -102,8 +104,11 @@ namespace BoosterCreator {
 					response.AppendLine(Commands.FormatBotResponse(bot, string.Format(Strings.BotAddLicense, gameID, $"Available at time: {bi.AvailableAtTime}")));
 					//Wait until specified time
 					DateTime availableAtTime;
+
 					if (DateTime.TryParseExact(bi.AvailableAtTime, "d MMM @ h:mmtt", CultureInfo.InvariantCulture, DateTimeStyles.None, out availableAtTime)) {
-						gameIDs.TryUpdate(gameID.Key, availableAtTime, availableAtTime);
+						if (gameID.Value.HasValue) { //if source is timer, not command
+							gameIDs.TryUpdate(gameID.Key, availableAtTime, availableAtTime);
+						}
 					} else {
 						ASF.ArchiLogger.LogGenericInfo("Unable to parse time \""+ bi.AvailableAtTime+"\", please report this.");
 					}
@@ -123,7 +128,9 @@ namespace BoosterCreator {
 				if (result?.Result?.Result != EResult.OK) {
 					response.AppendLine(Commands.FormatBotResponse(bot, string.Format(Strings.BotAddLicense, bi.AppID, EResult.Fail)));
 					//Some unhandled error - wait 8 hours before retry
-					gameIDs.TryUpdate(gameID.Key, DateTime.Now.AddHours(8), DateTime.Now.AddHours(8));
+					if (gameID.Value.HasValue) { //if source is timer, not command
+						gameIDs.TryUpdate(gameID.Key, DateTime.Now.AddHours(8), DateTime.Now.AddHours(8));
+					}
 					continue;
 				}
 				
@@ -132,7 +139,9 @@ namespace BoosterCreator {
 				unTradableGooAmount = result.UntradableGooAmount;
 				response.AppendLine(Commands.FormatBotResponse(bot, string.Format(Strings.BotAddLicenseWithItems, bi.AppID, EResult.OK, bi.Name)));
 				//Buster was made - next is only available in 24 hours
-				gameIDs.TryUpdate(gameID.Key, DateTime.Now.AddHours(24), DateTime.Now.AddHours(24));
+				if (gameID.Value.HasValue) { //if source is timer, not command
+					gameIDs.TryUpdate(gameID.Key, DateTime.Now.AddHours(24), DateTime.Now.AddHours(24));
+				}
 
 
 			}
