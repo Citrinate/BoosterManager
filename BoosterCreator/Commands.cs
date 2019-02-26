@@ -49,12 +49,12 @@ namespace BoosterCreator {
 					return FormatBotResponse(bot, string.Format(Strings.ErrorParsingObject, nameof(gameID)));
 				}
 
-				gamesToBooster.TryAdd(gameID,null);
+				gamesToBooster.TryAdd(gameID, null);
 			}
 
 			return await BoosterHandler.CreateBooster(bot, gamesToBooster).ConfigureAwait(false);
 		}
-		
+
 		private static async Task<string> ResponseBooster(ulong steamID, string botNames, string targetGameIDs) {
 			if ((steamID == 0) || string.IsNullOrEmpty(botNames) || string.IsNullOrEmpty(targetGameIDs)) {
 				ASF.ArchiLogger.LogNullError(nameof(steamID) + " || " + nameof(botNames) + " || " + nameof(targetGameIDs));
