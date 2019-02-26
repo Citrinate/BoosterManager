@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Collections.Concurrent;
 using ArchiSteamFarm;
 using ArchiSteamFarm.Localization;
 
@@ -39,14 +40,16 @@ namespace BoosterCreator {
 				return FormatBotResponse(bot, string.Format(Strings.ErrorIsEmpty, nameof(gameIDs)));
 			}
 
-			HashSet<uint> gamesToBooster = new HashSet<uint>();
+
+			ConcurrentDictionary<uint, DateTime?> gamesToBooster = new ConcurrentDictionary<uint, DateTime?>();
+			//HashSet<uint> gamesToBooster = new HashSet<uint>();
 
 			foreach (string game in gameIDs) {
 				if (!uint.TryParse(game, out uint gameID) || (gameID == 0)) {
 					return FormatBotResponse(bot, string.Format(Strings.ErrorParsingObject, nameof(gameID)));
 				}
 
-				gamesToBooster.Add(gameID);
+				gamesToBooster.TryAdd(gameID,null);
 			}
 
 			return await BoosterHandler.CreateBooster(bot, gamesToBooster).ConfigureAwait(false);

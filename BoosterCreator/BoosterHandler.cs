@@ -16,14 +16,17 @@ using JetBrains.Annotations;
 namespace BoosterCreator {
 	internal sealed class BoosterHandler : IDisposable {
 		private readonly Bot Bot;
-		private readonly IReadOnlyCollection<uint> GameIDs;
+		//private readonly IReadOnlyCollection<uint> GameIDs;
+		private readonly ConcurrentDictionary<uint,DateTime?> GameIDs = new ConcurrentDictionary<uint, DateTime?>();
 		private readonly Timer BoosterTimer;
 
 		internal static ConcurrentDictionary<string, BoosterHandler> BoosterHandlers = new ConcurrentDictionary<string, BoosterHandler>();
 
 		internal BoosterHandler([NotNull] Bot bot, IReadOnlyCollection<uint> gameIDs) {
 			Bot = bot ?? throw new ArgumentNullException(nameof(bot));
-			GameIDs = gameIDs;
+			foreach(var gameID in gameIDs) {
+				GameIDs.TryAdd(gameID, DateTime.Now.AddHours(1));
+			}
 
 			BoosterTimer = new Timer(
 				async e => await AutoBooster().ConfigureAwait(false),
@@ -44,7 +47,7 @@ namespace BoosterCreator {
 			ASF.ArchiLogger.LogGenericInfo (response);
 		}
 
-		internal static async Task<string> CreateBooster(Bot bot, IReadOnlyCollection<uint> gameIDs) {
+		internal static async Task<string> CreateBooster(Bot bot, ConcurrentDictionary<uint, DateTime?> gameIDs) {
 			if (!gameIDs.Any()) {
 				bot.ArchiLogger.LogNullError(nameof(gameIDs));
 
@@ -74,27 +77,30 @@ namespace BoosterCreator {
 
 			StringBuilder response = new StringBuilder();
 
-			foreach (uint gameID in gameIDs) {
+			foreach (var gameID in gameIDs) {
 				await Task.Delay(500).ConfigureAwait(false);
 
-				if (!boosterInfos.ContainsKey(gameID)) {
+				if (!boosterInfos.ContainsKey(gameID.Key)) {
 					response.AppendLine(Commands.FormatBotResponse(bot, string.Format(Strings.BotAddLicense, gameID, "NotEligible")));
+					//If we are not eligible - wait 8 hours, just in case game will be added to account later
+					gameIDs.TryUpdate(gameID.Key, DateTime.Now.AddHours(8), DateTime.Now.AddHours(8)); 
 
 					continue;
 				}
 
-				Steam.BoosterInfo bi = boosterInfos[gameID];
+				Steam.BoosterInfo bi = boosterInfos[gameID.Key];
 
 				if (gooAmount < bi.Price) {
 					response.AppendLine(Commands.FormatBotResponse(bot, string.Format(Strings.BotAddLicense, gameID, "NotEnoughGems")));
-
+					//If we have not enough gems - wait 8 hours, just in case gems will be added to account later
+					gameIDs.TryUpdate(gameID.Key, DateTime.Now.AddHours(8), DateTime.Now.AddHours(8));
 					continue;
 				}
 
 				if (bi.Unavailable) {
 					response.AppendLine(Commands.FormatBotResponse(bot, string.Format(Strings.BotAddLicense, gameID, $"Available at time: {bi.AvailableAtTime}")));
-					BoosterHandler.BoosterHandlers[bot.BotName].BoosterTimer.Change(TimeSpan.FromSeconds(0), DateTime.Parse(bi.AvailableAtTime)- DateTime.Now+ TimeSpan.FromMinutes(10));
-
+					//Wait until specified time
+					gameIDs.TryUpdate(gameID.Key, DateTime.Parse(bi.AvailableAtTime), DateTime.Parse(bi.AvailableAtTime));
 					continue;
 				}
 
@@ -118,7 +124,20 @@ namespace BoosterCreator {
 				tradableGooAmount = result.TradableGooAmount;
 				unTradableGooAmount = result.UntradableGooAmount;
 				response.AppendLine(Commands.FormatBotResponse(bot, string.Format(Strings.BotAddLicenseWithItems, bi.AppID, EResult.OK, bi.Name)));
-				BoosterHandler.BoosterHandlers[bot.BotName].BoosterTimer.Change(TimeSpan.FromSeconds(0), TimeSpan.FromHours(24.1));
+				//Buster was made - next is only available in 24 hours
+				gameIDs.TryUpdate(gameID.Key, DateTime.Now.AddHours(24), DateTime.Now.AddHours(24));
+
+
+			}
+
+
+
+			//Get nearest time when we should try for new booster;
+			DateTime? nextTry = gameIDs.Values.Min<DateTime?>();
+
+			if (nextTry.HasValue) { //if it was not from command
+				//Add 10 minutes to avoid race conditions
+				BoosterHandler.BoosterHandlers[bot.BotName].BoosterTimer.Change(TimeSpan.FromSeconds(0), nextTry.Value - DateTime.Now + TimeSpan.FromMinutes(10));
 			}
 
 			return response.Length > 0 ? response.ToString() : null;
