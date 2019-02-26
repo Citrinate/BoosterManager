@@ -28,8 +28,8 @@ namespace BoosterCreator {
 			BoosterTimer = new Timer(
 				async e => await AutoBooster().ConfigureAwait(false),
 				null,
-				TimeSpan.FromHours(1.1) + TimeSpan.FromSeconds(Bot.BotsReadOnly.Count * ASF.GlobalConfig.LoginLimiterDelay * 3),
-				TimeSpan.FromHours(8.1)
+				TimeSpan.FromHours(1),
+				TimeSpan.FromHours(1)
 			);
 		}
 
@@ -40,7 +40,8 @@ namespace BoosterCreator {
 				return;
 			}
 
-			await CreateBooster(Bot, GameIDs).ConfigureAwait(false);
+			string response = await CreateBooster(Bot, GameIDs).ConfigureAwait(false);
+			ASF.ArchiLogger.LogGenericInfo (response);
 		}
 
 		internal static async Task<string> CreateBooster(Bot bot, IReadOnlyCollection<uint> gameIDs) {
@@ -92,6 +93,7 @@ namespace BoosterCreator {
 
 				if (bi.Unavailable) {
 					response.AppendLine(Commands.FormatBotResponse(bot, string.Format(Strings.BotAddLicense, gameID, $"Available at time: {bi.AvailableAtTime}")));
+					BoosterHandler.BoosterHandlers[bot.BotName].BoosterTimer.Change(TimeSpan.FromSeconds(0), DateTime.Parse(bi.AvailableAtTime)- DateTime.Now+ TimeSpan.FromMinutes(10));
 
 					continue;
 				}
@@ -116,6 +118,7 @@ namespace BoosterCreator {
 				tradableGooAmount = result.TradableGooAmount;
 				unTradableGooAmount = result.UntradableGooAmount;
 				response.AppendLine(Commands.FormatBotResponse(bot, string.Format(Strings.BotAddLicenseWithItems, bi.AppID, EResult.OK, bi.Name)));
+				BoosterHandler.BoosterHandlers[bot.BotName].BoosterTimer.Change(TimeSpan.FromSeconds(0), TimeSpan.FromHours(24.1));
 			}
 
 			return response.Length > 0 ? response.ToString() : null;
