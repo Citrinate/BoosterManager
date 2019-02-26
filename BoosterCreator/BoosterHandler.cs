@@ -3,6 +3,7 @@ using ArchiSteamFarm.Localization;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -100,7 +101,12 @@ namespace BoosterCreator {
 				if (bi.Unavailable) {
 					response.AppendLine(Commands.FormatBotResponse(bot, string.Format(Strings.BotAddLicense, gameID, $"Available at time: {bi.AvailableAtTime}")));
 					//Wait until specified time
-					gameIDs.TryUpdate(gameID.Key, DateTime.Parse(bi.AvailableAtTime), DateTime.Parse(bi.AvailableAtTime));
+					DateTime availableAtTime;
+					if (DateTime.TryParseExact(bi.AvailableAtTime, "d MMM @ h:mmtt", CultureInfo.InvariantCulture, DateTimeStyles.None, out availableAtTime)) {
+						gameIDs.TryUpdate(gameID.Key, DateTime.Parse(bi.AvailableAtTime), DateTime.Parse(bi.AvailableAtTime));
+					} else {
+						ASF.ArchiLogger.LogGenericInfo("Unable to parse time \""+ bi.AvailableAtTime+"\", please report this.");
+					}
 					continue;
 				}
 
@@ -116,7 +122,8 @@ namespace BoosterCreator {
 
 				if (result?.Result?.Result != EResult.OK) {
 					response.AppendLine(Commands.FormatBotResponse(bot, string.Format(Strings.BotAddLicense, bi.AppID, EResult.Fail)));
-
+					//Some unhandled error - wait 8 hours before retry
+					gameIDs.TryUpdate(gameID.Key, DateTime.Now.AddHours(8), DateTime.Now.AddHours(8));
 					continue;
 				}
 				
