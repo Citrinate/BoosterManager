@@ -36,3 +36,4 @@ Example: `"GamesToBooster": [730, 570],`<br/>
 Для автоматического создания набора карточек вам нужно добавить в конфигурационный файл бота(ов) параметр `GamesToBooster`, типа "массив uint". ASF будет создавать наборы карточек из указаных игр пока у него не закончатся самоцветы, автоматически учитывая задержки после создания.<br/>
 Пример: `"GamesToBooster": [730, 570],`<br/>
 
+![downloads](https://img.shields.io/github/downloads/Ryzhehvost/BoosterCreator/total.svg?style=social)
