@@ -24,8 +24,9 @@ namespace BoosterCreator {
 
 		internal BoosterHandler([NotNull] Bot bot, IReadOnlyCollection<uint> gameIDs) {
 			Bot = bot ?? throw new ArgumentNullException(nameof(bot));
-			foreach (var gameID in gameIDs) {
+			foreach (uint gameID in gameIDs) {
 				GameIDs.TryAdd(gameID, DateTime.Now.AddHours(1));
+				ASF.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Auto-attepmt to make booster from " + gameID.ToString() + " is planned at " + GameIDs[gameID].Value.ToShortDateString() + " " + GameIDs[gameID].Value.ToShortTimeString()));
 			}
 
 			BoosterTimer = new Timer(
@@ -43,8 +44,9 @@ namespace BoosterCreator {
 				return;
 			}
 
-			string response = await CreateBooster(Bot, GameIDs).ConfigureAwait(false);
-			ASF.ArchiLogger.LogGenericInfo(response);
+			//string response =
+			await CreateBooster(Bot, GameIDs).ConfigureAwait(false);
+			//ASF.ArchiLogger.LogGenericInfo(response);
 		}
 
 		internal static async Task<string> CreateBooster(Bot bot, ConcurrentDictionary<uint, DateTime?> gameIDs) {
@@ -59,14 +61,16 @@ namespace BoosterCreator {
 			if (boosterPage == null) {
 				bot.ArchiLogger.LogNullError(nameof(boosterPage));
 
-				return Strings.WarningFailed;
+				return Commands.FormatBotResponse(bot, string.Format(Strings.ErrorFailingRequest, boosterPage)); ;
 			}
 
 			MatchCollection gooAmounts = Regex.Matches(boosterPage.Text, "(?<=parseFloat\\( \")[0-9]+");
 			Match info = Regex.Match(boosterPage.Text, "\\[\\{\"[\\s\\S]*\"}]");
 
 			if (!info.Success || (gooAmounts.Count != 3)) {
-				return Strings.WarningFailed;
+				bot.ArchiLogger.LogGenericError(string.Format(Strings.ErrorParsingObject, boosterPage));
+				return Commands.FormatBotResponse(bot, string.Format(Strings.ErrorParsingObject, boosterPage));
+				//return Strings.WarningFailed;
 			}
 
 			uint gooAmount = uint.Parse(gooAmounts[0].Value);
@@ -77,15 +81,17 @@ namespace BoosterCreator {
 
 			StringBuilder response = new StringBuilder();
 
-			foreach (var gameID in gameIDs) {
+			foreach (KeyValuePair<uint, DateTime?> gameID in gameIDs) {
 				if (!gameID.Value.HasValue || DateTime.Compare(gameID.Value.Value, DateTime.Now) <= 0) {
 					await Task.Delay(500).ConfigureAwait(false);
 
 					if (!boosterInfos.ContainsKey(gameID.Key)) {
-						response.AppendLine(Commands.FormatBotResponse(bot, string.Format(Strings.BotAddLicense, gameID, "NotEligible")));
+						response.AppendLine(Commands.FormatBotResponse(bot, "Not eligible to create boosters from " + gameID.Key.ToString()));
+						ASF.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Not eligible to create boosters from " + gameID.Key.ToString()));
 						//If we are not eligible - wait 8 hours, just in case game will be added to account later
 						if (gameID.Value.HasValue) { //if source is timer, not command
 							gameIDs[gameID.Key] = DateTime.Now.AddHours(8);
+							ASF.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Next attepmt to make booster from " + gameID.Key.ToString() + " is planned at " + gameIDs[gameID.Key].Value.ToShortDateString() + " " + gameIDs[gameID.Key].Value.ToShortTimeString()));
 						}
 						continue;
 					}
@@ -93,23 +99,26 @@ namespace BoosterCreator {
 					Steam.BoosterInfo bi = boosterInfos[gameID.Key];
 
 					if (gooAmount < bi.Price) {
-						response.AppendLine(Commands.FormatBotResponse(bot, string.Format(Strings.BotAddLicense, gameID, "NotEnoughGems")));
+						response.AppendLine(Commands.FormatBotResponse(bot, "Not enough gems to create booster from " + gameID.Key.ToString()));
 						//If we have not enough gems - wait 8 hours, just in case gems will be added to account later
+						ASF.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Not enough gems to create booster from " + gameID.Key.ToString()));
 						if (gameID.Value.HasValue) { //if source is timer, not command
 							gameIDs[gameID.Key] = DateTime.Now.AddHours(8);
+							ASF.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Next attepmt to make booster from " + gameID.Key.ToString() + " is planned at " + gameIDs[gameID.Key].Value.ToShortDateString() + " " + gameIDs[gameID.Key].Value.ToShortTimeString()));
 						}
 						continue;
 					}
 
 					if (bi.Unavailable) {
-						response.AppendLine(Commands.FormatBotResponse(bot, string.Format(Strings.BotAddLicense, gameID, $"Available at time: {bi.AvailableAtTime}")));
+						response.AppendLine(Commands.FormatBotResponse(bot, "Crafting booster from " + gameID.Key.ToString() + "will be available at time: " + bi.AvailableAtTime));
+						ASF.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Crafting booster from " + gameID.Key.ToString() + " is not availiable now"));
 						//Wait until specified time
-						DateTime availableAtTime;
 
-						if (DateTime.TryParseExact(bi.AvailableAtTime, "d MMM @ h:mmtt", CultureInfo.CurrentCulture, DateTimeStyles.None, out availableAtTime)) {
-							DateTime convertedTime = TimeZoneInfo.ConvertTime(availableAtTime, ValveTimeZone.GetTimeZoneInfo(), TimeZoneInfo.Local);
+						if (DateTime.TryParseExact(bi.AvailableAtTime, "d MMM @ h:mmtt", CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime availableAtTime)) {
+							/*DateTime convertedTime = TimeZoneInfo.ConvertTime(availableAtTime, ValveTimeZone.GetTimeZoneInfo(), TimeZoneInfo.Local);*/
 							if (gameID.Value.HasValue) { //if source is timer, not command
-								gameIDs[gameID.Key] = convertedTime;
+								gameIDs[gameID.Key] = availableAtTime;//convertedTime;
+								ASF.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Next attepmt to make booster from " + gameID.Key.ToString() + " is planned at " + gameIDs[gameID.Key].Value.ToShortDateString() + " " + gameIDs[gameID.Key].Value.ToShortTimeString()));
 							}
 						} else {
 							ASF.ArchiLogger.LogGenericInfo("Unable to parse time \"" + bi.AvailableAtTime + "\", please report this.");
@@ -128,10 +137,12 @@ namespace BoosterCreator {
 					Steam.BoostersResponse result = await WebRequest.CreateBooster(bot, bi.AppID, bi.Series, nTp).ConfigureAwait(false);
 
 					if (result?.Result?.Result != EResult.OK) {
-						response.AppendLine(Commands.FormatBotResponse(bot, string.Format(Strings.BotAddLicense, bi.AppID, EResult.Fail)));
+						response.AppendLine(Commands.FormatBotResponse(bot, "Failed to create booster from " + gameID.Key.ToString()));
+						ASF.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Failed to create booster from " + gameID.Key.ToString()));
 						//Some unhandled error - wait 8 hours before retry
 						if (gameID.Value.HasValue) { //if source is timer, not command
 							gameIDs[gameID.Key] = DateTime.Now.AddHours(8);
+							ASF.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Next attepmt to make booster from " + gameID.Key.ToString() + " is planned at " + gameIDs[gameID.Key].Value.ToShortDateString() + " " + gameIDs[gameID.Key].Value.ToShortTimeString()));
 						}
 						continue;
 					}
@@ -139,10 +150,12 @@ namespace BoosterCreator {
 					gooAmount = result.GooAmount;
 					tradableGooAmount = result.TradableGooAmount;
 					unTradableGooAmount = result.UntradableGooAmount;
-					response.AppendLine(Commands.FormatBotResponse(bot, string.Format(Strings.BotAddLicenseWithItems, bi.AppID, EResult.OK, bi.Name)));
+					response.AppendLine(Commands.FormatBotResponse(bot, "Successfuly created booster from " + gameID.Key.ToString()));
+					ASF.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Successfuly created booster from " + gameID.Key.ToString()));
 					//Buster was made - next is only available in 24 hours
 					if (gameID.Value.HasValue) { //if source is timer, not command
 						gameIDs[gameID.Key] = DateTime.Now.AddHours(24);
+						ASF.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Next attepmt to make booster from " + gameID.Key.ToString() + " is planned at " + gameIDs[gameID.Key].Value.ToShortDateString() + " " + gameIDs[gameID.Key].Value.ToShortTimeString()));
 					}
 				}
 

@@ -13,7 +13,7 @@ namespace BoosterCreator {
 		public string Name => nameof(BoosterCreator);
 		public Version Version => typeof(BoosterCreator).Assembly.GetName().Version;
 
-		public void OnLoaded() => ASF.ArchiLogger.LogGenericInfo("BoosterCreator ASF Plugin by Out | Support: https://steamcommunity.com/id/outzzz");
+		public void OnLoaded() => ASF.ArchiLogger.LogGenericInfo("BoosterCreator ASF Plugin by Out (https://steamcommunity.com/id/outzzz) | fork by Ryzhehvost");
 
 		public async Task<string> OnBotCommand(Bot bot, ulong steamID, string message, string[] args) => await Commands.Response(bot, steamID, message, args).ConfigureAwait(false);
 
@@ -30,7 +30,7 @@ namespace BoosterCreator {
 							BoosterHandler.BoosterHandlers[bot.BotName] = null;
 						}
 
-						bot.ArchiLogger.LogGenericInfo("GamesToBooster:" + string.Join(",", configProperty.Value));
+						bot.ArchiLogger.LogGenericInfo("GamesToBooster : " + string.Join(",", configProperty.Value));
 						await Task.Run(() => BoosterHandler.BoosterHandlers[bot.BotName] = new BoosterHandler(bot, configProperty.Value.ToObject<HashSet<uint>>())).ConfigureAwait(false);
 						break;
 					}
