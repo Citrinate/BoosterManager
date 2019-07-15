@@ -2,7 +2,7 @@
 
 # Introduction
 This plugin was made by [Outzzz](https://github.com/Outzzz), but after some time it got removed from github. Luckily I forked it before that, and as it was published under Apache 2.0 license I can continue development of this plugin. I tried to improve it a little, you can check what changes I made to it in git commits history.<br/>
-As title says, aim of this plugin is giving a user an easy way to create booster packs, both by command and automatically.
+As title says, aim of this plugin is giving a user an easy way to create booster packs from gems, both by command and automatically.
 
 ## Installation
 - download .zip file from [latest release](https://github.com/Ryzhehvost/BoosterCreator/releases/latest), in most cases you need `BoosterCreator.zip`, but if you use ASF-generic-netf.zip (you really need a strong reason to do that) download `BoosterCreator-netf.zip`.
@@ -22,7 +22,7 @@ Example: `"GamesToBooster": [730, 570],`<br/>
 Этот плагин изначально был разработан [Outzzz](https://github.com/Outzzz), однако спустя некоторое время он был удалён с github. 
 К счастью перед этим я сделал fork, и поскольку плагин был опубликован под лицензией Apache 2.0 я могу продолжить его разработку. 
 Я попытался его несколько улучшить, вы можете ознакомиться с изменениями в истории коммитов на github.<br/>
-Как ясно из заголовка, цель этого плагина - дать пользователю возможность создавать наборы карточек, как по команде, так и автоматически.
+Как ясно из заголовка, цель этого плагина - дать пользователю возможность создавать наборы карточек из самоцветов, как по команде, так и автоматически.
 
 ## Установка
 - скачайте файл .zip из [последнего релиза](https://github.com/Ryzhehvost/BoosterCreator/releases/latest), в большинстве случаев вам нужен файл `BoosterCreator.zip`, не если вы по какой-то причине пользуетесь ASF-generic-netf.zip (а для этого нужны веские причины) - скачайте `BoosterCreator-netf.zip`.
