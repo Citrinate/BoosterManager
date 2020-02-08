@@ -1,4 +1,4 @@
-﻿using ArchiSteamFarm;
+using ArchiSteamFarm;
 using ArchiSteamFarm.Localization;
 using System;
 using System.Collections.Concurrent;
@@ -114,7 +114,7 @@ namespace BoosterCreator {
 						ASF.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Crafting booster from " + gameID.Key.ToString() + " is not availiable now"));
 						//Wait until specified time
 
-						if (DateTime.TryParseExact(bi.AvailableAtTime, "d MMM @ h:mmtt", CultureInfo.CurrentCulture, DateTimeStyles.None, out DateTime availableAtTime)) {
+						if (DateTime.TryParseExact(bi.AvailableAtTime, "d MMM @ h:mmtt", new CultureInfo("en-US"), DateTimeStyles.None, out DateTime availableAtTime)) {
 							/*DateTime convertedTime = TimeZoneInfo.ConvertTime(availableAtTime, ValveTimeZone.GetTimeZoneInfo(), TimeZoneInfo.Local);*/
 							if (gameID.Value.HasValue) { //if source is timer, not command
 								gameIDs[gameID.Key] = availableAtTime;//convertedTime;
