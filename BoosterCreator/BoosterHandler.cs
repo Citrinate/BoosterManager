@@ -9,10 +9,10 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using HtmlAgilityPack;
 using SteamKit2;
 using Newtonsoft.Json;
 using JetBrains.Annotations;
+using AngleSharp.Dom;
 
 namespace BoosterCreator {
 	internal sealed class BoosterHandler : IDisposable {
@@ -56,7 +56,7 @@ namespace BoosterCreator {
 				return null;
 			}
 
-			HtmlDocument boosterPage = await WebRequest.GetBoosterPage(bot).ConfigureAwait(false);
+			IDocument boosterPage = await WebRequest.GetBoosterPage(bot).ConfigureAwait(false);
 
 			if (boosterPage == null) {
 				bot.ArchiLogger.LogNullError(nameof(boosterPage));
@@ -64,8 +64,8 @@ namespace BoosterCreator {
 				return Commands.FormatBotResponse(bot, string.Format(Strings.ErrorFailingRequest, boosterPage)); ;
 			}
 
-			MatchCollection gooAmounts = Regex.Matches(boosterPage.Text, "(?<=parseFloat\\( \")[0-9]+");
-			Match info = Regex.Match(boosterPage.Text, "\\[\\{\"[\\s\\S]*\"}]");
+			MatchCollection gooAmounts = Regex.Matches(boosterPage.TextContent, "(?<=parseFloat\\( \")[0-9]+");
+			Match info = Regex.Match(boosterPage.TextContent, "\\[\\{\"[\\s\\S]*\"}]");
 
 			if (!info.Success || (gooAmounts.Count != 3)) {
 				bot.ArchiLogger.LogGenericError(string.Format(Strings.ErrorParsingObject, boosterPage));

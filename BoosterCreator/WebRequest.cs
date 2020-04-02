@@ -1,13 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using AngleSharp.Dom;
 using ArchiSteamFarm;
-using HtmlAgilityPack;
 
 namespace BoosterCreator {
 	internal static class WebRequest {
-		internal static async Task<HtmlDocument> GetBoosterPage(Bot bot) {
+		internal static async Task<IDocument> GetBoosterPage(Bot bot) {
 			const string request = "/tradingcards/boostercreator?l=english";
 
 			return await bot.ArchiWebHandler.UrlGetToHtmlDocumentWithSession(SteamCommunityURL, request).ConfigureAwait(false);
