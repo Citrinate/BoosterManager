@@ -64,8 +64,8 @@ namespace BoosterCreator {
 				return Commands.FormatBotResponse(bot, string.Format(Strings.ErrorFailingRequest, boosterPage)); ;
 			}
 
-			MatchCollection gooAmounts = Regex.Matches(boosterPage.TextContent, "(?<=parseFloat\\( \")[0-9]+");
-			Match info = Regex.Match(boosterPage.TextContent, "\\[\\{\"[\\s\\S]*\"}]");
+			MatchCollection gooAmounts = Regex.Matches(boosterPage.Source.Text, "(?<=parseFloat\\( \")[0-9]+");
+			Match info = Regex.Match(boosterPage.Source.Text, "\\[\\{\"[\\s\\S]*\"}]");
 
 			if (!info.Success || (gooAmounts.Count != 3)) {
 				bot.ArchiLogger.LogGenericError(string.Format(Strings.ErrorParsingObject, boosterPage));
