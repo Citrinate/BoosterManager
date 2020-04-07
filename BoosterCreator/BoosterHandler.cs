@@ -110,7 +110,7 @@ namespace BoosterCreator {
 					}
 
 					if (bi.Unavailable) {
-						response.AppendLine(Commands.FormatBotResponse(bot, "Crafting booster from " + gameID.Key.ToString() + "will be available at time: " + bi.AvailableAtTime));
+						response.AppendLine(Commands.FormatBotResponse(bot, "Crafting booster from " + gameID.Key.ToString() + " will be available at time: " + bi.AvailableAtTime));
 						ASF.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Crafting booster from " + gameID.Key.ToString() + " is not availiable now"));
 						//Wait until specified time
 
