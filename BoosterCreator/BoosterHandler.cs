@@ -13,6 +13,8 @@ using SteamKit2;
 using Newtonsoft.Json;
 using JetBrains.Annotations;
 using AngleSharp.Dom;
+using Markdig.Helpers;
+
 
 namespace BoosterCreator {
 	internal sealed class BoosterHandler : IDisposable {
@@ -22,18 +24,28 @@ namespace BoosterCreator {
 
 		internal static ConcurrentDictionary<string, BoosterHandler> BoosterHandlers = new ConcurrentDictionary<string, BoosterHandler>();
 
+		internal static readonly int DelayBetweenBots = 5; //5 minutes between bots
+
+		internal static int GetBotIndex(Bot bot) {
+			//this can be pretty slow and memory-consuming on lage bot farm. Luckily, I don't care about cases with >10 bots
+			List<string> botnames = BoosterHandlers.Keys.ToList<string>();
+			botnames.Sort();
+			int index = botnames.IndexOf(bot.BotName);
+			return 1+(index>=0?index:botnames.Count);
+		}
+
 		internal BoosterHandler([NotNull] Bot bot, IReadOnlyCollection<uint> gameIDs) {
 			Bot = bot ?? throw new ArgumentNullException(nameof(bot));
 			foreach (uint gameID in gameIDs) {
-				GameIDs.TryAdd(gameID, DateTime.Now.AddHours(1));
+				GameIDs.TryAdd(gameID, DateTime.Now.AddMinutes(GetBotIndex(bot) * DelayBetweenBots));
 				ASF.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Auto-attepmt to make booster from " + gameID.ToString() + " is planned at " + GameIDs[gameID].Value.ToShortDateString() + " " + GameIDs[gameID].Value.ToShortTimeString()));
 			}
 
 			BoosterTimer = new Timer(
 				async e => await AutoBooster().ConfigureAwait(false),
 				null,
-				TimeSpan.FromHours(1) + TimeSpan.FromSeconds(Bot.BotsReadOnly.Count * ASF.GlobalConfig.LoginLimiterDelay * 3),
-				TimeSpan.FromHours(1)
+				TimeSpan.FromMinutes(GetBotIndex(bot) * DelayBetweenBots),
+				TimeSpan.FromMinutes(GetBotIndex(bot) * DelayBetweenBots)
 			);
 		}
 
@@ -61,7 +73,8 @@ namespace BoosterCreator {
 			if (boosterPage == null) {
 				bot.ArchiLogger.LogNullError(nameof(boosterPage));
 
-				return Commands.FormatBotResponse(bot, string.Format(Strings.ErrorFailingRequest, boosterPage)); ;
+				return Commands.FormatBotResponse(bot, string.Format(Strings.ErrorFailingRequest, boosterPage));
+				;
 			}
 
 			MatchCollection gooAmounts = Regex.Matches(boosterPage.Source.Text, "(?<=parseFloat\\( \")[0-9]+");
@@ -109,21 +122,31 @@ namespace BoosterCreator {
 						continue;
 					}
 
+
+					//God, I hate this shit. But for now I have no idea how to predict/enforce correct format.
+					string timeFormat;
+					if (bi.AvailableAtTime.Trim()[0].IsDigit()) {
+						timeFormat = "d MMM @ h:mmtt";
+					} else {
+						timeFormat = "MMM d @ h:mmtt";
+					}
+
+
 					if (bi.Unavailable) {
 						response.AppendLine(Commands.FormatBotResponse(bot, "Crafting booster from " + gameID.Key.ToString() + " will be available at time: " + bi.AvailableAtTime));
 						ASF.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Crafting booster from " + gameID.Key.ToString() + " is not availiable now"));
 						//Wait until specified time
-
-						if (DateTime.TryParseExact(bi.AvailableAtTime, "d MMM @ h:mmtt", new CultureInfo("en-US"), DateTimeStyles.None, out DateTime availableAtTime)) {
-							/*DateTime convertedTime = TimeZoneInfo.ConvertTime(availableAtTime, ValveTimeZone.GetTimeZoneInfo(), TimeZoneInfo.Local);*/
-							if (gameID.Value.HasValue) { //if source is timer, not command
-								gameIDs[gameID.Key] = availableAtTime;//convertedTime;
-								ASF.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Next attepmt to make booster from " + gameID.Key.ToString() + " is planned at " + gameIDs[gameID.Key].Value.ToShortDateString() + " " + gameIDs[gameID.Key].Value.ToShortTimeString()));
-							}
+						if (DateTime.TryParseExact(bi.AvailableAtTime, timeFormat, new CultureInfo("en-US"), DateTimeStyles.None, out DateTime availableAtTime)) {
 						} else {
 							ASF.ArchiLogger.LogGenericInfo("Unable to parse time \"" + bi.AvailableAtTime + "\", please report this.");
+							availableAtTime = DateTime.Now.AddHours(8); //fallback to 8 hours in case of error
+						}
+						if (gameID.Value.HasValue) { //if source is timer, not command
+							gameIDs[gameID.Key] = availableAtTime;//convertedTime;
+							ASF.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Next attepmt to make booster from " + gameID.Key.ToString() + " is planned at " + gameIDs[gameID.Key].Value.ToShortDateString() + " " + gameIDs[gameID.Key].Value.ToShortTimeString()));
 						}
 						continue;
+
 					}
 
 					uint nTp;
@@ -165,8 +188,7 @@ namespace BoosterCreator {
 			DateTime? nextTry = gameIDs.Values.Min<DateTime?>();
 
 			if (nextTry.HasValue) { //if it was not from command
-									//Add 10 minutes to avoid race conditions
-				BoosterHandler.BoosterHandlers[bot.BotName].BoosterTimer.Change(nextTry.Value - DateTime.Now + TimeSpan.FromMinutes(10), nextTry.Value - DateTime.Now + TimeSpan.FromMinutes(10));
+				BoosterHandler.BoosterHandlers[bot.BotName].BoosterTimer.Change(nextTry.Value - DateTime.Now + TimeSpan.FromMinutes(10), nextTry.Value - DateTime.Now + TimeSpan.FromMinutes(GetBotIndex(bot) * DelayBetweenBots));
 			}
 
 			return response.Length > 0 ? response.ToString() : null;

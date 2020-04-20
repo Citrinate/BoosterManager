@@ -30,7 +30,7 @@ namespace BoosterCreator {
 							BoosterHandler.BoosterHandlers[bot.BotName] = null;
 						}
 
-						bot.ArchiLogger.LogGenericInfo("GamesToBooster : " + string.Join(",", configProperty.Value));
+						bot.ArchiLogger.LogGenericInfo("Games To Booster : " + string.Join(",", configProperty.Value));
 						await Task.Run(() => BoosterHandler.BoosterHandlers[bot.BotName] = new BoosterHandler(bot, configProperty.Value.ToObject<HashSet<uint>>())).ConfigureAwait(false);
 						break;
 					}
