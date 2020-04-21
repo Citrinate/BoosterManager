@@ -13,8 +13,6 @@ using SteamKit2;
 using Newtonsoft.Json;
 using JetBrains.Annotations;
 using AngleSharp.Dom;
-using Markdig.Helpers;
-
 
 namespace BoosterCreator {
 	internal sealed class BoosterHandler : IDisposable {
@@ -24,14 +22,14 @@ namespace BoosterCreator {
 
 		internal static ConcurrentDictionary<string, BoosterHandler> BoosterHandlers = new ConcurrentDictionary<string, BoosterHandler>();
 
-		internal static readonly int DelayBetweenBots = 5; //5 minutes between bots
+		internal const int DelayBetweenBots = 5; //5 minutes between bots
 
 		internal static int GetBotIndex(Bot bot) {
 			//this can be pretty slow and memory-consuming on lage bot farm. Luckily, I don't care about cases with >10 bots
 			List<string> botnames = BoosterHandlers.Keys.ToList<string>();
 			botnames.Sort();
 			int index = botnames.IndexOf(bot.BotName);
-			return 1+(index>=0?index:botnames.Count);
+			return 1 + (index >= 0 ? index : botnames.Count);
 		}
 
 		internal BoosterHandler([NotNull] Bot bot, IReadOnlyCollection<uint> gameIDs) {
@@ -56,9 +54,7 @@ namespace BoosterCreator {
 				return;
 			}
 
-			//string response =
 			await CreateBooster(Bot, GameIDs).ConfigureAwait(false);
-			//ASF.ArchiLogger.LogGenericInfo(response);
 		}
 
 		internal static async Task<string> CreateBooster(Bot bot, ConcurrentDictionary<uint, DateTime?> gameIDs) {
@@ -67,37 +63,29 @@ namespace BoosterCreator {
 
 				return null;
 			}
-
 			IDocument boosterPage = await WebRequest.GetBoosterPage(bot).ConfigureAwait(false);
-
 			if (boosterPage == null) {
 				bot.ArchiLogger.LogNullError(nameof(boosterPage));
 
 				return Commands.FormatBotResponse(bot, string.Format(Strings.ErrorFailingRequest, boosterPage));
 				;
 			}
-
 			MatchCollection gooAmounts = Regex.Matches(boosterPage.Source.Text, "(?<=parseFloat\\( \")[0-9]+");
 			Match info = Regex.Match(boosterPage.Source.Text, "\\[\\{\"[\\s\\S]*\"}]");
-
 			if (!info.Success || (gooAmounts.Count != 3)) {
 				bot.ArchiLogger.LogGenericError(string.Format(Strings.ErrorParsingObject, boosterPage));
 				return Commands.FormatBotResponse(bot, string.Format(Strings.ErrorParsingObject, boosterPage));
-				//return Strings.WarningFailed;
 			}
-
 			uint gooAmount = uint.Parse(gooAmounts[0].Value);
 			uint tradableGooAmount = uint.Parse(gooAmounts[1].Value);
 			uint unTradableGooAmount = uint.Parse(gooAmounts[2].Value);
 
 			Dictionary<uint, Steam.BoosterInfo> boosterInfos = JsonConvert.DeserializeObject<IEnumerable<Steam.BoosterInfo>>(info.Value).ToDictionary(boosterInfo => boosterInfo.AppID);
-
 			StringBuilder response = new StringBuilder();
 
 			foreach (KeyValuePair<uint, DateTime?> gameID in gameIDs) {
 				if (!gameID.Value.HasValue || DateTime.Compare(gameID.Value.Value, DateTime.Now) <= 0) {
 					await Task.Delay(500).ConfigureAwait(false);
-
 					if (!boosterInfos.ContainsKey(gameID.Key)) {
 						response.AppendLine(Commands.FormatBotResponse(bot, "Not eligible to create boosters from " + gameID.Key.ToString()));
 						ASF.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Not eligible to create boosters from " + gameID.Key.ToString()));
@@ -108,9 +96,7 @@ namespace BoosterCreator {
 						}
 						continue;
 					}
-
 					Steam.BoosterInfo bi = boosterInfos[gameID.Key];
-
 					if (gooAmount < bi.Price) {
 						response.AppendLine(Commands.FormatBotResponse(bot, "Not enough gems to create booster from " + gameID.Key.ToString()));
 						//If we have not enough gems - wait 8 hours, just in case gems will be added to account later
@@ -122,17 +108,16 @@ namespace BoosterCreator {
 						continue;
 					}
 
-
-					//God, I hate this shit. But for now I have no idea how to predict/enforce correct format.
-					string timeFormat;
-					if (bi.AvailableAtTime.Trim()[0].IsDigit()) {
-						timeFormat = "d MMM @ h:mmtt";
-					} else {
-						timeFormat = "MMM d @ h:mmtt";
-					}
-
-
 					if (bi.Unavailable) {
+
+						//God, I hate this shit. But for now I have no idea how to predict/enforce correct format.
+						string timeFormat;
+						if (!string.IsNullOrWhiteSpace(bi.AvailableAtTime) && char.IsDigit(bi.AvailableAtTime.Trim()[0])) {
+							timeFormat = "d MMM @ h:mmtt";
+						} else {
+							timeFormat = "MMM d @ h:mmtt";
+						}
+
 						response.AppendLine(Commands.FormatBotResponse(bot, "Crafting booster from " + gameID.Key.ToString() + " will be available at time: " + bi.AvailableAtTime));
 						ASF.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Crafting booster from " + gameID.Key.ToString() + " is not availiable now"));
 						//Wait until specified time
@@ -148,7 +133,6 @@ namespace BoosterCreator {
 						continue;
 
 					}
-
 					uint nTp;
 
 					if (unTradableGooAmount > 0) {
@@ -156,9 +140,7 @@ namespace BoosterCreator {
 					} else {
 						nTp = 2;
 					}
-
 					Steam.BoostersResponse result = await WebRequest.CreateBooster(bot, bi.AppID, bi.Series, nTp).ConfigureAwait(false);
-
 					if (result?.Result?.Result != EResult.OK) {
 						response.AppendLine(Commands.FormatBotResponse(bot, "Failed to create booster from " + gameID.Key.ToString()));
 						ASF.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Failed to create booster from " + gameID.Key.ToString()));
@@ -169,7 +151,6 @@ namespace BoosterCreator {
 						}
 						continue;
 					}
-
 					gooAmount = result.GooAmount;
 					tradableGooAmount = result.TradableGooAmount;
 					unTradableGooAmount = result.UntradableGooAmount;
@@ -183,14 +164,11 @@ namespace BoosterCreator {
 				}
 
 			}
-
 			//Get nearest time when we should try for new booster;
 			DateTime? nextTry = gameIDs.Values.Min<DateTime?>();
-
 			if (nextTry.HasValue) { //if it was not from command
-				BoosterHandler.BoosterHandlers[bot.BotName].BoosterTimer.Change(nextTry.Value - DateTime.Now + TimeSpan.FromMinutes(10), nextTry.Value - DateTime.Now + TimeSpan.FromMinutes(GetBotIndex(bot) * DelayBetweenBots));
+				BoosterHandler.BoosterHandlers[bot.BotName].BoosterTimer.Change(nextTry.Value - DateTime.Now + TimeSpan.FromMinutes(GetBotIndex(bot) * DelayBetweenBots), nextTry.Value - DateTime.Now + TimeSpan.FromMinutes(GetBotIndex(bot) * DelayBetweenBots));
 			}
-
 			return response.Length > 0 ? response.ToString() : null;
 		}
 	}
