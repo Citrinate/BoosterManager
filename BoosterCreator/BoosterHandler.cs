@@ -36,7 +36,7 @@ namespace BoosterCreator {
 			Bot = bot ?? throw new ArgumentNullException(nameof(bot));
 			foreach (uint gameID in gameIDs) {
 				GameIDs.TryAdd(gameID, DateTime.Now.AddMinutes(GetBotIndex(bot) * DelayBetweenBots));
-				ASF.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Auto-attepmt to make booster from " + gameID.ToString() + " is planned at " + GameIDs[gameID].Value.ToShortDateString() + " " + GameIDs[gameID].Value.ToShortTimeString()));
+				ASF.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Auto-attempt to make booster from " + gameID.ToString() + " is planned at " + GameIDs[gameID].Value.ToShortDateString() + " " + GameIDs[gameID].Value.ToShortTimeString()));
 			}
 
 			BoosterTimer = new Timer(
@@ -92,7 +92,7 @@ namespace BoosterCreator {
 						//If we are not eligible - wait 8 hours, just in case game will be added to account later
 						if (gameID.Value.HasValue) { //if source is timer, not command
 							gameIDs[gameID.Key] = DateTime.Now.AddHours(8);
-							ASF.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Next attepmt to make booster from " + gameID.Key.ToString() + " is planned at " + gameIDs[gameID.Key].Value.ToShortDateString() + " " + gameIDs[gameID.Key].Value.ToShortTimeString()));
+							ASF.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Next attempt to make booster from " + gameID.Key.ToString() + " is planned at " + gameIDs[gameID.Key].Value.ToShortDateString() + " " + gameIDs[gameID.Key].Value.ToShortTimeString()));
 						}
 						continue;
 					}
@@ -103,7 +103,7 @@ namespace BoosterCreator {
 						ASF.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Not enough gems to create booster from " + gameID.Key.ToString()));
 						if (gameID.Value.HasValue) { //if source is timer, not command
 							gameIDs[gameID.Key] = DateTime.Now.AddHours(8);
-							ASF.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Next attepmt to make booster from " + gameID.Key.ToString() + " is planned at " + gameIDs[gameID.Key].Value.ToShortDateString() + " " + gameIDs[gameID.Key].Value.ToShortTimeString()));
+							ASF.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Next attempt to make booster from " + gameID.Key.ToString() + " is planned at " + gameIDs[gameID.Key].Value.ToShortDateString() + " " + gameIDs[gameID.Key].Value.ToShortTimeString()));
 						}
 						continue;
 					}
@@ -128,7 +128,7 @@ namespace BoosterCreator {
 						}
 						if (gameID.Value.HasValue) { //if source is timer, not command
 							gameIDs[gameID.Key] = availableAtTime;//convertedTime;
-							ASF.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Next attepmt to make booster from " + gameID.Key.ToString() + " is planned at " + gameIDs[gameID.Key].Value.ToShortDateString() + " " + gameIDs[gameID.Key].Value.ToShortTimeString()));
+							ASF.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Next attempt to make booster from " + gameID.Key.ToString() + " is planned at " + gameIDs[gameID.Key].Value.ToShortDateString() + " " + gameIDs[gameID.Key].Value.ToShortTimeString()));
 						}
 						continue;
 
@@ -147,7 +147,7 @@ namespace BoosterCreator {
 						//Some unhandled error - wait 8 hours before retry
 						if (gameID.Value.HasValue) { //if source is timer, not command
 							gameIDs[gameID.Key] = DateTime.Now.AddHours(8);
-							ASF.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Next attepmt to make booster from " + gameID.Key.ToString() + " is planned at " + gameIDs[gameID.Key].Value.ToShortDateString() + " " + gameIDs[gameID.Key].Value.ToShortTimeString()));
+							ASF.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Next attempt to make booster from " + gameID.Key.ToString() + " is planned at " + gameIDs[gameID.Key].Value.ToShortDateString() + " " + gameIDs[gameID.Key].Value.ToShortTimeString()));
 						}
 						continue;
 					}
@@ -159,7 +159,7 @@ namespace BoosterCreator {
 					//Buster was made - next is only available in 24 hours
 					if (gameID.Value.HasValue) { //if source is timer, not command
 						gameIDs[gameID.Key] = DateTime.Now.AddHours(24);
-						ASF.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Next attepmt to make booster from " + gameID.Key.ToString() + " is planned at " + gameIDs[gameID.Key].Value.ToShortDateString() + " " + gameIDs[gameID.Key].Value.ToShortTimeString()));
+						ASF.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Next attempt to make booster from " + gameID.Key.ToString() + " is planned at " + gameIDs[gameID.Key].Value.ToShortDateString() + " " + gameIDs[gameID.Key].Value.ToShortTimeString()));
 					}
 				}
 
