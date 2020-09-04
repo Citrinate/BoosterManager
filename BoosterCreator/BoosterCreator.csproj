@@ -4,6 +4,8 @@
     <TargetFrameworks>netcoreapp3.1;net48</TargetFrameworks>
     <Authors>Out</Authors>
     <AssemblyVersion>1.0.3.3</AssemblyVersion>
+    <Nullable>enable</Nullable>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,10 +20,5 @@
   <ItemGroup>
     <ProjectReference Include="..\ArchiSteamFarm\ArchiSteamFarm\ArchiSteamFarm.csproj" />
   </ItemGroup>
-
-  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="mkdir $(TargetDir)BoosterCreator&#xD;&#xA;copy $(TargetPath) $(TargetDir)BoosterCreator\&#xD;&#xA;7z a -tzip -mx7  BoosterCreator.zip $(TargetDir)BoosterCreator" />
-  </Target>
-
 
 </Project>

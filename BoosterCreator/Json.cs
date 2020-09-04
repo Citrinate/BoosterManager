@@ -9,7 +9,7 @@ namespace BoosterCreator {
 			public readonly EResult Result;
 
 			[JsonConstructor]
-			protected EResultResponse() { }
+			public EResultResponse() { }
 		}
 
 		[SuppressMessage("ReSharper", "ClassCannotBeInstantiated")]
@@ -33,7 +33,10 @@ namespace BoosterCreator {
 			internal readonly string AvailableAtTime;
 
 			[JsonConstructor]
-			private BoosterInfo() { }
+			private BoosterInfo() {
+				Name = "";
+				AvailableAtTime = "";
+			 }
 		}
 
 		[SuppressMessage("ReSharper", "ClassCannotBeInstantiated")]
@@ -48,15 +51,12 @@ namespace BoosterCreator {
 			internal readonly uint UntradableGooAmount;
 
 			[JsonProperty(PropertyName = "purchase_result", Required = Required.DisallowNull)]
-			internal readonly PurchaseResult Result;
-
-			internal sealed class PurchaseResult : EResultResponse {
-				[JsonConstructor]
-				private PurchaseResult() { }
-			}
+			internal readonly EResultResponse Result;
 
 			[JsonConstructor]
-			private BoostersResponse() { }
+			private BoostersResponse() {
+				Result = new EResultResponse();
+			}
 		}
 	}
 }

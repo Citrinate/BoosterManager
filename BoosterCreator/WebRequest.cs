@@ -5,13 +5,13 @@ using ArchiSteamFarm;
 
 namespace BoosterCreator {
 	internal static class WebRequest {
-		internal static async Task<IDocument> GetBoosterPage(Bot bot) {
+		internal static async Task<IDocument?> GetBoosterPage(Bot bot) {
 			const string request = "/tradingcards/boostercreator?l=english";
-
-			return await bot.ArchiWebHandler.UrlGetToHtmlDocumentWithSession(SteamCommunityURL, request).ConfigureAwait(false);
+			WebBrowser.HtmlDocumentResponse? boosterPageResponse = await bot.ArchiWebHandler.UrlGetToHtmlDocumentWithSession(SteamCommunityURL, request).ConfigureAwait(false);
+			return boosterPageResponse?.Content;
 		}
 
-		internal static async Task<Steam.BoostersResponse> CreateBooster(Bot bot, uint appID, uint series, uint nTradabilityPreference) {
+		internal static async Task<Steam.BoostersResponse?> CreateBooster(Bot bot, uint appID, uint series, uint nTradabilityPreference) {
 			if (appID == 0) {
 				bot.ArchiLogger.LogNullError(nameof(appID));
 
@@ -27,7 +27,9 @@ namespace BoosterCreator {
 				{ "tradability_preference", nTradabilityPreference.ToString() }
 			};
 
-			return await bot.ArchiWebHandler.UrlPostToJsonObjectWithSession<Steam.BoostersResponse>(SteamCommunityURL, request, data).ConfigureAwait(false);
+			WebBrowser.ObjectResponse<Steam.BoostersResponse>? createBoosterResponse = await bot.ArchiWebHandler.UrlPostToJsonObjectWithSession<Steam.BoostersResponse>(SteamCommunityURL, request, data).ConfigureAwait(false);
+
+			return createBoosterResponse?.Content;
 		}
 
 		internal static string SteamCommunityURL => ArchiWebHandler.SteamCommunityURL;
