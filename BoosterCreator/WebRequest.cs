@@ -27,7 +27,7 @@ namespace BoosterCreator {
 				{ "tradability_preference", nTradabilityPreference.ToString() }
 			};
 
-			WebBrowser.ObjectResponse<Steam.BoostersResponse>? createBoosterResponse = await bot.ArchiWebHandler.UrlPostToJsonObjectWithSession<Steam.BoostersResponse>(SteamCommunityURL, request, data).ConfigureAwait(false);
+			WebBrowser.ObjectResponse<Steam.BoostersResponse>? createBoosterResponse = await bot.ArchiWebHandler.UrlPostToJsonObjectWithSession<Steam.BoostersResponse>(SteamCommunityURL, request, data: data).ConfigureAwait(false);
 
 			return createBoosterResponse?.Content;
 		}
