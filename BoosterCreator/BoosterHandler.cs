@@ -122,7 +122,7 @@ namespace BoosterCreator {
 						}
 
 						response.AppendLine(Commands.FormatBotResponse(bot, "Crafting booster from " + gameID.Key.ToString() + " will be available at time: " + bi.AvailableAtTime));
-						bot.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Crafting booster from " + gameID.Key.ToString() + " is not availiable now"));
+						bot.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Crafting booster from " + gameID.Key.ToString() + " is not available now"));
 						//Wait until specified time
 						if (DateTime.TryParseExact(bi.AvailableAtTime, timeFormat, new CultureInfo("en-US"), DateTimeStyles.None, out DateTime availableAtTime)) {
 						} else {
