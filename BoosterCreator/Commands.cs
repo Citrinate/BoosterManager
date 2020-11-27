@@ -26,7 +26,7 @@ namespace BoosterCreator {
 				return null;
 			}
 
-			if (!bot.HasPermission(steamID, BotConfig.EPermission.Operator)) {
+			if (!bot.HasAccess(steamID, BotConfig.EAccess.Operator)) {
 				return null;
 			}
 
