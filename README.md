@@ -16,6 +16,10 @@ Example: `booster bot1 730`<br/>
 To automatically create boosters you can add to config of your bot(s) parameter `GamesToBooster`, of type "array of uint". ASF will create boosters from specified games as long as there is enough gems, automatically waiting for cooldowns.<br/>
 Example: `"GamesToBooster": [730, 570],`<br/>
 
+You can get support for this plugin in https://steamcommunity.com/groups/Ryzheplugins (or just use github issues).
+
+---
+
 # Плагин для создания наборов карточек в ASF
 
 # Введение
@@ -35,5 +39,7 @@ Example: `"GamesToBooster": [730, 570],`<br/>
 Пример: `booster bot1 730`<br/>
 Для автоматического создания набора карточек вам нужно добавить в конфигурационный файл бота(ов) параметр `GamesToBooster`, типа "массив uint". ASF будет создавать наборы карточек из указаных игр пока у него не закончатся самоцветы, автоматически учитывая задержки после создания.<br/>
 Пример: `"GamesToBooster": [730, 570],`<br/>
+
+Помощь по этому плагину вы можете получить в https://steamcommunity.com/groups/Ryzheplugins (или просто используйте раздел issues)
 
 ![downloads](https://img.shields.io/github/downloads/Ryzhehvost/BoosterCreator/total.svg?style=social)
