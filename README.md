@@ -1,5 +1,7 @@
 # ASF Booster Creator Plugin
 
+# ATTENTION! This plugin only works with ASF-generic!
+
 # Introduction
 This plugin was made by [Outzzz](https://github.com/Outzzz), but after some time it got removed from github. Luckily I forked it before that, and as it was published under Apache 2.0 license I can continue development of this plugin. I tried to improve it a little, you can check what changes I made to it in git commits history.<br/>
 As title says, aim of this plugin is giving a user an easy way to create booster packs from gems, both by command and automatically.
@@ -21,6 +23,9 @@ You can get support for this plugin in https://steamcommunity.com/groups/Ryzhepl
 ---
 
 # Плагин для создания наборов карточек в ASF
+
+
+# ВНИМАНИЕ! Этот плагин работает только с ASF-generic!
 
 # Введение
 Этот плагин изначально был разработан [Outzzz](https://github.com/Outzzz), однако спустя некоторое время он был удалён с github. 
