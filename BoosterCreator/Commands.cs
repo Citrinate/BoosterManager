@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.Concurrent;
-using ArchiSteamFarm;
+using ArchiSteamFarm.Core;
+using ArchiSteamFarm.Steam;
+using ArchiSteamFarm.Steam.Storage;
 using ArchiSteamFarm.Localization;
 
 namespace BoosterCreator {
@@ -75,7 +77,7 @@ namespace BoosterCreator {
 			return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
 		}
 
-		internal static string FormatStaticResponse(string response) => ArchiSteamFarm.Commands.FormatStaticResponse(response);
+		internal static string FormatStaticResponse(string response) => Commands.FormatStaticResponse(response);
 		internal static string FormatBotResponse(Bot bot, string response) => bot.Commands.FormatBotResponse(response);
 	}
 }

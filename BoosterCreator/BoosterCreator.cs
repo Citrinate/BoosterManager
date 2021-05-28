@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using System.Composition;
 using System.Linq;
 using System.Threading.Tasks;
-using ArchiSteamFarm;
-using ArchiSteamFarm.Plugins;
+using ArchiSteamFarm.Core;
+using ArchiSteamFarm.Steam;
+using ArchiSteamFarm.Plugins.Interfaces;
 using Newtonsoft.Json.Linq;
 
 namespace BoosterCreator {

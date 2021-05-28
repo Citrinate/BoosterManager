@@ -1,4 +1,4 @@
-using ArchiSteamFarm;
+using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Localization;
 using System;
 using System.Collections.Concurrent;
@@ -70,7 +70,7 @@ namespace BoosterCreator {
 			if (boosterPage == null) {
 				bot.ArchiLogger.LogNullError(nameof(boosterPage));
 
-				return Commands.FormatBotResponse(bot, string.Format(Strings.ErrorFailingRequest, boosterPage));
+				return Commands.FormatBotResponse(bot, string.Format(Strings.ErrorFailingRequest, nameof(boosterPage)));
 				;
 			}
 			MatchCollection gooAmounts = Regex.Matches(boosterPage.Source.Text, "(?<=parseFloat\\( \")[0-9]+");
@@ -83,7 +83,13 @@ namespace BoosterCreator {
 			uint tradableGooAmount = uint.Parse(gooAmounts[1].Value);
 			uint unTradableGooAmount = uint.Parse(gooAmounts[2].Value);
 
-			Dictionary<uint, Steam.BoosterInfo> boosterInfos = JsonConvert.DeserializeObject<IEnumerable<Steam.BoosterInfo>>(info.Value).ToDictionary(boosterInfo => boosterInfo.AppID);
+			IEnumerable<Steam.BoosterInfo>? enumerableBoosters = JsonConvert.DeserializeObject<IEnumerable<Steam.BoosterInfo>>(info.Value);
+			if (enumerableBoosters==null) {
+				bot.ArchiLogger.LogNullError(nameof(enumerableBoosters));
+				return Commands.FormatBotResponse(bot, string.Format(Strings.ErrorParsingObject, nameof(enumerableBoosters)));
+			}
+
+			Dictionary<uint, Steam.BoosterInfo> boosterInfos = enumerableBoosters.ToDictionary(boosterInfo => boosterInfo.AppID);
 			StringBuilder response = new StringBuilder();
 
 			foreach (KeyValuePair<uint, DateTime?> gameID in gameIDs) {

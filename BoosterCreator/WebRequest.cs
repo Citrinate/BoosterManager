@@ -1,13 +1,16 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using AngleSharp.Dom;
-using ArchiSteamFarm;
+using ArchiSteamFarm.Steam;
+using ArchiSteamFarm.Steam.Integration;
+using ArchiSteamFarm.Web.Responses;
 
 namespace BoosterCreator {
 	internal static class WebRequest {
 		internal static async Task<IDocument?> GetBoosterPage(Bot bot) {
-			const string request = "/tradingcards/boostercreator?l=english";
-			WebBrowser.HtmlDocumentResponse? boosterPageResponse = await bot.ArchiWebHandler.UrlGetToHtmlDocumentWithSession(SteamCommunityURL, request).ConfigureAwait(false);
+			Uri request = new(ArchiWebHandler.SteamCommunityURL, "/tradingcards/boostercreator?l=english");
+			HtmlDocumentResponse? boosterPageResponse = await bot.ArchiWebHandler.UrlGetToHtmlDocumentWithSession(request).ConfigureAwait(false);
 			return boosterPageResponse?.Content;
 		}
 
@@ -18,7 +21,7 @@ namespace BoosterCreator {
 				return null;
 			}
 
-			const string request = "/tradingcards/ajaxcreatebooster";
+			Uri request = new(ArchiWebHandler.SteamCommunityURL, "/tradingcards/ajaxcreatebooster");
 
 			// Extra entry for sessionID
 			Dictionary<string, string> data = new Dictionary<string, string>(4) {
@@ -27,11 +30,10 @@ namespace BoosterCreator {
 				{ "tradability_preference", nTradabilityPreference.ToString() }
 			};
 
-			WebBrowser.ObjectResponse<Steam.BoostersResponse>? createBoosterResponse = await bot.ArchiWebHandler.UrlPostToJsonObjectWithSession<Steam.BoostersResponse>(SteamCommunityURL, request, data: data).ConfigureAwait(false);
+			ObjectResponse<Steam.BoostersResponse>? createBoosterResponse = await bot.ArchiWebHandler.UrlPostToJsonObjectWithSession<Steam.BoostersResponse>(request, data: data).ConfigureAwait(false);
 
 			return createBoosterResponse?.Content;
 		}
 
-		internal static string SteamCommunityURL => ArchiWebHandler.SteamCommunityURL;
 	}
 }
