@@ -14,11 +14,14 @@ namespace BoosterCreator {
 		public string Name => nameof(BoosterCreator);
 		public Version Version => typeof(BoosterCreator).Assembly.GetName().Version ?? new Version("0");
 
-		public void OnLoaded() => ASF.ArchiLogger.LogGenericInfo("BoosterCreator ASF Plugin by Out (https://steamcommunity.com/id/outzzz) | fork by Ryzhehvost");
+		public Task OnLoaded() {
+			ASF.ArchiLogger.LogGenericInfo("BoosterCreator ASF Plugin by Out (https://steamcommunity.com/id/outzzz) | fork by Ryzhehvost");
+			return Task.CompletedTask;
+		}
 
 		public async Task<string?> OnBotCommand(Bot bot, ulong steamID, string message, string[] args) => await Commands.Response(bot, steamID, message, args).ConfigureAwait(false);
 
-		public async void OnBotInitModules(Bot bot, IReadOnlyDictionary<string, JToken>? additionalConfigProperties = null) {
+		public async Task OnBotInitModules(Bot bot, IReadOnlyDictionary<string, JToken>? additionalConfigProperties = null) {
 			if (additionalConfigProperties == null) {
 				return;
 			}

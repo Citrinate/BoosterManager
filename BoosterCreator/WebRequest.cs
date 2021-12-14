@@ -24,7 +24,7 @@ namespace BoosterCreator {
 			Uri request = new(ArchiWebHandler.SteamCommunityURL, "/tradingcards/ajaxcreatebooster");
 
 			// Extra entry for sessionID
-			Dictionary<string, string> data = new Dictionary<string, string>(4) {
+			Dictionary<string, string> data = new(4) {
 				{ "appid", appID.ToString() },
 				{ "series", series.ToString() },
 				{ "tradability_preference", nTradabilityPreference.ToString() }

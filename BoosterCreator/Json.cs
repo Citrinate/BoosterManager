@@ -12,7 +12,6 @@ namespace BoosterCreator {
 			public EResultResponse() { }
 		}
 
-		[SuppressMessage("ReSharper", "ClassCannotBeInstantiated")]
 		internal sealed class BoosterInfo {
 			[JsonProperty(PropertyName = "appid", Required = Required.Always)]
 			internal readonly uint AppID;
@@ -39,7 +38,7 @@ namespace BoosterCreator {
 			 }
 		}
 
-		[SuppressMessage("ReSharper", "ClassCannotBeInstantiated")]
+
 		internal sealed class BoostersResponse {
 			[JsonProperty(PropertyName = "goo_amount", Required = Required.Always)]
 			internal readonly uint GooAmount;
@@ -54,9 +53,7 @@ namespace BoosterCreator {
 			internal readonly EResultResponse Result;
 
 			[JsonConstructor]
-			private BoostersResponse() {
-				Result = new EResultResponse();
-			}
+			private BoostersResponse() => Result = new EResultResponse();
 		}
 	}
 }

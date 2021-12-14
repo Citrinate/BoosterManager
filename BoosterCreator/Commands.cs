@@ -11,14 +11,14 @@ using ArchiSteamFarm.Localization;
 namespace BoosterCreator {
 	internal static class Commands {
 		internal static async Task<string?> Response(Bot bot, ulong steamID, string message, string[] args) {
-			switch (args[0].ToUpperInvariant()) {
-				case "BOOSTER" when args.Length > 2:
-					return await ResponseBooster(steamID, args[1], args[2]).ConfigureAwait(false);
-				case "BOOSTER":
-					return await ResponseBooster(bot, steamID, args[1]).ConfigureAwait(false);
-				default:
-					return null;
+			if (string.IsNullOrEmpty(message)) {
+				return null;
 			}
+			return args[0].ToUpperInvariant() switch {
+				"BOOSTER" when args.Length > 2 => await ResponseBooster(steamID, args[1], args[2]).ConfigureAwait(false),
+				"BOOSTER" => await ResponseBooster(bot, steamID, args[1]).ConfigureAwait(false),
+				_ => null,
+			};
 		}
 
 		private static async Task<string?> ResponseBooster(Bot bot, ulong steamID, string targetGameIDs) {
@@ -43,7 +43,7 @@ namespace BoosterCreator {
 			}
 
 
-			ConcurrentDictionary<uint, DateTime?> gamesToBooster = new ConcurrentDictionary<uint, DateTime?>();
+			ConcurrentDictionary<uint, DateTime?> gamesToBooster = new();
 			//HashSet<uint> gamesToBooster = new HashSet<uint>();
 
 			foreach (string game in gameIDs) {
@@ -72,7 +72,7 @@ namespace BoosterCreator {
 
 			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseBooster(bot, steamID, targetGameIDs))).ConfigureAwait(false);
 
-			List<string?> responses = new List<string?>(results.Where(result => !string.IsNullOrEmpty(result)));
+			List<string?> responses = new(results.Where(result => !string.IsNullOrEmpty(result)));
 
 			return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
 		}
