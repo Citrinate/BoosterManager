@@ -9,25 +9,25 @@ using ArchiSteamFarm.Localization;
 
 namespace BoosterCreator {
 	internal static class Commands {
-		internal static async Task<string?> Response(Bot bot, ulong steamID, string message, string[] args) {
+		internal static async Task<string?> Response(Bot bot, EAccess access, ulong steamID, string message, string[] args) {
 			if (string.IsNullOrEmpty(message)) {
 				return null;
 			}
 			return args[0].ToUpperInvariant() switch {
-				"BOOSTER" when args.Length > 2 => await ResponseBooster(steamID, args[1], args[2]).ConfigureAwait(false),
-				"BOOSTER" => await ResponseBooster(bot, steamID, args[1]).ConfigureAwait(false),
+				"BOOSTER" when args.Length > 2 => await ResponseBooster(access, steamID, args[1], args[2]).ConfigureAwait(false),
+				"BOOSTER" => await ResponseBooster(bot, access, args[1]).ConfigureAwait(false),
 				_ => null,
 			};
 		}
 
-		private static async Task<string?> ResponseBooster(Bot bot, ulong steamID, string targetGameIDs) {
-			if ((steamID == 0) || string.IsNullOrEmpty(targetGameIDs)) {
-				ASF.ArchiLogger.LogNullError(nameof(steamID) + " || " + nameof(targetGameIDs));
+		private static async Task<string?> ResponseBooster(Bot bot, EAccess access, string targetGameIDs) {
+			if ( string.IsNullOrEmpty(targetGameIDs)) {
+				ASF.ArchiLogger.LogNullError(nameof(targetGameIDs));
 
 				return null;
 			}
 
-			if (bot.GetAccess(steamID) < EAccess.Operator) {
+			if (access < EAccess.Operator) {
 				return null;
 			}
 
@@ -56,9 +56,9 @@ namespace BoosterCreator {
 			return await BoosterHandler.CreateBooster(bot, gamesToBooster).ConfigureAwait(false);
 		}
 
-		private static async Task<string?> ResponseBooster(ulong steamID, string botNames, string targetGameIDs) {
-			if ((steamID == 0) || string.IsNullOrEmpty(botNames) || string.IsNullOrEmpty(targetGameIDs)) {
-				ASF.ArchiLogger.LogNullError(nameof(steamID) + " || " + nameof(botNames) + " || " + nameof(targetGameIDs));
+		private static async Task<string?> ResponseBooster(EAccess access, ulong steamID, string botNames, string targetGameIDs) {
+			if (string.IsNullOrEmpty(botNames) || string.IsNullOrEmpty(targetGameIDs)) {
+				ASF.ArchiLogger.LogNullError(nameof(botNames) + " || " + nameof(targetGameIDs));
 
 				return null;
 			}
@@ -66,10 +66,10 @@ namespace BoosterCreator {
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
 
 			if ((bots == null) || (bots.Count == 0)) {
-				return ASF.IsOwner(steamID) ? FormatStaticResponse(string.Format(Strings.BotNotFound, botNames)) : null;
+				return access >= EAccess.Owner ? FormatStaticResponse(string.Format(Strings.BotNotFound, botNames)) : null;
 			}
 
-			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseBooster(bot, steamID, targetGameIDs))).ConfigureAwait(false);
+			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseBooster(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), targetGameIDs))).ConfigureAwait(false);
 
 			List<string?> responses = new(results.Where(result => !string.IsNullOrEmpty(result)));
 

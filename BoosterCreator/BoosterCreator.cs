@@ -19,7 +19,7 @@ namespace BoosterCreator {
 			return Task.CompletedTask;
 		}
 
-		public async Task<string?> OnBotCommand(Bot bot, EAccess access, string message, string[] args, ulong steamID = 0) => await Commands.Response(bot, steamID, message, args).ConfigureAwait(false);
+		public async Task<string?> OnBotCommand(Bot bot, EAccess access, string message, string[] args, ulong steamID = 0) => await Commands.Response(bot, access, steamID, message, args).ConfigureAwait(false);
 
 		public async Task OnBotInitModules(Bot bot, IReadOnlyDictionary<string, JToken>? additionalConfigProperties = null) {
 			if (additionalConfigProperties == null) {
