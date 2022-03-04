@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using System.Collections.Concurrent;
 using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Steam;
-using ArchiSteamFarm.Steam.Storage;
 using ArchiSteamFarm.Localization;
 
 namespace BoosterCreator {
@@ -28,7 +27,7 @@ namespace BoosterCreator {
 				return null;
 			}
 
-			if (!bot.HasAccess(steamID, BotConfig.EAccess.Operator)) {
+			if (bot.GetAccess(steamID) < EAccess.Operator) {
 				return null;
 			}
 
