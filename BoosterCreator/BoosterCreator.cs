@@ -10,7 +10,7 @@ using Newtonsoft.Json.Linq;
 
 namespace BoosterCreator {
 	[Export(typeof(IPlugin))]
-	public sealed class BoosterCreator : IBotModules, IBotCommand {
+	public sealed class BoosterCreator : IBotModules, IBotCommand2 {
 		public string Name => nameof(BoosterCreator);
 		public Version Version => typeof(BoosterCreator).Assembly.GetName().Version ?? new Version("0");
 
@@ -19,7 +19,7 @@ namespace BoosterCreator {
 			return Task.CompletedTask;
 		}
 
-		public async Task<string?> OnBotCommand(Bot bot, ulong steamID, string message, string[] args) => await Commands.Response(bot, steamID, message, args).ConfigureAwait(false);
+		public async Task<string?> OnBotCommand(Bot bot, EAccess access, string message, string[] args, ulong steamID = 0) => await Commands.Response(bot, access, steamID, message, args).ConfigureAwait(false);
 
 		public async Task OnBotInitModules(Bot bot, IReadOnlyDictionary<string, JToken>? additionalConfigProperties = null) {
 			if (additionalConfigProperties == null) {
