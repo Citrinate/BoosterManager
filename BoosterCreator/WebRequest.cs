@@ -16,7 +16,7 @@ namespace BoosterCreator {
 
 		internal static async Task<Steam.BoostersResponse?> CreateBooster(Bot bot, uint appID, uint series, uint nTradabilityPreference) {
 			if (appID == 0) {
-				bot.ArchiLogger.LogNullError(nameof(appID));
+				bot.ArchiLogger.LogNullError(null, nameof(appID));
 
 				return null;
 			}

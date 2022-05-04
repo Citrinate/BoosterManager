@@ -37,8 +37,7 @@ namespace BoosterCreator {
 			foreach (uint gameID in gameIDs) {
 				if (GameIDs.TryAdd(gameID, DateTime.Now.AddMinutes(GetBotIndex(bot) * DelayBetweenBots))) {
 					bot.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Auto-attempt to make booster from " + gameID.ToString() + " is planned at " + GameIDs[gameID]!.Value.ToShortDateString() + " " + GameIDs[gameID]!.Value.ToShortTimeString()));
-				}
-				else {
+				} else {
 					bot.ArchiLogger.LogGenericError("Unable to schedule next auto-attempt");
 				}
 			}
@@ -63,13 +62,13 @@ namespace BoosterCreator {
 
 		internal static async Task<string?> CreateBooster(Bot bot, ConcurrentDictionary<uint, DateTime?> gameIDs) {
 			if (!gameIDs.Any()) {
-				bot.ArchiLogger.LogNullError(nameof(gameIDs));
+				bot.ArchiLogger.LogNullError(null, nameof(gameIDs));
 
 				return null;
 			}
 			IDocument? boosterPage = await WebRequest.GetBoosterPage(bot).ConfigureAwait(false);
 			if (boosterPage == null) {
-				bot.ArchiLogger.LogNullError(nameof(boosterPage));
+				bot.ArchiLogger.LogNullError(boosterPage);
 
 				return Commands.FormatBotResponse(bot, string.Format(Strings.ErrorFailingRequest, nameof(boosterPage)));
 				;
@@ -86,7 +85,7 @@ namespace BoosterCreator {
 
 			IEnumerable<Steam.BoosterInfo>? enumerableBoosters = JsonConvert.DeserializeObject<IEnumerable<Steam.BoosterInfo>>(info.Value);
 			if (enumerableBoosters == null) {
-				bot.ArchiLogger.LogNullError(nameof(enumerableBoosters));
+				bot.ArchiLogger.LogNullError(enumerableBoosters);
 				return Commands.FormatBotResponse(bot, string.Format(Strings.ErrorParsingObject, nameof(enumerableBoosters)));
 			}
 
@@ -124,8 +123,7 @@ namespace BoosterCreator {
 						string timeFormat;
 						if (!string.IsNullOrWhiteSpace(bi.AvailableAtTime) && char.IsDigit(bi.AvailableAtTime.Trim()[0])) {
 							timeFormat = "d MMM @ h:mmtt";
-						}
-						else {
+						} else {
 							timeFormat = "MMM d @ h:mmtt";
 						}
 
@@ -133,8 +131,7 @@ namespace BoosterCreator {
 						bot.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Crafting booster from " + gameID.Key.ToString() + " is not available now"));
 						//Wait until specified time
 						if (DateTime.TryParseExact(bi.AvailableAtTime, timeFormat, new CultureInfo("en-US"), DateTimeStyles.None, out DateTime availableAtTime)) {
-						}
-						else {
+						} else {
 							bot.ArchiLogger.LogGenericInfo("Unable to parse time \"" + bi.AvailableAtTime + "\", please report this.");
 							availableAtTime = DateTime.Now.AddHours(8); //fallback to 8 hours in case of error
 						}
@@ -148,9 +145,8 @@ namespace BoosterCreator {
 					uint nTp;
 
 					if (unTradableGooAmount > 0) {
-						nTp = tradableGooAmount > bi.Price ? (uint)1 : 3;
-					}
-					else {
+						nTp = tradableGooAmount > bi.Price ? (uint) 1 : 3;
+					} else {
 						nTp = 2;
 					}
 					Steam.BoostersResponse? result = await WebRequest.CreateBooster(bot, bi.AppID, bi.Series, nTp).ConfigureAwait(false);

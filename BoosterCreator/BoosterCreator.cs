@@ -29,7 +29,7 @@ namespace BoosterCreator {
 			foreach (KeyValuePair<string, JToken> configProperty in additionalConfigProperties) {
 				switch (configProperty.Key) {
 					case "GamesToBooster" when configProperty.Value.Type == JTokenType.Array && configProperty.Value.Any(): {
-						if (BoosterHandler.BoosterHandlers.ContainsKey(bot.BotName)&&(BoosterHandler.BoosterHandlers[bot.BotName] != null)) {
+						if (BoosterHandler.BoosterHandlers.ContainsKey(bot.BotName) && (BoosterHandler.BoosterHandlers[bot.BotName] != null)) {
 							BoosterHandler.BoosterHandlers[bot.BotName]!.Dispose();
 							BoosterHandler.BoosterHandlers[bot.BotName] = null;
 						}
@@ -37,7 +37,7 @@ namespace BoosterCreator {
 						bot.ArchiLogger.LogGenericInfo("Games To Booster : " + string.Join(",", configProperty.Value));
 						IReadOnlyCollection<uint>? gameIDs = configProperty.Value.ToObject<HashSet<uint>>();
 						if (gameIDs == null) {
-							bot.ArchiLogger.LogNullError(nameof(gameIDs));
+							bot.ArchiLogger.LogNullError(gameIDs);
 						} else {
 							await Task.Run(() => BoosterHandler.BoosterHandlers[bot.BotName] = new BoosterHandler(bot, gameIDs)).ConfigureAwait(false);
 						}

@@ -21,8 +21,8 @@ namespace BoosterCreator {
 		}
 
 		private static async Task<string?> ResponseBooster(Bot bot, EAccess access, string targetGameIDs) {
-			if ( string.IsNullOrEmpty(targetGameIDs)) {
-				ASF.ArchiLogger.LogNullError(nameof(targetGameIDs));
+			if (string.IsNullOrEmpty(targetGameIDs)) {
+				ASF.ArchiLogger.LogNullError(null, nameof(targetGameIDs));
 
 				return null;
 			}
@@ -58,7 +58,7 @@ namespace BoosterCreator {
 
 		private static async Task<string?> ResponseBooster(EAccess access, ulong steamID, string botNames, string targetGameIDs) {
 			if (string.IsNullOrEmpty(botNames) || string.IsNullOrEmpty(targetGameIDs)) {
-				ASF.ArchiLogger.LogNullError(nameof(botNames) + " || " + nameof(targetGameIDs));
+				ASF.ArchiLogger.LogNullError(null, nameof(botNames) + " || " + nameof(targetGameIDs));
 
 				return null;
 			}
