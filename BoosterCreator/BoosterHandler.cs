@@ -1,186 +1,156 @@
 using ArchiSteamFarm.Steam;
-using ArchiSteamFarm.Localization;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using SteamKit2;
-using Newtonsoft.Json;
-using JetBrains.Annotations;
-using AngleSharp.Dom;
 
 namespace BoosterCreator {
 	internal sealed class BoosterHandler : IDisposable {
 		private readonly Bot Bot;
-		private readonly ConcurrentDictionary<uint, DateTime?> GameIDs = new();
-		private readonly Timer BoosterTimer;
+		private readonly BoosterQueue BoosterQueue;
+		private Bot RespondingBot; // When we send status alerts, they'll come from this bot
+		private ulong RecipientSteamID; // When we send status alerts, they'll go to this SteamID
+		internal static ConcurrentDictionary<string, Timer> ResponseTimers = new();
+		internal HashSet<string> StoredResponses = new();
+		private string LastResponse = "";
+		internal static ConcurrentDictionary<string, BoosterHandler> BoosterHandlers = new();
+		private static int DelayBetweenBots = 0; // Delay, in minutes, between when bots will craft boosters
 
-		internal static ConcurrentDictionary<string, BoosterHandler?> BoosterHandlers = new();
-
-		internal const int DelayBetweenBots = 5; //5 minutes between bots
-
-		internal static int GetBotIndex(Bot bot) {
-			//this can be pretty slow and memory-consuming on lage bot farm. Luckily, I don't care about cases with >10 bots
-			List<string> botnames = BoosterHandlers.Keys.ToList<string>();
-			botnames.Sort();
-			int index = botnames.IndexOf(bot.BotName);
-			return 1 + (index >= 0 ? index : botnames.Count);
+		internal BoosterHandler(Bot bot) {
+			Bot = bot ?? throw new ArgumentNullException(nameof(bot));
+			BoosterQueue = new BoosterQueue(Bot, this);
+			RespondingBot = bot;
+			RecipientSteamID = Bot.Actions.GetFirstSteamMasterID();
 		}
 
-		internal BoosterHandler(Bot bot, IReadOnlyCollection<uint> gameIDs) {
-			Bot = bot ?? throw new ArgumentNullException(nameof(bot));
-			foreach (uint gameID in gameIDs) {
-				if (GameIDs.TryAdd(gameID, DateTime.Now.AddMinutes(GetBotIndex(bot) * DelayBetweenBots))) {
-					bot.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Auto-attempt to make booster from " + gameID.ToString() + " is planned at " + GameIDs[gameID]!.Value.ToShortDateString() + " " + GameIDs[gameID]!.Value.ToShortTimeString()));
-				} else {
-					bot.ArchiLogger.LogGenericError("Unable to schedule next auto-attempt");
-				}
+		public void Dispose() {
+			BoosterQueue.Dispose();
+		}
+
+		internal static void AddHandler(Bot bot) {
+			if (BoosterHandlers.ContainsKey(bot.BotName)) {
+				BoosterHandlers[bot.BotName].Dispose();
+				BoosterHandlers.TryRemove(bot.BotName, out BoosterHandler _);
 			}
 
-			BoosterTimer = new Timer(
-				async e => await AutoBooster().ConfigureAwait(false),
-				null,
-				TimeSpan.FromMinutes(GetBotIndex(bot) * DelayBetweenBots),
-				TimeSpan.FromMinutes(GetBotIndex(bot) * DelayBetweenBots)
-			);
+			if (BoosterHandlers.TryAdd(bot.BotName, new BoosterHandler(bot))) {
+				UpdateBotDelays();
+			}
 		}
 
-		public void Dispose() => BoosterTimer.Dispose();
+		internal static void UpdateBotDelays(int? delayInMinutes = null) {
+			DelayBetweenBots = delayInMinutes ?? DelayBetweenBots;
+			List<string> botNames = BoosterHandlers.Keys.ToList<string>();
+			botNames.Sort();
+			foreach (KeyValuePair<string, BoosterHandler> kvp in BoosterHandlers) {
+				// TODO: Need to figure out a better way to implement these kinds of delays
+				// Because of the 24 hour cooldown, any delay will carry over from one day to the next. With a delay of 1 minute, on day one we'll correctly delay for 1 minute.
+				// If two bots were going to craft a booster at say, 12:00; one will craft at 12:00 and the next at 12:01. On day two however, we'll add another 1 minute delay.
+				// The first bot will still craft at 12:00, but the second will now craft at 12:02, and the difference between them will keep drifting apart.
+				int index = botNames.IndexOf(kvp.Key);
+				kvp.Value.BoosterQueue.BoosterDelay = DelayBetweenBots * index;
+			}
+		}
 
-		private async Task AutoBooster() {
-			if (!Bot.IsConnectedAndLoggedOn) {
+		internal string ScheduleBoosters(HashSet<uint> gameIDs, Bot respondingBot, ulong recipientSteamID) {
+			RespondingBot = respondingBot;
+			RecipientSteamID = recipientSteamID;
+			foreach (uint gameID in gameIDs) {
+				BoosterQueue.AddBooster(gameID, BoosterType.OneTime);
+			}
+			BoosterQueue.OnBoosterInfosUpdated -= ScheduleBoostersResponse;
+			BoosterQueue.OnBoosterInfosUpdated += ScheduleBoostersResponse;
+			BoosterQueue.Start();
+
+			return Commands.FormatBotResponse(Bot, String.Format("Attempting to craft {0} booster(s)...", gameIDs.Count));
+		}
+
+		private void ScheduleBoostersResponse() {
+			BoosterQueue.OnBoosterInfosUpdated -= ScheduleBoostersResponse;
+			string? message = BoosterQueue.GetShortStatus();
+			if (message == null) {
+				PerpareStatusReport("Bot cannot craft boosters for the requested games");
+
 				return;
 			}
 
-			await CreateBooster(Bot, GameIDs).ConfigureAwait(false);
+			PerpareStatusReport(message);
 		}
 
-		internal static async Task<string?> CreateBooster(Bot bot, ConcurrentDictionary<uint, DateTime?> gameIDs) {
-			if (!gameIDs.Any()) {
-				bot.ArchiLogger.LogNullError(null, nameof(gameIDs));
-
-				return null;
+		internal void SchedulePermanentBoosters(HashSet<uint> gameIDs) {
+			foreach (uint gameID in gameIDs) {
+				BoosterQueue.AddBooster(gameID, BoosterType.Permanent);
 			}
-			IDocument? boosterPage = await WebRequest.GetBoosterPage(bot).ConfigureAwait(false);
-			if (boosterPage == null) {
-				bot.ArchiLogger.LogNullError(boosterPage);
-
-				return Commands.FormatBotResponse(bot, string.Format(Strings.ErrorFailingRequest, nameof(boosterPage)));
-				;
-			}
-			MatchCollection gooAmounts = Regex.Matches(boosterPage.Source.Text, "(?<=parseFloat\\( \")[0-9]+");
-			Match info = Regex.Match(boosterPage.Source.Text, "\\[\\{\"[\\s\\S]*\"}]");
-			if (!info.Success || (gooAmounts.Count != 3)) {
-				bot.ArchiLogger.LogGenericError(string.Format(Strings.ErrorParsingObject, boosterPage));
-				return Commands.FormatBotResponse(bot, string.Format(Strings.ErrorParsingObject, boosterPage));
-			}
-			uint gooAmount = uint.Parse(gooAmounts[0].Value);
-			uint tradableGooAmount = uint.Parse(gooAmounts[1].Value);
-			uint unTradableGooAmount = uint.Parse(gooAmounts[2].Value);
-
-			IEnumerable<Steam.BoosterInfo>? enumerableBoosters = JsonConvert.DeserializeObject<IEnumerable<Steam.BoosterInfo>>(info.Value);
-			if (enumerableBoosters == null) {
-				bot.ArchiLogger.LogNullError(enumerableBoosters);
-				return Commands.FormatBotResponse(bot, string.Format(Strings.ErrorParsingObject, nameof(enumerableBoosters)));
-			}
-
-			Dictionary<uint, Steam.BoosterInfo> boosterInfos = enumerableBoosters.ToDictionary(boosterInfo => boosterInfo.AppID);
-			StringBuilder response = new();
-
-			foreach (KeyValuePair<uint, DateTime?> gameID in gameIDs) {
-				if (!gameID.Value.HasValue || DateTime.Compare(gameID.Value.Value, DateTime.Now) <= 0) {
-					await Task.Delay(500).ConfigureAwait(false);
-					if (!boosterInfos.ContainsKey(gameID.Key)) {
-						response.AppendLine(Commands.FormatBotResponse(bot, "Not eligible to create boosters from " + gameID.Key.ToString()));
-						bot.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Not eligible to create boosters from " + gameID.Key.ToString()));
-						//If we are not eligible - wait 8 hours, just in case game will be added to account later
-						if (gameID.Value.HasValue) { //if source is timer, not command
-							gameIDs[gameID.Key] = DateTime.Now.AddHours(8);
-							bot.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Next attempt to make booster from " + gameID.Key.ToString() + " is planned at " + gameIDs[gameID.Key]!.Value.ToShortDateString() + " " + gameIDs[gameID.Key]!.Value.ToShortTimeString()));
-						}
-						continue;
-					}
-					Steam.BoosterInfo bi = boosterInfos[gameID.Key];
-					if (gooAmount < bi.Price) {
-						response.AppendLine(Commands.FormatBotResponse(bot, "Not enough gems to create booster from " + gameID.Key.ToString()));
-						//If we have not enough gems - wait 8 hours, just in case gems will be added to account later
-						bot.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Not enough gems to create booster from " + gameID.Key.ToString()));
-						if (gameID.Value.HasValue) { //if source is timer, not command
-							gameIDs[gameID.Key] = DateTime.Now.AddHours(8);
-							bot.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Next attempt to make booster from " + gameID.Key.ToString() + " is planned at " + gameIDs[gameID.Key]!.Value.ToShortDateString() + " " + gameIDs[gameID.Key]!.Value.ToShortTimeString()));
-						}
-						continue;
-					}
-
-					if (bi.Unavailable) {
-
-						//God, I hate this shit. But for now I have no idea how to predict/enforce correct format.
-						string timeFormat;
-						if (!string.IsNullOrWhiteSpace(bi.AvailableAtTime) && char.IsDigit(bi.AvailableAtTime.Trim()[0])) {
-							timeFormat = "d MMM @ h:mmtt";
-						} else {
-							timeFormat = "MMM d @ h:mmtt";
-						}
-
-						response.AppendLine(Commands.FormatBotResponse(bot, "Crafting booster from " + gameID.Key.ToString() + " will be available at time: " + bi.AvailableAtTime));
-						bot.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Crafting booster from " + gameID.Key.ToString() + " is not available now"));
-						//Wait until specified time
-						if (DateTime.TryParseExact(bi.AvailableAtTime, timeFormat, new CultureInfo("en-US"), DateTimeStyles.None, out DateTime availableAtTime)) {
-						} else {
-							bot.ArchiLogger.LogGenericInfo("Unable to parse time \"" + bi.AvailableAtTime + "\", please report this.");
-							availableAtTime = DateTime.Now.AddHours(8); //fallback to 8 hours in case of error
-						}
-						if (gameID.Value.HasValue) { //if source is timer, not command
-							gameIDs[gameID.Key] = availableAtTime;//convertedTime;
-							bot.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Next attempt to make booster from " + gameID.Key.ToString() + " is planned at " + gameIDs[gameID.Key]!.Value.ToShortDateString() + " " + gameIDs[gameID.Key]!.Value.ToShortTimeString()));
-						}
-						continue;
-
-					}
-					uint nTp;
-
-					if (unTradableGooAmount > 0) {
-						nTp = tradableGooAmount > bi.Price ? (uint) 1 : 3;
-					} else {
-						nTp = 2;
-					}
-					Steam.BoostersResponse? result = await WebRequest.CreateBooster(bot, bi.AppID, bi.Series, nTp).ConfigureAwait(false);
-					if (result?.Result?.Result != EResult.OK) {
-						response.AppendLine(Commands.FormatBotResponse(bot, "Failed to create booster from " + gameID.Key.ToString()));
-						bot.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Failed to create booster from " + gameID.Key.ToString()));
-						//Some unhandled error - wait 8 hours before retry
-						if (gameID.Value.HasValue) { //if source is timer, not command
-							gameIDs[gameID.Key] = DateTime.Now.AddHours(8);
-							bot.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Next attempt to make booster from " + gameID.Key.ToString() + " is planned at " + gameIDs[gameID.Key]!.Value.ToShortDateString() + " " + gameIDs[gameID.Key]!.Value.ToShortTimeString()));
-						}
-						continue;
-					}
-					gooAmount = result.GooAmount;
-					tradableGooAmount = result.TradableGooAmount;
-					unTradableGooAmount = result.UntradableGooAmount;
-					response.AppendLine(Commands.FormatBotResponse(bot, "Successfuly created booster from " + gameID.Key.ToString()));
-					bot.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Successfuly created booster from " + gameID.Key.ToString()));
-					//Buster was made - next is only available in 24 hours
-					if (gameID.Value.HasValue) { //if source is timer, not command
-						gameIDs[gameID.Key] = DateTime.Now.AddHours(24);
-						bot.ArchiLogger.LogGenericInfo(Commands.FormatBotResponse(bot, "Next attempt to make booster from " + gameID.Key.ToString() + " is planned at " + gameIDs[gameID.Key]!.Value.ToShortDateString() + " " + gameIDs[gameID.Key]!.Value.ToShortTimeString()));
-					}
-				}
-
-			}
-			//Get nearest time when we should try for new booster;
-			DateTime? nextTry = gameIDs.Values.Min<DateTime?>();
-			if (nextTry.HasValue) { //if it was not from command
-				if (BoosterHandler.BoosterHandlers[bot.BotName] != null) {
-					BoosterHandler.BoosterHandlers[bot.BotName]!.BoosterTimer.Change(nextTry.Value - DateTime.Now + TimeSpan.FromMinutes(GetBotIndex(bot) * DelayBetweenBots), nextTry.Value - DateTime.Now + TimeSpan.FromMinutes(GetBotIndex(bot) * DelayBetweenBots));
-				}
-			}
-			return response.Length > 0 ? response.ToString() : null;
+			BoosterQueue.Start();
 		}
+
+		internal string UnscheduleBoosters(HashSet<uint>? gameIDs = null, int? timeLimitHours = null) {
+			HashSet<uint> removedGameIDs = BoosterQueue.RemoveBoosters(gameIDs, timeLimitHours);
+
+			if (removedGameIDs.Count == 0) {
+				if (timeLimitHours == null) {
+					return Commands.FormatBotResponse(Bot, "Bot was not attempting to craft any of those boosters.  If you're trying to remove boosters from your \"GamesToBooster\" config setting, you'll need to remove them from your config file.");
+				}
+				
+				return Commands.FormatBotResponse(Bot, "Didn't find any boosters that could be removed.");
+
+			}
+
+			return Commands.FormatBotResponse(Bot, String.Format("Will no longer craft these {0} boosters: {1}", removedGameIDs.Count, String.Join(", ", removedGameIDs)));
+		}
+
+		internal string GetStatus() {
+			return Commands.FormatBotResponse(Bot, BoosterQueue.GetStatus());
+		}
+
+		internal void PerpareStatusReport(string message, bool suppressDuplicateMessages = false) {
+			if (suppressDuplicateMessages && LastResponse == message) {
+				return;
+			}
+
+			LastResponse = message;
+			// Could be that multiple bots will try to respond all at once individually.  Start a timer, during which all messages will be logged and sent all together when the timer triggers.
+			if (StoredResponses.Count == 0) {
+				message = Commands.FormatBotResponse(Bot, message);
+			}
+			StoredResponses.Add(message);
+			if (!ResponseTimers.ContainsKey(RespondingBot.BotName)) {
+				ResponseTimers[RespondingBot.BotName] = new Timer(
+					async e => await SendStatusReport(RespondingBot, RecipientSteamID).ConfigureAwait(false),
+					null,
+					GetMillisecondsFromNow(DateTime.Now.AddSeconds(5)),
+					Timeout.Infinite
+				);
+			}
+		}
+
+		private static async Task SendStatusReport(Bot respondingBot, ulong recipientSteamID) {
+			if (!respondingBot.IsConnectedAndLoggedOn) {
+				ResponseTimers[respondingBot.BotName].Change(BoosterHandler.GetMillisecondsFromNow(DateTime.Now.AddSeconds(1)), Timeout.Infinite);
+
+				return;
+			}
+
+			ResponseTimers.TryRemove(respondingBot.BotName, out Timer? _);
+			HashSet<string> messages = new HashSet<string>();
+			List<string> botNames = BoosterHandlers.Keys.ToList<string>();
+			botNames.Sort();
+			foreach (string botName in botNames) {
+				if (BoosterHandlers[botName].StoredResponses.Count == 0 
+					|| BoosterHandlers[botName].RespondingBot.BotName != respondingBot.BotName) {
+					continue;
+				}
+
+				messages.Add(String.Join(Environment.NewLine, BoosterHandlers[botName].StoredResponses));
+				BoosterHandlers[botName].StoredResponses.Clear();
+			}
+			
+			string message = String.Join(Environment.NewLine, messages);
+			await respondingBot.SendMessage(recipientSteamID, message).ConfigureAwait(false);
+		}
+
+		private static int GetMillisecondsFromNow(DateTime then) => Math.Max(0, (int) (then - DateTime.Now).TotalMilliseconds);
 	}
 }

@@ -1,12 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net6.0;net48</TargetFrameworks>
     <Authors>Out</Authors>
     <AssemblyVersion>1.2.3.0</AssemblyVersion>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
+		<TargetFrameworks>net6.0;net48</TargetFrameworks>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(OS)' != 'Windows_NT'">
+		<TargetFramework>net6.0</TargetFramework>
+	</PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="System.Composition.AttributedModel" Version="*" />

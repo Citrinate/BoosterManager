@@ -14,7 +14,7 @@ namespace BoosterCreator {
 			return boosterPageResponse?.Content;
 		}
 
-		internal static async Task<Steam.BoostersResponse?> CreateBooster(Bot bot, uint appID, uint series, uint nTradabilityPreference) {
+		internal static async Task<Steam.BoostersResponse?> CreateBooster(Bot bot, uint appID, uint series, TradabilityPreference nTradabilityPreference) {
 			if (appID == 0) {
 				bot.ArchiLogger.LogNullError(null, nameof(appID));
 
@@ -27,7 +27,7 @@ namespace BoosterCreator {
 			Dictionary<string, string> data = new(4) {
 				{ "appid", appID.ToString() },
 				{ "series", series.ToString() },
-				{ "tradability_preference", nTradabilityPreference.ToString() }
+				{ "tradability_preference", ((int) nTradabilityPreference).ToString() }
 			};
 
 			ObjectResponse<Steam.BoostersResponse>? createBoosterResponse = await bot.ArchiWebHandler.UrlPostToJsonObjectWithSession<Steam.BoostersResponse>(request, data: data).ConfigureAwait(false);
