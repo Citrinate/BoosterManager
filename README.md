@@ -32,9 +32,9 @@ Command | Access | Description
 
 Example: `"GamesToBooster": [730, 570],`
 
-This configuration can be added to any of your bot's config files.  It will automatically add any of the `AppIDs` to that bot's booster queue, and will automatically re-queue them after they've been crafted.
+This `HashSet<uint>` type configuration setting can be added to your individual bot config files.  It will automatically add any of the `AppIDs` to that bot's booster queue, and will automatically re-queue them after they've been crafted.
 
-Note: It's not possible to remove any `AppIDs` from the booster queue using any Commands.  Any changes you want to make will need to be made in the configuration file.
+Note: It's not possible to remove any of these `AppIDs` from the booster queue using any commands.  Any changes you want to make will need to be made in the configuration file.
 
 ---
 
@@ -44,6 +44,6 @@ Note: It's not possible to remove any `AppIDs` from the booster queue using any 
 
 Example: `"BoosterDelayBetweenBots": 5,`
 
-This configuration can be added to your `ASF.json` config file.  It will add a `#` minute delay between each of your bot's booster crafts.  For example: when attempting to craft a booster at 12:00 using a 5 minute delay, Bot 1 will craft at 12:00, Bot 2 will  craft at 12:05, Bot 3 will craft at 12:10, and so on.
+This `uint` type configuration setting can be added to your `ASF.json` config file.  It will add a `#` minute delay between each of your bot's booster crafts.  For example: when attempting to craft a booster at 12:00 using a 5 minute delay, Bot 1 will craft at 12:00, Bot 2 will  craft at 12:05, Bot 3 will craft at 12:10, and so on.
 
 By default, this delay is set to `0`, and is not recommended to be used in all but the most extreme use cases.
