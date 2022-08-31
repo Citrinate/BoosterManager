@@ -7,7 +7,7 @@ At its core it serves the same purpose: to provide an easy-to-use interface for 
 
 ## Installation
 
-- Download the .zip file from [latest release](https://github.com/Citrinate/BoosterManager/releases/latest)
+- Download the .zip file from the [latest release](https://github.com/Citrinate/BoosterManager/releases/latest)
 - Unpack the downloaded .zip file to the `plugins` folder inside your ASF folder.
 - (Re)start ASF, you should get a message indicating that the plugin loaded successfully. 
 
@@ -19,11 +19,11 @@ Please note, this plugin only works with ASF-generic.
 
 Command | Access | Description
 --- | --- | ---
-`booster [Bots] <AppIDs>`|`Operator`|Adds `AppIDs` to the given bot's booster queue
-`bstatus [Bots]`|`Operator`|Prints status of given bot's booster queue
-`bstop [Bots] <AppIDs>`|`Operator`|Removes `AppIDs` from the given bot's booster queue
-`bstoptime [Bots] <#>`|`Operator`|Removes everything from the given bot's booster queue that will take more than `#` hours to craft
-`bstopall [Bots]`|`Operator`|Removes everything from the given bot's booster queue
+`booster [Bots] <AppIDs>`|`Operator`|Adds `AppIDs` to the given bot's booster queue.  `AppIDs` added to the booster queue this way will be crafted one time as soon as they become available.
+`bstatus [Bots]`|`Operator`|Prints the status of given bot's booster queue.
+`bstop [Bots] <AppIDs>`|`Operator`|Removes `AppIDs` from the given bot's booster queue.
+`bstoptime [Bots] <#>`|`Operator`|Removes everything from the given bot's booster queue that will take more than `#` hours to craft.
+`bstopall [Bots]`|`Operator`|Removes everything from the given bot's booster queue.
 
 ---
 
