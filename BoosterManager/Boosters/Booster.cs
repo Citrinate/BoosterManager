@@ -3,7 +3,7 @@ using SteamKit2;
 using System;
 using System.Threading.Tasks;
 
-namespace BoosterCreator {
+namespace BoosterManager {
 	internal class Booster {
 		private readonly Bot Bot;
 		internal readonly uint GameID;

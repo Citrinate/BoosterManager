@@ -10,7 +10,7 @@ using ArchiSteamFarm.Localization;
 using ArchiSteamFarm.Steam;
 using Newtonsoft.Json;
 
-namespace BoosterCreator {
+namespace BoosterManager {
 	internal sealed class BoosterQueue : IDisposable {
 		private readonly Bot Bot;
 		private readonly BoosterHandler BoosterHandler;

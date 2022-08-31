@@ -1,4 +1,4 @@
-namespace BoosterCreator {
+namespace BoosterManager {
 	internal enum BoosterType {
 		OneTime,
 		Permanent,

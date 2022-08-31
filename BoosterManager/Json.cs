@@ -5,7 +5,7 @@ using Newtonsoft.Json;
 using SteamKit2;
 
 #pragma warning disable 649
-namespace BoosterCreator {
+namespace BoosterManager {
 	internal static class Steam {
 		internal class EResultResponse {
 			[JsonProperty(PropertyName = "success", Required = Required.Always)]

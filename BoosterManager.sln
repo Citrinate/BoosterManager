@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.28307.136
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BoosterCreator", "BoosterCreator\BoosterCreator.csproj", "{C485E0CB-4D22-4A09-8CBA-83D1300A83DC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BoosterManager", "BoosterManager\BoosterManager.csproj", "{C485E0CB-4D22-4A09-8CBA-83D1300A83DC}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ArchiSteamFarm", "ArchiSteamFarm\ArchiSteamFarm\ArchiSteamFarm.csproj", "{CF84911C-2C4C-4195-8AF3-ABBB6D3DE9AA}"
 EndProject

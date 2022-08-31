@@ -1,4 +1,4 @@
-namespace BoosterCreator {
+namespace BoosterManager {
 	internal enum TradabilityPreference {
 		Tradable = 1,
 		Default = 2,

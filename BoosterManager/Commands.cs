@@ -6,7 +6,7 @@ using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Localization;
 
-namespace BoosterCreator {
+namespace BoosterManager {
 	internal static class Commands {
 #pragma warning disable 1998
 		internal static async Task<string?> Response(Bot bot, EAccess access, ulong steamID, string message, string[] args) {

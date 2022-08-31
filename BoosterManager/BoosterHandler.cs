@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace BoosterCreator {
+namespace BoosterManager {
 	internal sealed class BoosterHandler : IDisposable {
 		private readonly Bot Bot;
 		private readonly BoosterQueue BoosterQueue;

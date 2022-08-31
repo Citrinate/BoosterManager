@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using AngleSharp.Dom;
 using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Steam.Integration;
 using ArchiSteamFarm.Web.Responses;
 
-namespace BoosterCreator {
+namespace BoosterManager {
 	internal static class WebRequest {
 		internal static async Task<IDocument?> GetBoosterPage(Bot bot) {
 			Uri request = new(ArchiWebHandler.SteamCommunityURL, "/tradingcards/boostercreator?l=english");

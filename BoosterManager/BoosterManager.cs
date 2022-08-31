@@ -8,14 +8,14 @@ using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Plugins.Interfaces;
 using Newtonsoft.Json.Linq;
 
-namespace BoosterCreator {
+namespace BoosterManager {
 	[Export(typeof(IPlugin))]
-	public sealed class BoosterCreator : IASF, IBotModules, IBotCommand2 {
-		public string Name => nameof(BoosterCreator);
-		public Version Version => typeof(BoosterCreator).Assembly.GetName().Version ?? new Version("0");
+	public sealed class BoosterManager : IASF, IBotModules, IBotCommand2 {
+		public string Name => nameof(BoosterManager);
+		public Version Version => typeof(BoosterManager).Assembly.GetName().Version ?? new Version("0");
 
 		public Task OnLoaded() {
-			ASF.ArchiLogger.LogGenericInfo("BoosterCreator ASF Plugin by Out (https://steamcommunity.com/id/outzzz) | fork by Ryzhehvost");
+			ASF.ArchiLogger.LogGenericInfo("BoosterManager ASF Plugin by Citrinate");
 			return Task.CompletedTask;
 		}
 
