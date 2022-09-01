@@ -40,8 +40,8 @@ namespace BoosterManager {
 			}
 		}
 
-		internal static void UpdateBotDelays(int? delayInMinutes = null) {
-			DelayBetweenBots = delayInMinutes ?? DelayBetweenBots;
+		internal static void UpdateBotDelays(int? delayInSeconds = null) {
+			DelayBetweenBots = delayInSeconds ?? DelayBetweenBots;
 			List<string> botNames = BoosterHandlers.Keys.ToList<string>();
 			botNames.Sort();
 			foreach (KeyValuePair<string, BoosterHandler> kvp in BoosterHandlers) {
