@@ -1,9 +1,7 @@
 # Booster Manager Plugin for ArchiSteamFarm
 
 ## Introduction
-This plugin is based off of the [Booster Creator Plugin](https://github.com/Ryzhehvost/BoosterCreator) by [Outzzz](https://github.com/Outzzz) and [Ryzhehvost](https://github.com/Ryzhehvost).
-
-At its core it serves the same purpose: to provide an easy-to-use interface for turning gems into booster packs.  The major difference being: this plugin is more tailored for users wanting to craft **a lot** of booster packs.  To that end, the scope of this project is a bit wider, intending to encompass all manner of features that could, even indirectly, facilitate crafting boosters.  Although this plugin is designed for power users, casual booster crafters should find it just as useful.
+This plugin is based off of the [Booster Creator Plugin](https://github.com/Ryzhehvost/BoosterCreator) by [Outzzz](https://github.com/Outzzz) and [Ryzhehvost](https://github.com/Ryzhehvost).  At its core it serves the same purpose: to provide an easy-to-use interface for turning gems into booster packs.  The major difference being: this plugin is more tailored for users wanting to craft **a lot** of booster packs.  To that end, the scope of this project is a bit wider, intending to encompass all manner of features that could, even indirectly, facilitate crafting boosters.  Although this plugin is designed for power users, casual booster crafters should find it just as useful.
 
 ## Installation
 
@@ -20,7 +18,7 @@ Please note, this plugin only works with ASF-generic.
 Command | Access | Description
 --- | --- | ---
 `booster [Bots] <AppIDs>`|`Operator`|Adds `AppIDs` to the given bot's booster queue.  `AppIDs` added to the booster queue this way will be crafted one time as soon as they become available.
-`bstatus [Bots]`|`Operator`|Prints the status of given bot's booster queue.
+`bstatus [Bots]`|`Operator`|Prints the status of the given bot's booster queue.
 `bstop [Bots] <AppIDs>`|`Operator`|Removes `AppIDs` from the given bot's booster queue.
 `bstoptime [Bots] <#>`|`Operator`|Removes everything from the given bot's booster queue that will take more than `#` hours to craft.
 `bstopall [Bots]`|`Operator`|Removes everything from the given bot's booster queue.
