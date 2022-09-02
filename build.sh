@@ -48,5 +48,12 @@ sync
 dotnet publish -c "Release" -f net6.0 -o "out/generic" "/p:LinkDuringPublish=false"
 mkdir ./out/$plugin_name
 cp ./out/generic/$plugin_name.dll ./out/$plugin_name
+if [[ -f "README.md" ]]; then
+   if ! command -v pandoc &> /dev/null; then
+      cp README.md ./out/$plugin_name
+   else
+      pandoc --metadata title="$plugin_name" --standalone --columns 2000 -f markdown -t html --self-contained -c ./github-pandoc.css -o ./out/$plugin_name/README.html README.md
+   fi
+fi
 7z a -tzip -mx7 ./out/$plugin_name.zip ./out/$plugin_name
 rm -rf out/$plugin_name
