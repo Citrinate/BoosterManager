@@ -41,6 +41,10 @@ namespace BoosterManager {
 		}
 
 		internal static void UpdateBotDelays(int? delayInSeconds = null) {
+			if(DelayBetweenBots == 0 && (delayInSeconds == null || delayInSeconds == 0)) {
+				return;
+			}
+
 			DelayBetweenBots = delayInSeconds ?? DelayBetweenBots;
 			List<string> botNames = BoosterHandlers.Keys.ToList<string>();
 			botNames.Sort();
@@ -64,7 +68,7 @@ namespace BoosterManager {
 			BoosterQueue.OnBoosterInfosUpdated += ScheduleBoostersResponse;
 			BoosterQueue.Start();
 
-			return Commands.FormatBotResponse(Bot, String.Format("Attempting to craft {0} booster(s)...", gameIDs.Count));
+			return Commands.FormatBotResponse(Bot, String.Format("Attempting to craft {0} boosters...", gameIDs.Count));
 		}
 
 		private void ScheduleBoostersResponse() {

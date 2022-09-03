@@ -21,7 +21,7 @@ namespace BoosterManager {
 		private uint TradableGooAmount = 0;
 		private uint UntradableGooAmount = 0;
 		private const int MinDelayBetweenBoosters = 5; // Minimum delay, in seconds, between booster crafts
-		internal int BoosterDelay = 0; // Delay, in minutes, added to all booster crafts
+		internal int BoosterDelay = 0; // Delay, in seconds, added to all booster crafts
 		internal event Action? OnBoosterInfosUpdated;
 
 		internal BoosterQueue(Bot bot, BoosterHandler boosterHandler) {
@@ -105,8 +105,14 @@ namespace BoosterManager {
 		internal void AddBooster(uint gameID, BoosterType type) {
 			void handler() {
 				if (BoosterInfos.TryGetValue(gameID, out Steam.BoosterInfo? boosterInfo)) {
-					Booster booster = new Booster(Bot, gameID, type, boosterInfo);
-					if (Boosters.TryAdd(gameID, booster)) {
+					if (Boosters.TryGetValue(gameID, out Booster? existingBooster)) {
+						// Re-add a booster that was successfully crafted and is waiting to be cleared out of the queue
+						if (existingBooster.Type == BoosterType.OneTime && existingBooster.WasCrafted) {
+							RemoveBooster(gameID);
+						}
+					}
+					Booster newBooster = new Booster(Bot, gameID, type, boosterInfo);
+					if (Boosters.TryAdd(gameID, newBooster)) {
 						Bot.ArchiLogger.LogGenericInfo(String.Format("Added {0} to booster queue.", gameID));
 					}
 				} else {
@@ -119,6 +125,7 @@ namespace BoosterManager {
 
 		private bool RemoveBooster(uint gameID) {
 			if (Boosters.TryRemove(gameID, out Booster? booster)) {
+				Bot.ArchiLogger.LogGenericInfo(String.Format("Removed {0} from booster queue.", gameID));
 				if (booster.Type == BoosterType.Permanent) {
 					Bot.ArchiLogger.LogGenericInfo(String.Format("Re-adding permanent {0} to booster queue.", gameID));
 					AddBooster(gameID, BoosterType.Permanent);
@@ -271,7 +278,7 @@ namespace BoosterManager {
 				return null;
 			}
 
-			return String.Format("{0} booster(s) from {1:N0} gems will be crafted by ~{2:h:mm tt}", GetNumBoosters(BoosterType.OneTime), GetGemsNeeded(BoosterType.OneTime), lastOneTimeBooster.GetAvailableAtTime().AddSeconds(BoosterDelay));
+			return String.Format("{0} boosters from {1:N0} gems will be crafted by ~{2:h:mm tt}", GetNumBoosters(BoosterType.OneTime), GetGemsNeeded(BoosterType.OneTime), lastOneTimeBooster.GetAvailableAtTime().AddSeconds(BoosterDelay));
 		}
 
 		internal string GetStatus() {
