@@ -8,7 +8,6 @@ using ArchiSteamFarm.Localization;
 
 namespace BoosterManager {
 	internal static class Commands {
-#pragma warning disable 1998
 		internal static async Task<string?> Response(Bot bot, EAccess access, ulong steamID, string message, string[] args) {
 			if (string.IsNullOrEmpty(message)) {
 				return null;
@@ -24,7 +23,8 @@ namespace BoosterManager {
 				"BSTOPTIME" => ResponseBoosterStopTime(bot, access, args[1]),
 				"BSTOPALL" when args.Length > 1 => ResponseBoosterStopTime(access, steamID, args[1], "0"),
 				"BSTOPALL" => ResponseBoosterStopTime(bot, access, "0"),
-				// "GEMS" => TODO,
+				"GEMS" when args.Length > 1 => await ResponseGems(access, steamID, args[1]),
+				"GEMS" => await ResponseGems(bot, access),
 				// "GTRANSFER" => TODO,
 				// "GLOOT" => TODO,
 				// "KEYS" => TODO,
@@ -34,7 +34,6 @@ namespace BoosterManager {
 				_ => null,
 			};
 		}
-#pragma warning restore 1998
 
 		private static string? ResponseBooster(Bot bot, EAccess access, ulong steamID, string targetGameIDs, Bot? respondingBot = null) {
 			if (string.IsNullOrEmpty(targetGameIDs)) {
@@ -218,6 +217,38 @@ namespace BoosterManager {
 				bots.Select(
 					bot => ResponseBoosterStopTime(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), timeLimit)
 				);
+
+			List<string?> responses = new(results.Where(result => !string.IsNullOrEmpty(result)));
+
+			return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
+		}
+
+		private static async Task<string?> ResponseGems(Bot bot, EAccess access) {
+			if (access < EAccess.Operator) {
+				return null;
+			}
+
+			if (!bot.IsConnectedAndLoggedOn) {
+				return FormatBotResponse(bot, Strings.BotNotConnected);
+			}
+
+			return await GemHandler.GetGemCount(bot).ConfigureAwait(false);
+		}
+
+		private static async Task<string?> ResponseGems(EAccess access, ulong steamID, string botNames) {
+			if (string.IsNullOrEmpty(botNames)) {
+				ASF.ArchiLogger.LogNullError(null, nameof(botNames));
+
+				return null;
+			}
+
+			HashSet<Bot>? bots = Bot.GetBots(botNames);
+
+			if ((bots == null) || (bots.Count == 0)) {
+				return access >= EAccess.Owner ? FormatStaticResponse(string.Format(Strings.BotNotFound, botNames)) : null;
+			}
+
+			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseGems(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)))).ConfigureAwait(false);
 
 			List<string?> responses = new(results.Where(result => !string.IsNullOrEmpty(result)));
 

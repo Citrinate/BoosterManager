@@ -33,6 +33,7 @@ namespace BoosterManager {
 			if (Info.Unavailable) {
 				// Unavailable boosters become available exactly 24 hours after being crafted, down to the second, but Steam doesn't tell us which second that is.
 				// Rounding up to the next minute allows us to safely assume that our boosters will be available when we attempt to craft them.
+				// TODO: When crafting with the plugin, save the time we crafted at, so we'll have something that's more accurate
 				return Info.AvailableAtTime.AddMinutes(1);
 			}
 
