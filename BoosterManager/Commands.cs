@@ -25,7 +25,8 @@ namespace BoosterManager {
 				"BSTOPALL" => ResponseBoosterStopTime(bot, access, "0"),
 				"GEMS" when args.Length > 1 => await ResponseGems(access, steamID, args[1]),
 				"GEMS" => await ResponseGems(bot, access),
-				// "GTRANSFER" => TODO,
+				"GTRANSFER" when args.Length > 3 => await ResponseGemsTransfer(access, steamID, args[1], args[2], args[3]),
+				"GTRANSFER" when args.Length > 2 => await ResponseGemsTransfer(bot, access, args[1], args[2]),
 				// "GLOOT" => TODO,
 				// "KEYS" => TODO,
 				// "KTRANSFER" => TODO,
@@ -253,6 +254,66 @@ namespace BoosterManager {
 			List<string?> responses = new(results.Where(result => !string.IsNullOrEmpty(result)));
 
 			return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
+		}
+
+		private static async Task<string?> ResponseGemsTransfer(Bot bot, EAccess access, string recievingBotNames, string recievingAmounts) {
+			if (string.IsNullOrEmpty(recievingBotNames)) {
+				ASF.ArchiLogger.LogNullError(null, nameof(recievingBotNames));
+
+				return null;
+			}
+
+			HashSet<Bot>? bots = Bot.GetBots(recievingBotNames);
+
+			if ((bots == null) || (bots.Count == 0)) {
+				return access >= EAccess.Owner ? FormatStaticResponse(string.Format(Strings.BotNotFound, recievingBotNames)) : null;
+			}
+
+			bots.Remove(bot);
+			string[] amounts = recievingAmounts.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+			if (amounts.Length == 1 && bots.Count > 1) {
+				amounts = Enumerable.Repeat(amounts[0], bots.Count).ToArray();
+			}
+
+			if (amounts.Length == 0) {
+				return FormatBotResponse(bot, string.Format(Strings.ErrorIsEmpty, nameof(amounts)));
+			} else if (amounts.Length != bots.Count) {
+				return FormatBotResponse(bot, "Number of recieving bots does not match number of gem amounts");
+			}
+
+			List<uint> amountNums = new List<uint>();
+
+			foreach (string amount in amounts) {
+				if (!uint.TryParse(amount, out uint amountNum) || (amountNum == 0)) {
+					return FormatBotResponse(bot, string.Format(Strings.ErrorParsingObject, nameof(amountNum)));
+				}
+
+				amountNums.Add(amountNum);
+			}
+
+			HashSet<Tuple<Bot, uint>> recievers = bots.Zip(amountNums).Select(pair => new Tuple<Bot, uint>(pair.First, pair.Second)).ToHashSet();
+
+			return await GemHandler.TransferGems(bot, recievers);
+		}
+
+		private static async Task<string?> ResponseGemsTransfer(EAccess access, ulong steamID, string sendingBotName, string recievingBotNames, string recievingAmounts) {
+			if (string.IsNullOrEmpty(sendingBotName)) {
+				ASF.ArchiLogger.LogNullError(null, nameof(sendingBotName));
+
+				return null;
+			}
+
+			HashSet<Bot>? bots = Bot.GetBots(sendingBotName);
+
+			if ((bots == null) || (bots.Count == 0)) {
+				return access >= EAccess.Owner ? FormatStaticResponse(string.Format(Strings.BotNotFound, recievingBotNames)) : null;
+			} else if (bots.Count > 1) {
+				return FormatStaticResponse("Can't have more than 1 sender");
+			}
+
+			Bot sender = bots.First();
+
+			return await ResponseGemsTransfer(sender, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(sender, access, steamID), recievingBotNames, recievingAmounts);
 		}
 
 		internal static string FormatStaticResponse(string response) => ArchiSteamFarm.Steam.Interaction.Commands.FormatStaticResponse(response);
