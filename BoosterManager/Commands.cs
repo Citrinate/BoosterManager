@@ -23,14 +23,18 @@ namespace BoosterManager {
 				"BSTOPTIME" => ResponseBoosterStopTime(bot, access, args[1]),
 				"BSTOPALL" when args.Length > 1 => ResponseBoosterStopTime(access, steamID, args[1], "0"),
 				"BSTOPALL" => ResponseBoosterStopTime(bot, access, "0"),
+				// "LOOTBOOSTERS" => TODO,
+				// "TRANSFERBOOSTERS" => TODO,
 				"GEMS" when args.Length > 1 => await ResponseGems(access, steamID, args[1]),
 				"GEMS" => await ResponseGems(bot, access),
-				"GTRANSFER" when args.Length > 3 => await ResponseGemsTransfer(access, steamID, args[1], args[2], args[3]),
-				"GTRANSFER" when args.Length > 2 => await ResponseGemsTransfer(bot, access, args[1], args[2]),
-				// "GLOOT" => TODO,
+				"TRANSFERGEMS" when args.Length == 4 => await ResponseTransferGems(access, steamID, args[1], args[2], args[3]),
+				"TRANSFERGEMS" when args.Length == 3 => await ResponseTransferGems(bot, access, args[1], args[2]),
+				// "LOOTGEMS" => TODO,
+				// "LOOTSACKS" => TODO,
 				// "KEYS" => TODO,
-				// "KTRANSFER" => TODO,
-				// "KLOOT" => TODO,
+				// "LOOTKEYS" => TODO,
+				// "TRANSFERKEYS" => TODO,
+				// "LOOTKEYS" => TODO,
 				// "LOGDATA" => TODO,
 				_ => null,
 			};
@@ -43,7 +47,7 @@ namespace BoosterManager {
 				return null;
 			}
 
-			if (access < EAccess.Operator) {
+			if (access < EAccess.Master) {
 				return null;
 			}
 
@@ -94,7 +98,7 @@ namespace BoosterManager {
 		}
 
 		private static string? ResponseBoosterStatus(Bot bot, EAccess access) {
-			if (access < EAccess.Operator) {
+			if (access < EAccess.Master) {
 				return null;
 			}
 
@@ -135,7 +139,7 @@ namespace BoosterManager {
 				return null;
 			}
 
-			if (access < EAccess.Operator) {
+			if (access < EAccess.Master) {
 				return null;
 			}
 
@@ -186,7 +190,7 @@ namespace BoosterManager {
 		}
 
 		private static string? ResponseBoosterStopTime(Bot bot, EAccess access, string timeLimit) {
-			if (access < EAccess.Operator) {
+			if (access < EAccess.Master) {
 				return null;
 			}
 
@@ -225,7 +229,7 @@ namespace BoosterManager {
 		}
 
 		private static async Task<string?> ResponseGems(Bot bot, EAccess access) {
-			if (access < EAccess.Operator) {
+			if (access < EAccess.Master) {
 				return null;
 			}
 
@@ -256,11 +260,19 @@ namespace BoosterManager {
 			return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
 		}
 
-		private static async Task<string?> ResponseGemsTransfer(Bot bot, EAccess access, string recievingBotNames, string recievingAmounts) {
-			if (string.IsNullOrEmpty(recievingBotNames)) {
-				ASF.ArchiLogger.LogNullError(null, nameof(recievingBotNames));
+		private static async Task<string?> ResponseTransferGems(Bot bot, EAccess access, string recievingBotNames, string recievingAmounts) {
+			if (string.IsNullOrEmpty(recievingBotNames) || string.IsNullOrEmpty(recievingAmounts)) {
+				ASF.ArchiLogger.LogNullError(null, nameof(recievingBotNames) + " || " + nameof(recievingAmounts));
 
 				return null;
+			}
+
+			if (access < EAccess.Master) {
+				return null;
+			}
+
+			if (!bot.IsConnectedAndLoggedOn) {
+				return FormatBotResponse(bot, Strings.BotNotConnected);
 			}
 
 			HashSet<Bot>? bots = Bot.GetBots(recievingBotNames);
@@ -296,14 +308,14 @@ namespace BoosterManager {
 			return await GemHandler.TransferGems(bot, recievers);
 		}
 
-		private static async Task<string?> ResponseGemsTransfer(EAccess access, ulong steamID, string sendingBotName, string recievingBotNames, string recievingAmounts) {
-			if (string.IsNullOrEmpty(sendingBotName)) {
-				ASF.ArchiLogger.LogNullError(null, nameof(sendingBotName));
+		private static async Task<string?> ResponseTransferGems(EAccess access, ulong steamID, string senderBotName, string recievingBotNames, string recievingAmounts) {
+			if (string.IsNullOrEmpty(senderBotName)) {
+				ASF.ArchiLogger.LogNullError(null, nameof(senderBotName));
 
 				return null;
 			}
 
-			HashSet<Bot>? bots = Bot.GetBots(sendingBotName);
+			HashSet<Bot>? bots = Bot.GetBots(senderBotName);
 
 			if ((bots == null) || (bots.Count == 0)) {
 				return access >= EAccess.Owner ? FormatStaticResponse(string.Format(Strings.BotNotFound, recievingBotNames)) : null;
@@ -313,7 +325,7 @@ namespace BoosterManager {
 
 			Bot sender = bots.First();
 
-			return await ResponseGemsTransfer(sender, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(sender, access, steamID), recievingBotNames, recievingAmounts);
+			return await ResponseTransferGems(sender, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(sender, access, steamID), recievingBotNames, recievingAmounts);
 		}
 
 		internal static string FormatStaticResponse(string response) => ArchiSteamFarm.Steam.Interaction.Commands.FormatStaticResponse(response);

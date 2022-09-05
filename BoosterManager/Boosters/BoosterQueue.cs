@@ -51,7 +51,7 @@ namespace BoosterManager {
 			}
 
 			if (!await UpdateBoosterInfos().ConfigureAwait(false)) {
-				Bot.ArchiLogger.LogGenericInfo("Failed to update booster information");
+				Bot.ArchiLogger.LogGenericError("Failed to update booster information");
 				UpdateTimer(DateTime.Now.AddMinutes(1));
 
 				return;
@@ -71,7 +71,7 @@ namespace BoosterManager {
 				}
 
 				if (!await CraftBooster(booster).ConfigureAwait(false)) {
-					Bot.ArchiLogger.LogGenericInfo(String.Format("Failed to create booster from {0}", booster.GameID));
+					Bot.ArchiLogger.LogGenericError(String.Format("Failed to create booster from {0}", booster.GameID));
 					VerifyCraftBoosterError(booster);
 					UpdateTimer(DateTime.Now);
 
@@ -116,7 +116,7 @@ namespace BoosterManager {
 						Bot.ArchiLogger.LogGenericInfo(String.Format("Added {0} to booster queue.", gameID));
 					}
 				} else {
-					Bot.ArchiLogger.LogGenericInfo(String.Format("Can't craft boosters for {0}", gameID));
+					Bot.ArchiLogger.LogGenericError(String.Format("Can't craft boosters for {0}", gameID));
 				}
 				OnBoosterInfosUpdated -= handler;
 			}
