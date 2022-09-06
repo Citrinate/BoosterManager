@@ -26,6 +26,8 @@ namespace BoosterManager {
 				return;
 			}
 
+			// TODO: bool "AllowCraftUntradableBoosters".  Default to true.  If false, don't use untradable gems to craft boosters
+
 			foreach (KeyValuePair<string, JToken> configProperty in additionalConfigProperties) {
 				switch (configProperty.Key) {
 					case "BoosterDelayBetweenBots" when configProperty.Value.Type == JTokenType.Integer: {

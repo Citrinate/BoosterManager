@@ -13,10 +13,6 @@ namespace BoosterManager {
 		internal const ulong SackOfGemsClassID = 667933237; 
 
 		internal static async Task<string> GetGemCount(Bot bot) {
-			uint tradableGemCount = 0;
-			uint untradableGemCount = 0;
-			uint tradableSackCount = 0;
-			uint untradableSackCount = 0;
 			HashSet<Asset> inventory;
 			try {
 				inventory = await bot.ArchiWebHandler.GetInventoryAsync().Where(item => item.Type == Asset.EType.SteamGems).ToHashSetAsync().ConfigureAwait(false);
@@ -25,22 +21,24 @@ namespace BoosterManager {
 				return Commands.FormatBotResponse(bot, Strings.WarningFailed);
 			}
 
+			(uint tradable, uint untradable) gems = (0,0);
+			(uint tradable, uint untradable) sacks = (0,0);
 			foreach (Asset item in inventory) {
 				switch (item.ClassID, item.Tradable) {
-					case (GemsClassID, true): tradableGemCount += item.Amount; break;
-					case (GemsClassID, false): untradableGemCount += item.Amount; break;
-					case (SackOfGemsClassID, true): tradableSackCount += item.Amount; break;
-					case (SackOfGemsClassID, false): untradableSackCount += item.Amount; break;
+					case (GemsClassID, true): gems.tradable += item.Amount; break;
+					case (GemsClassID, false): gems.untradable += item.Amount; break;
+					case (SackOfGemsClassID, true): sacks.tradable += item.Amount; break;
+					case (SackOfGemsClassID, false): sacks.untradable += item.Amount; break;
 					default: break;
 				}
 			}
 
-			return Commands.FormatBotResponse(bot, String.Format("Tradable: {0:N0}{1}{2}", tradableGemCount, tradableSackCount == 0 ? "" : String.Format(" (+{0:N0} Sacks)", tradableSackCount),
-				(untradableGemCount + untradableSackCount) == 0 ? "" : String.Format("; Untradable: {0:N0}{1}", untradableGemCount, untradableSackCount == 0 ? "" : String.Format(" (+{0:N0} Sacks)", untradableSackCount))
+			return Commands.FormatBotResponse(bot, String.Format("Tradable: {0:N0}{1}{2}", gems.tradable, sacks.tradable == 0 ? "" : String.Format(" (+{0:N0} Sacks)", sacks.tradable),
+				(gems.untradable + sacks.untradable) == 0 ? "" : String.Format("; Untradable: {0:N0}{1}", gems.untradable, sacks.untradable == 0 ? "" : String.Format(" (+{0:N0} Sacks)", sacks.untradable))
 			));
 		}
 
-		internal static async Task<string> TransferGems(Bot sender, HashSet<Tuple<Bot, uint>> recievers) {
+		internal static async Task<string> TransferGems(Bot sender, List<(Bot reciever, uint amount)> recievers) {
 			HashSet<Asset> gemsStacks;
 			try {
 				gemsStacks = await sender.ArchiWebHandler.GetInventoryAsync().Where(item => item.Tradable && item.ClassID == GemsClassID).ToHashSetAsync().ConfigureAwait(false);
@@ -49,53 +47,53 @@ namespace BoosterManager {
 				return Commands.FormatBotResponse(sender, Strings.WarningFailed);
 			}
 
-			uint totalGemsTransfered = 0;
 			HashSet<string> responses = new HashSet<string>();
-			foreach (Tuple<Bot, uint> reciever in recievers) {
-				sender.ArchiLogger.LogGenericInfo(String.Format("Sending {0} gems to {1}", reciever.Item2, reciever.Item1.BotName));
-				(bool success, string response) = await SendGems(sender, gemsStacks, reciever.Item1, reciever.Item2, totalGemsTransfered).ConfigureAwait(false);
-				responses.Add(response);
+			uint totalGemsTransfered = 0;
+			foreach ((Bot reciever, uint amount) in recievers) {
+				sender.ArchiLogger.LogGenericInfo(String.Format("Sending {0} gems to {1}", amount, reciever.BotName));
+				(bool success, string response) = await SendFungibleItems(sender, gemsStacks, reciever, amount, totalGemsTransfered).ConfigureAwait(false);
+				responses.Add(Commands.FormatBotResponse(reciever, response));
 				if (success) {
-					sender.ArchiLogger.LogGenericInfo(String.Format("Sent {0} gems to {1}", reciever.Item2, reciever.Item1.BotName));
-					totalGemsTransfered += reciever.Item2;
+					sender.ArchiLogger.LogGenericInfo(String.Format("Sent {0} gems to {1}", amount, reciever.BotName));
+					totalGemsTransfered += amount;
 				} else {
-					sender.ArchiLogger.LogGenericError(String.Format("Failed to send {0} gems to {1}", reciever.Item2, reciever.Item1.BotName));
+					sender.ArchiLogger.LogGenericError(String.Format("Failed to send {0} gems to {1}", amount, reciever.BotName));
 				}
 			}
 
 			return String.Join(Environment.NewLine, responses);
 		}
 
-		private static async Task<(bool, String)> SendGems(Bot sender, HashSet<Asset> gemsStacks, Bot reciever, uint totalAmountToSend, uint amountToSkip = 0) {
+		private static async Task<(bool, String)> SendFungibleItems(Bot sender, HashSet<Asset> itemStacks, Bot reciever, uint amountToSend, uint amountToSkip = 0) {
 			if (!reciever.IsConnectedAndLoggedOn) {
-				return (false, Commands.FormatBotResponse(reciever, Strings.BotNotConnected));
+				return (false, Strings.BotNotConnected);
 			}
 
-			if (totalAmountToSend == 0) {
-				return (true, Commands.FormatBotResponse(reciever, "Successfully sent no gems!"));
+			if (amountToSend == 0) {
+				return (true, "Successfully sent nothing!");
 			}
 
-			uint count = 0;
+			HashSet<Asset> itemsToGive = new HashSet<Asset>();	
 			uint amountSent = 0;
-			HashSet<Asset> itemsToGive = new HashSet<Asset>();			
-			foreach (Asset gemsStack in gemsStacks) {
-				count += gemsStack.Amount;
-				uint amountLeftInStack = Math.Min((amountToSkip > count) ? 0 : (count - amountToSkip), gemsStack.Amount);
+			uint itemCount = 0;
+			foreach (Asset itemStack in itemStacks) {
+				itemCount += itemStack.Amount;
+				uint amountLeftInStack = Math.Min((amountToSkip > itemCount) ? 0 : (itemCount - amountToSkip), itemStack.Amount);
 				if (amountLeftInStack == 0) {
 					continue;
 				}
 
-				uint amountToSend = Math.Min(Math.Min(gemsStack.Amount, amountLeftInStack), totalAmountToSend - amountSent);
-				if (amountToSend == 0) {
+				uint amountToSendFromStack = Math.Min(Math.Min(itemStack.Amount, amountLeftInStack), amountToSend - amountSent);
+				if (amountToSendFromStack == 0) {
 					break;
 				}
 
-				amountSent += amountToSend;
-				itemsToGive.Add(new Asset(appID: gemsStack.AppID, contextID: gemsStack.ContextID, classID: gemsStack.ClassID, assetID: gemsStack.AssetID, amount: amountToSend));
+				itemsToGive.Add(new Asset(appID: itemStack.AppID, contextID: itemStack.ContextID, classID: itemStack.ClassID, assetID: itemStack.AssetID, amount: amountToSend));
+				amountSent += amountToSendFromStack;
 			}
-			if (itemsToGive.Count == 0 || amountSent != totalAmountToSend) {
-				sender.ArchiLogger.LogGenericError(String.Format("Not enough free gems to send to {0}, need {1}, but only {2} are available", reciever.BotName, totalAmountToSend, count - amountToSkip));
-				return (false, Commands.FormatBotResponse(reciever, "Not enough gems."));
+			if (itemsToGive.Count == 0 || amountSent != amountToSend) {
+				sender.ArchiLogger.LogGenericError(String.Format("Not enough available quantity to complete trade, need {0}, but only {1} are available", amountToSend, amountSent));
+				return (false, "Not enough to send!");
 			}
 
 			(bool success, HashSet<ulong>? mobileTradeOfferIDs) = await sender.ArchiWebHandler.SendTradeOffer(reciever.SteamID, itemsToGive).ConfigureAwait(false);
@@ -104,11 +102,11 @@ namespace BoosterManager {
 
 				if (!twoFactorSuccess) {
 					sender.ArchiLogger.LogGenericError(message);
-					return (success, Commands.FormatBotResponse(reciever, Strings.BotLootingFailed));
+					return (success, Strings.BotLootingFailed);
 				}
 			}
 
-			return (success, Commands.FormatBotResponse(reciever, success ? Strings.BotLootingSuccess : Strings.BotLootingFailed));
+			return (success, success ? Strings.BotLootingSuccess : Strings.BotLootingFailed);
 		}
 	}
 }
