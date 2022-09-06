@@ -88,7 +88,7 @@ namespace BoosterManager {
 					break;
 				}
 
-				itemsToGive.Add(new Asset(appID: itemStack.AppID, contextID: itemStack.ContextID, classID: itemStack.ClassID, assetID: itemStack.AssetID, amount: amountToSend));
+				itemsToGive.Add(new Asset(appID: itemStack.AppID, contextID: itemStack.ContextID, classID: itemStack.ClassID, assetID: itemStack.AssetID, amount: amountToSendFromStack));
 				amountSent += amountToSendFromStack;
 			}
 			if (itemsToGive.Count == 0 || amountSent != amountToSend) {
