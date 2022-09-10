@@ -21,9 +21,9 @@ namespace BoosterManager {
 
 		public async Task<string?> OnBotCommand(Bot bot, EAccess access, string message, string[] args, ulong steamID = 0) => await Commands.Response(bot, access, steamID, message, args).ConfigureAwait(false);
 
-		public async Task OnASFInit(IReadOnlyDictionary<string, JToken>? additionalConfigProperties = null) {
+		public Task OnASFInit(IReadOnlyDictionary<string, JToken>? additionalConfigProperties = null) {
 			if (additionalConfigProperties == null) {
-				return;
+				return Task.FromResult(0);
 			}
 
 			// TODO: bool "AllowCraftUntradableBoosters".  Default to true.  If false, don't use untradable gems to craft boosters
@@ -32,18 +32,45 @@ namespace BoosterManager {
 				switch (configProperty.Key) {
 					case "BoosterDelayBetweenBots" when configProperty.Value.Type == JTokenType.Integer: {
 						ASF.ArchiLogger.LogGenericInfo("Booster Delay Between Bots : " + configProperty.Value);
-						await Task.Run(() => BoosterHandler.UpdateBotDelays(configProperty.Value.ToObject<int>())).ConfigureAwait(false);
+						BoosterHandler.UpdateBotDelays((int)configProperty.Value.ToObject<uint>());
+						break;
+					}
+					case "BoosterDataAPI" when configProperty.Value.Type == JTokenType.String: {
+						ASF.ArchiLogger.LogGenericInfo("Booster Data API : " + configProperty.Value);
+						DataHandler.BoosterDataAPI = new Uri(configProperty.Value.ToObject<string>()!);
+						break;
+					}
+					case "MarketListingsAPI" when configProperty.Value.Type == JTokenType.String: {
+						ASF.ArchiLogger.LogGenericInfo("Market Listings API : " + configProperty.Value);
+						DataHandler.MarketListingsAPI = new Uri(configProperty.Value.ToObject<string>()!);
+						break;
+					}
+					case "MarketHistoryAPI" when configProperty.Value.Type == JTokenType.String: {
+						ASF.ArchiLogger.LogGenericInfo("Market History API : " + configProperty.Value);
+						DataHandler.MarketHistoryAPI = new Uri(configProperty.Value.ToObject<string>()!);
+						break;
+					}
+					case "NumMarketHistoryPages" when configProperty.Value.Type == JTokenType.Integer: {
+						ASF.ArchiLogger.LogGenericInfo("Num Market History Pages : " + configProperty.Value);
+						DataHandler.NumMarketHistoryPages = configProperty.Value.ToObject<uint>();
+						break;
+					}
+					case "MarketHistoryDelay" when configProperty.Value.Type == JTokenType.Integer: {
+						ASF.ArchiLogger.LogGenericInfo("Market History Delay : " + configProperty.Value);
+						DataHandler.MarketHistoryDelay = configProperty.Value.ToObject<uint>();
 						break;
 					}
 				}
 			}
+
+			return Task.FromResult(0);
 		}
 
-		public async Task OnBotInitModules(Bot bot, IReadOnlyDictionary<string, JToken>? additionalConfigProperties = null) {
+		public Task OnBotInitModules(Bot bot, IReadOnlyDictionary<string, JToken>? additionalConfigProperties = null) {
 			BoosterHandler.AddHandler(bot);
 
 			if (additionalConfigProperties == null) {
-				return;
+				return Task.FromResult(0);
 			}
 
 			foreach (KeyValuePair<string, JToken> configProperty in additionalConfigProperties) {
@@ -54,12 +81,14 @@ namespace BoosterManager {
 						if (gameIDs == null) {
 							bot.ArchiLogger.LogNullError(gameIDs);
 						} else {
-							await Task.Run(() => BoosterHandler.BoosterHandlers[bot.BotName].SchedulePermanentBoosters(gameIDs)).ConfigureAwait(false);
+							BoosterHandler.BoosterHandlers[bot.BotName].SchedulePermanentBoosters(gameIDs);
 						}
 						break;
 					}
 				}
 			}
+
+			return Task.FromResult(0);
 		}
 	}
 }

@@ -21,7 +21,6 @@ namespace BoosterManager {
 			// "KEYS"
 			// "LOOTKEYS"
 			// "TRANSFERKEYS"
-			// "LOGDATA"
 			switch (args.Length) {
 				case 1:
 					switch (args[0].ToUpperInvariant()) {
@@ -31,6 +30,8 @@ namespace BoosterManager {
 							return ResponseBoosterStopTime(bot, access, "0");
 						case "GEMS":
 							return await ResponseGems(bot, access).ConfigureAwait(false);
+						case "LOGDATA":
+							return await ResponseLogData(bot, access).ConfigureAwait(false);
 						default:
 							return null;
 					};
@@ -54,6 +55,8 @@ namespace BoosterManager {
 							return ResponseBoosterStopTime(bot, access, args[1]);
 						case "GEMS":
 							return await ResponseGems(access, steamID, args[1]).ConfigureAwait(false);
+						case "LOGDATA":
+							return await ResponseLogData(access, steamID, args[1]).ConfigureAwait(false);
 						case "TRANSFERGEMS" when args.Length > 3:
 							return await ResponseTransferGems(access, steamID, args[1], args[2], args[3]).ConfigureAwait(false);
 						case "TRANSFERGEMS" when args.Length > 2:
@@ -293,14 +296,14 @@ namespace BoosterManager {
 				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
 			}
 
-			bots.Remove(bot);
-			string[] amounts = gemAmounts.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);			
-			if (amounts.Length == 1 && bots.Count > 1) {
-				amounts = Enumerable.Repeat(amounts[0], bots.Count).ToArray();
-			}
+			string[] amounts = gemAmounts.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 
 			if (amounts.Length == 0) {
 				return FormatBotResponse(bot, String.Format(Strings.ErrorIsEmpty, nameof(amounts)));
+			}
+
+			if (amounts.Length == 1 && bots.Count > 1) {
+				amounts = Enumerable.Repeat(amounts[0], bots.Count).ToArray();
 			}
 			
 			if (amounts.Length != bots.Count) {
@@ -339,6 +342,36 @@ namespace BoosterManager {
 			Bot sender = senders.First();
 
 			return await ResponseTransferGems(sender, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(sender, access, steamID), botNames, gemAmounts).ConfigureAwait(false);
+		}
+
+		private static async Task<string?> ResponseLogData(Bot bot, EAccess access) {
+			if (access < EAccess.Master) {
+				return null;
+			}
+
+			if (!bot.IsConnectedAndLoggedOn) {
+				return FormatBotResponse(bot, Strings.BotNotConnected);
+			}
+
+			return await DataHandler.SendAllData(bot).ConfigureAwait(false);
+		}
+
+		private static async Task<string?> ResponseLogData(EAccess access, ulong steamID, string botNames) {
+			if (String.IsNullOrEmpty(botNames)) {
+				throw new ArgumentNullException(nameof(botNames));
+			}
+
+			HashSet<Bot>? bots = Bot.GetBots(botNames);
+
+			if ((bots == null) || (bots.Count == 0)) {
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
+			}
+
+			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseLogData(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)))).ConfigureAwait(false);
+
+			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
+
+			return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
 		}
 
 		internal static string FormatStaticResponse(string response) => ArchiSteamFarm.Steam.Interaction.Commands.FormatStaticResponse(response);

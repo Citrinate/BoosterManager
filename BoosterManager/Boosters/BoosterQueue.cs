@@ -144,42 +144,57 @@ namespace BoosterManager {
 				return true;
 			}
 
-			IDocument? boosterPage = await WebRequest.GetBoosterPage(Bot).ConfigureAwait(false);
+			(IDocument? boosterPage, _) = await WebRequest.GetBoosterPage(Bot).ConfigureAwait(false);
 			if (boosterPage == null) {
 				Bot.ArchiLogger.LogNullError(boosterPage);
 
 				return false;
 			}
 
-			MatchCollection gooAmounts = Regex.Matches(boosterPage.Source.Text, "(?<=parseFloat\\( \")[0-9]+");
-			Match info = Regex.Match(boosterPage.Source.Text, "\\[\\{\"[\\s\\S]*\"}]");
-			if (!info.Success || (gooAmounts.Count != 3)) {
-				Bot.ArchiLogger.LogGenericError(string.Format(Strings.ErrorParsingObject, boosterPage));
-
-				return false;
-			}
-			GooAmount = uint.Parse(gooAmounts[0].Value);
-			TradableGooAmount = uint.Parse(gooAmounts[1].Value);
-			UntradableGooAmount = uint.Parse(gooAmounts[2].Value);
-
-			IEnumerable<Steam.BoosterInfo>? enumerableBoosters;
-			try {
-				enumerableBoosters = JsonConvert.DeserializeObject<IEnumerable<Steam.BoosterInfo>>(info.Value, new Steam.BoosterInfoDateConverter());
-			} catch (JsonException ex) {
-				Bot.ArchiLogger.LogGenericError(ex.Message);
-
-				return false;
-			}
+			IEnumerable<Steam.BoosterInfo>? enumerableBoosters = ParseBoosterPage(Bot, boosterPage, this);
 			if (enumerableBoosters == null) {
 				Bot.ArchiLogger.LogNullError(enumerableBoosters);
 
 				return false;
 			}
+
 			BoosterInfos = enumerableBoosters.ToDictionary(boosterInfo => boosterInfo.AppID);
 			Bot.ArchiLogger.LogGenericInfo("BoosterInfos updated");
 			OnBoosterInfosUpdated?.Invoke();
 
 			return true;
+		}
+
+		internal static IEnumerable<Steam.BoosterInfo>? ParseBoosterPage(Bot bot, IDocument boosterPage, BoosterQueue? boosterQueue = null) {
+			MatchCollection gooAmounts = Regex.Matches(boosterPage.Source.Text, "(?<=parseFloat\\( \")[0-9]+");
+			Match info = Regex.Match(boosterPage.Source.Text, "\\[\\{\"[\\s\\S]*\"}]");
+			if (!info.Success || (gooAmounts.Count != 3)) {
+				bot.ArchiLogger.LogGenericError(string.Format(Strings.ErrorParsingObject, boosterPage));
+
+				return null;
+			}
+
+			if (boosterQueue != null) {
+				boosterQueue.GooAmount = uint.Parse(gooAmounts[0].Value);
+				boosterQueue.TradableGooAmount = uint.Parse(gooAmounts[1].Value);
+				boosterQueue.UntradableGooAmount = uint.Parse(gooAmounts[2].Value);
+			}
+
+			IEnumerable<Steam.BoosterInfo>? enumerableBoosters;
+			try {
+				enumerableBoosters = JsonConvert.DeserializeObject<IEnumerable<Steam.BoosterInfo>>(info.Value, new Steam.BoosterInfoDateConverter());
+			} catch (JsonException ex) {
+				bot.ArchiLogger.LogGenericError(ex.Message);
+
+				return null;
+			}
+			if (enumerableBoosters == null) {
+				bot.ArchiLogger.LogNullError(enumerableBoosters);
+
+				return null;
+			}
+
+			return enumerableBoosters;
 		}
 
 		private async Task<Boolean> CraftBooster(Booster booster) {
@@ -203,7 +218,10 @@ namespace BoosterManager {
 			// For any error we get, we'll need to refresh the booster page and see if the AvailableAtTime has changed to determine if we really failed to craft
 			void handler() {
 				if (BoosterInfos.TryGetValue(booster.GameID, out Steam.BoosterInfo? boosterInfo)) {
-					if (boosterInfo.Unavailable && boosterInfo.AvailableAtTime != booster.Info.AvailableAtTime) {
+					if (boosterInfo.Unavailable 
+						&& boosterInfo.AvailableAtTime != booster.Info.AvailableAtTime
+						&& (boosterInfo.AvailableAtTime - booster.Info.AvailableAtTime).Duration().Hours > 2 // Make sure the change in time isn't due to daylight savings
+					) {
 						Bot.ArchiLogger.LogGenericInfo(String.Format("Booster from {0} was recently created either by us or by user", booster.GameID));
 						booster.WasCrafted = true;
 					}

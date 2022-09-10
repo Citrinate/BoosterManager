@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using SteamKit2;
 
 #pragma warning disable 649
@@ -56,6 +57,88 @@ namespace BoosterManager {
 
 			[JsonConstructor]
 			private BoostersResponse() => Result = new EResultResponse();
+		}
+
+		internal sealed class MarketListingsResponse {
+			[JsonProperty(PropertyName = "success", Required = Required.Always)]
+			internal readonly bool Success;
+
+			[JsonProperty(PropertyName = "pagesize", Required = Required.Always)]
+			internal readonly uint PageSize;
+
+			[JsonProperty(PropertyName = "total_count", Required = Required.Always)]
+			internal readonly uint TotalCount;
+
+			[JsonProperty(PropertyName = "assets", Required = Required.Always)]
+			internal readonly JObject Assets;
+
+			[JsonProperty(PropertyName = "start", Required = Required.Always)]
+			internal readonly uint Start;
+
+			[JsonProperty(PropertyName = "num_active_listings", Required = Required.Always)]
+			internal readonly uint NumActiveListings;
+
+			[JsonProperty(PropertyName = "listings", Required = Required.Always)]
+			internal readonly JArray? Listings;
+
+			[JsonProperty(PropertyName = "listings_on_hold", Required = Required.Always)]
+			internal readonly JArray ListingsOnHold;
+
+			[JsonProperty(PropertyName = "listings_to_confirm", Required = Required.Always)]
+			internal readonly JArray ListingsToConfirm;
+
+			[JsonProperty(PropertyName = "buy_orders", Required = Required.Always)]
+			internal readonly JArray BuyOrders;
+
+			[JsonConstructor]
+			private MarketListingsResponse() {
+				Assets = new JObject();
+				ListingsOnHold = new JArray();
+				ListingsToConfirm = new JArray();
+				BuyOrders = new JArray();
+			}
+		}
+
+		internal sealed class MarketHistoryResponse {
+			[JsonProperty(PropertyName = "success", Required = Required.Always)]
+			internal readonly bool Success;
+
+			[JsonProperty(PropertyName = "pagesize", Required = Required.Always)]
+			internal readonly uint PageSize;
+
+			[JsonProperty(PropertyName = "total_count", Required = Required.Always)]
+			internal readonly uint? TotalCount;
+
+			[JsonProperty(PropertyName = "start", Required = Required.Always)]
+			internal readonly uint Start;
+
+			[JsonProperty(PropertyName = "assets", Required = Required.Always)]
+			internal readonly JObject Assets;
+
+			[JsonProperty(PropertyName = "events", Required = Required.Always)]
+			internal readonly JArray? Events;
+
+			[JsonProperty(PropertyName = "purchases", Required = Required.Always)]
+			internal readonly JObject Purchases;
+
+			[JsonProperty(PropertyName = "listings", Required = Required.Always)]
+			internal readonly JObject Listings;
+
+			[JsonConstructor]
+			private MarketHistoryResponse() {
+				Assets = new JObject();
+				Events = new JArray();
+				Purchases = new JObject();
+				Listings = new JObject();
+			}
+		}
+
+		internal sealed class DataAPIResponse {
+			[JsonProperty(PropertyName = "success", Required = Required.Always)]
+			internal readonly bool Success;
+
+			[JsonProperty(PropertyName = "message")]
+			internal readonly string? Message;			
 		}
 
 		// https://stackoverflow.com/a/51319347

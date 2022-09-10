@@ -41,7 +41,7 @@ namespace BoosterManager {
 		}
 
 		internal static void UpdateBotDelays(int? delayInSeconds = null) {
-			if(DelayBetweenBots == 0 && (delayInSeconds == null || delayInSeconds == 0)) {
+			if (DelayBetweenBots <= 0 && (delayInSeconds == null || delayInSeconds <= 0)) {
 				return;
 			}
 

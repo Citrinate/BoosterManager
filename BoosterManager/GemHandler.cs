@@ -69,6 +69,10 @@ namespace BoosterManager {
 				return (false, Strings.BotNotConnected);
 			}
 
+			if (sender.SteamID == reciever.SteamID) {
+				return (false, Strings.BotSendingTradeToYourself);
+			}
+
 			if (amountToSend == 0) {
 				return (true, "Successfully sent nothing!");
 			}
