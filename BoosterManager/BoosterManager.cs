@@ -50,11 +50,6 @@ namespace BoosterManager {
 						DataHandler.MarketHistoryAPI = new Uri(configProperty.Value.ToObject<string>()!);
 						break;
 					}
-					case "NumMarketHistoryPages" when configProperty.Value.Type == JTokenType.Integer: {
-						ASF.ArchiLogger.LogGenericInfo("Num Market History Pages : " + configProperty.Value);
-						DataHandler.NumMarketHistoryPages = configProperty.Value.ToObject<uint>();
-						break;
-					}
 					case "MarketHistoryDelay" when configProperty.Value.Type == JTokenType.Integer: {
 						ASF.ArchiLogger.LogGenericInfo("Market History Delay : " + configProperty.Value);
 						DataHandler.MarketHistoryDelay = configProperty.Value.ToObject<uint>();

@@ -20,7 +20,7 @@ Command | Access | Description
 `booster [Bots] <AppIDs>`|`Operator`|Adds `AppIDs` to the given bot's booster queue.  `AppIDs` added to the booster queue this way will be crafted one time as soon as they become available.
 `bstatus [Bots]`|`Operator`|Prints the status of the given bot's booster queue.
 `bstop [Bots] <AppIDs>`|`Operator`|Removes `AppIDs` from the given bot's booster queue.
-`bstoptime [Bots] <#>`|`Operator`|Removes everything from the given bot's booster queue that will take more than `#` hours to craft.
+`bstoptime [Bots] <Hours>`|`Operator`|Removes everything from the given bot's booster queue that will take more than the given `hours` to craft.
 `bstopall [Bots]`|`Operator`|Removes everything from the given bot's booster queue.
 
 ---

@@ -21,7 +21,7 @@ namespace BoosterManager {
 			internal readonly uint AppID;
 
 			[JsonProperty(PropertyName = "name", Required = Required.Always)]
-			internal readonly string Name;
+			internal readonly string Name = "";
 
 			[JsonProperty(PropertyName = "series", Required = Required.Always)]
 			internal readonly uint Series;
@@ -32,11 +32,11 @@ namespace BoosterManager {
 			[JsonProperty(PropertyName = "unavailable", Required = Required.DisallowNull)]
 			internal readonly bool Unavailable;
 
-			[JsonProperty(PropertyName = "available_at_time", Required = Required.DisallowNull)]
-			internal readonly DateTime AvailableAtTime;
+			[JsonProperty(PropertyName = "available_at_time", Required = Required.Default)]
+			internal readonly DateTime? AvailableAtTime;
 
 			[JsonConstructor]
-			private BoosterInfo() => Name = "";
+			public BoosterInfo() { }
 		}
 
 		internal sealed class BoostersResponse {
@@ -50,15 +50,15 @@ namespace BoosterManager {
 			internal readonly uint UntradableGooAmount;
 
 			[JsonProperty(PropertyName = "purchase_result", Required = Required.DisallowNull)]
-			internal readonly EResultResponse Result;
+			internal readonly EResultResponse Result = new();
 
 			[JsonProperty(PropertyName = "purchase_eresult", Required = Required.DisallowNull)]
 			internal readonly EResult PurchaseEResult;
 
 			[JsonConstructor]
-			private BoostersResponse() => Result = new EResultResponse();
+			private BoostersResponse() { }
 		}
-
+		
 		internal sealed class MarketListingsResponse {
 			[JsonProperty(PropertyName = "success", Required = Required.Always)]
 			internal readonly bool Success;
@@ -70,7 +70,7 @@ namespace BoosterManager {
 			internal readonly uint TotalCount;
 
 			[JsonProperty(PropertyName = "assets", Required = Required.Always)]
-			internal readonly JObject Assets;
+			internal readonly JToken? Assets;
 
 			[JsonProperty(PropertyName = "start", Required = Required.Always)]
 			internal readonly uint Start;
@@ -78,25 +78,20 @@ namespace BoosterManager {
 			[JsonProperty(PropertyName = "num_active_listings", Required = Required.Always)]
 			internal readonly uint NumActiveListings;
 
-			[JsonProperty(PropertyName = "listings", Required = Required.Always)]
+			[JsonProperty(PropertyName = "listings", Required = Required.AllowNull)]
 			internal readonly JArray? Listings;
 
 			[JsonProperty(PropertyName = "listings_on_hold", Required = Required.Always)]
-			internal readonly JArray ListingsOnHold;
+			internal readonly JArray ListingsOnHold = new();
 
 			[JsonProperty(PropertyName = "listings_to_confirm", Required = Required.Always)]
-			internal readonly JArray ListingsToConfirm;
+			internal readonly JArray ListingsToConfirm = new();
 
 			[JsonProperty(PropertyName = "buy_orders", Required = Required.Always)]
-			internal readonly JArray BuyOrders;
+			internal readonly JArray BuyOrders = new();
 
 			[JsonConstructor]
-			private MarketListingsResponse() {
-				Assets = new JObject();
-				ListingsOnHold = new JArray();
-				ListingsToConfirm = new JArray();
-				BuyOrders = new JArray();
-			}
+			private MarketListingsResponse() { }
 		}
 
 		internal sealed class MarketHistoryResponse {
@@ -113,32 +108,19 @@ namespace BoosterManager {
 			internal readonly uint Start;
 
 			[JsonProperty(PropertyName = "assets", Required = Required.Always)]
-			internal readonly JObject Assets;
+			internal readonly JToken? Assets;
 
 			[JsonProperty(PropertyName = "events", Required = Required.Always)]
-			internal readonly JArray? Events;
+			internal readonly JArray Events = new();
 
 			[JsonProperty(PropertyName = "purchases", Required = Required.Always)]
-			internal readonly JObject Purchases;
+			internal readonly JToken? Purchases;
 
 			[JsonProperty(PropertyName = "listings", Required = Required.Always)]
-			internal readonly JObject Listings;
+			internal readonly JToken? Listings;
 
 			[JsonConstructor]
-			private MarketHistoryResponse() {
-				Assets = new JObject();
-				Events = new JArray();
-				Purchases = new JObject();
-				Listings = new JObject();
-			}
-		}
-
-		internal sealed class DataAPIResponse {
-			[JsonProperty(PropertyName = "success", Required = Required.Always)]
-			internal readonly bool Success;
-
-			[JsonProperty(PropertyName = "message")]
-			internal readonly string? Message;			
+			private MarketHistoryResponse() { }
 		}
 
 		// https://stackoverflow.com/a/51319347
@@ -151,7 +133,7 @@ namespace BoosterManager {
 			};
 			
 			public override bool CanConvert(Type objectType) {
-				return objectType == typeof(DateTime);
+				return objectType == typeof(DateTime?);
 			}
 			
 			public override object ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer) {

@@ -23,6 +23,7 @@ namespace BoosterManager {
 
 			(uint tradable, uint untradable) gems = (0,0);
 			(uint tradable, uint untradable) sacks = (0,0);
+
 			foreach (Asset item in inventory) {
 				switch (item.ClassID, item.Tradable) {
 					case (GemsClassID, true): gems.tradable += item.Amount; break;
@@ -49,10 +50,12 @@ namespace BoosterManager {
 
 			HashSet<string> responses = new HashSet<string>();
 			uint totalGemsTransfered = 0;
+
 			foreach ((Bot reciever, uint amount) in recievers) {
 				sender.ArchiLogger.LogGenericInfo(String.Format("Sending {0} gems to {1}", amount, reciever.BotName));
 				(bool success, string response) = await SendFungibleItems(sender, gemsStacks, reciever, amount, totalGemsTransfered).ConfigureAwait(false);
 				responses.Add(Commands.FormatBotResponse(reciever, response));
+
 				if (success) {
 					sender.ArchiLogger.LogGenericInfo(String.Format("Sent {0} gems to {1}", amount, reciever.BotName));
 					totalGemsTransfered += amount;
@@ -77,26 +80,8 @@ namespace BoosterManager {
 				return (true, "Successfully sent nothing!");
 			}
 
-			HashSet<Asset> itemsToGive = new HashSet<Asset>();	
-			uint amountSent = 0;
-			uint itemCount = 0;
-			foreach (Asset itemStack in itemStacks) {
-				itemCount += itemStack.Amount;
-				uint amountLeftInStack = Math.Min((amountToSkip > itemCount) ? 0 : (itemCount - amountToSkip), itemStack.Amount);
-				if (amountLeftInStack == 0) {
-					continue;
-				}
-
-				uint amountToSendFromStack = Math.Min(Math.Min(itemStack.Amount, amountLeftInStack), amountToSend - amountSent);
-				if (amountToSendFromStack == 0) {
-					break;
-				}
-
-				itemsToGive.Add(new Asset(appID: itemStack.AppID, contextID: itemStack.ContextID, classID: itemStack.ClassID, assetID: itemStack.AssetID, amount: amountToSendFromStack));
-				amountSent += amountToSendFromStack;
-			}
-			if (itemsToGive.Count == 0 || amountSent != amountToSend) {
-				sender.ArchiLogger.LogGenericError(String.Format("Not enough available quantity to complete trade, need {0}, but only {1} are available", amountToSend, amountSent));
+			HashSet<Asset>? itemsToGive = GetItemsFromStacks(sender, itemStacks, amountToSend, amountToSkip);
+			if (itemsToGive == null) {
 				return (false, "Not enough to send!");
 			}
 
@@ -111,6 +96,37 @@ namespace BoosterManager {
 			}
 
 			return (success, success ? Strings.BotLootingSuccess : Strings.BotLootingFailed);
+		}
+
+		private static HashSet<Asset>? GetItemsFromStacks(Bot bot, HashSet<Asset> itemStacks, uint amountToTake, uint amountToSkip) {
+			HashSet<Asset> items = new HashSet<Asset>();	
+			uint amountTaken = 0;
+			uint itemCount = 0;
+
+			foreach (Asset itemStack in itemStacks) {
+				itemCount += itemStack.Amount;
+				
+				uint amountLeftInStack = Math.Min((amountToSkip > itemCount) ? 0 : (itemCount - amountToSkip), itemStack.Amount);
+				if (amountLeftInStack == 0) {
+					continue;
+				}
+
+				uint amountToTakeFromStack = Math.Min(Math.Min(itemStack.Amount, amountLeftInStack), amountToTake - amountTaken);
+				if (amountToTakeFromStack == 0) {
+					break;
+				}
+
+				items.Add(new Asset(appID: itemStack.AppID, contextID: itemStack.ContextID, classID: itemStack.ClassID, assetID: itemStack.AssetID, amount: amountToTakeFromStack));
+				amountTaken += amountToTakeFromStack;
+			}
+
+			if (items.Count == 0 || amountTaken != amountToTake) {
+				bot.ArchiLogger.LogGenericError(String.Format("Not enough available quantity to complete trade, need {0}, but only {1} are available", amountToTake, amountTaken));
+
+				return null;
+			}
+
+			return items;
 		}
 	}
 }

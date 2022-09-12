@@ -12,22 +12,33 @@ namespace BoosterManager {
 		internal static Uri? BoosterDataAPI = null;
 		internal static Uri? MarketListingsAPI = null;
 		internal static Uri? MarketHistoryAPI = null;
-		internal static uint NumMarketHistoryPages = 1; // Number of market history pages to fetch
-		internal static uint MarketHistoryDelay = 5; // Delay, in seconds, between each market history page fetch
+		internal static uint MarketHistoryDelay = 15; // Delay, in seconds, between each market history page fetch
 
-		internal static async Task<string> SendAllData(Bot bot) {
+		internal static async Task<string> SendAllData(Bot bot, uint? numMarketHistoryPages = 1, uint? marketHistoryStartPage = 0) {
+			if (BoosterDataAPI == null && MarketListingsAPI == null && MarketHistoryAPI == null) {
+				return Commands.FormatBotResponse(bot, "API endpoints not defined");
+			}
+
 			List<Task<string?>> tasks = new List<Task<string?>>();
+
 			tasks.Add(SendBoosterData(bot));
 			tasks.Add(SendMarketListings(bot));
-			for (uint page = 0; page < NumMarketHistoryPages; page++) {
-				uint delayInMilliseconds = page * MarketHistoryDelay * 1000;
+
+			numMarketHistoryPages = numMarketHistoryPages ?? 1;
+			marketHistoryStartPage = marketHistoryStartPage ?? 0;
+			uint startPage = marketHistoryStartPage.Value;
+			uint endPage = numMarketHistoryPages.Value + marketHistoryStartPage.Value;
+			
+			for (uint page = startPage; page < endPage; page++) {
+				uint delayInMilliseconds = (page - startPage) * MarketHistoryDelay * 1000;
 				tasks.Add(SendMarketHistory(bot, page, delayInMilliseconds));
 			}
 
 			List<string> responses = (await Task.WhenAll(tasks).ConfigureAwait(false)).WhereNotNull().ToList<string>();
 			if (responses.Count == 0) {
-				return Commands.FormatBotResponse(bot, "API endpoints not defined");
+				return Commands.FormatBotResponse(bot, "No messages to display");
 			}
+			responses.Add("");
 
 			return Commands.FormatBotResponse(bot, String.Join(Environment.NewLine, responses));
 		}
@@ -38,29 +49,33 @@ namespace BoosterManager {
 			}
 
 			if (delayInMilliseconds != 0) {
-				await Task.Delay((int)delayInMilliseconds);
+				await Task.Delay((int)delayInMilliseconds).ConfigureAwait(false);
 			}
 
 			(IDocument? boosterPage, Uri source) = await WebRequest.GetBoosterPage(bot).ConfigureAwait(false);
 
 			if (boosterPage == null) {
-				return "Failed to fetch Booster Data!";
+				return "!Failed to fetch Booster Data!";
 			}
 
 			IEnumerable<Steam.BoosterInfo>? boosterInfos = BoosterQueue.ParseBoosterPage(bot, boosterPage);
 			
 			if (boosterInfos == null) {
-				return "Failed to parse Booster Data!";
+				return "!Failed to parse Booster Data!";
 			}
 
-			(bool success, string? message) = await SendSteamData<IEnumerable<Steam.BoosterInfo>>(BoosterDataAPI, bot, boosterInfos, source).ConfigureAwait(false);
+			SteamDataResponse response = await SendSteamData<IEnumerable<Steam.BoosterInfo>>(BoosterDataAPI, bot, boosterInfos, source).ConfigureAwait(false);
 
-			if (message != null) {
-				return message;
+			if (!response.ShowMessage) {
+				return null;
 			}
 
-			if (!success) {
-				return "API failed to accept Booster Data!";
+			if (response.Message != null) {
+				return response.Message;
+			}
+
+			if (!response.Success) {
+				return "!API failed to accept Booster Data!";
 			}
 
 			return "Successly sent Booster Data";
@@ -72,23 +87,27 @@ namespace BoosterManager {
 			}
 
 			if (delayInMilliseconds != 0) {
-				await Task.Delay((int)delayInMilliseconds);
+				await Task.Delay((int)delayInMilliseconds).ConfigureAwait(false);
 			}
 
 			(Steam.MarketListingsResponse? marketListings, Uri source) = await WebRequest.GetMarketListings(bot).ConfigureAwait(false);
 
 			if (marketListings == null || !marketListings.Success) {
-				return "Failed to fetch Market Listings!";
+				return "!Failed to fetch Market Listings!";
 			}
 			
-			(bool success, string? message) = await SendSteamData<Steam.MarketListingsResponse>(MarketListingsAPI, bot, marketListings, source).ConfigureAwait(false);
+			SteamDataResponse response = await SendSteamData<Steam.MarketListingsResponse>(MarketListingsAPI, bot, marketListings, source).ConfigureAwait(false);
 
-			if (message != null) {
-				return message;
+			if (!response.ShowMessage) {
+				return null;
 			}
 
-			if (!success) {
-				return "API failed to accept Market Listings!";
+			if (response.Message != null) {
+				return response.Message;
+			}
+
+			if (!response.Success) {
+				return "!API failed to accept Market Listings!";
 			}
 
 			return "Successfully sent Market Listings";
@@ -100,7 +119,7 @@ namespace BoosterManager {
 			}
 
 			if (delayInMilliseconds != 0) {
-				await Task.Delay((int)delayInMilliseconds);
+				await Task.Delay((int)delayInMilliseconds).ConfigureAwait(false);
 			}
 
 			uint count = 500;
@@ -108,27 +127,35 @@ namespace BoosterManager {
 			(Steam.MarketHistoryResponse? marketHistory, Uri source) = await WebRequest.GetMarketHistory(bot, start, count).ConfigureAwait(false);
 
 			if (marketHistory == null || !marketHistory.Success) {
-				return String.Format("Failed to fetch Market History (Page {0})!", page + 1);
+				return String.Format("!Failed to fetch Market History (Page {0})!", page + 1);
 			}
 			
-			(bool success, string? message) = await SendSteamData<Steam.MarketHistoryResponse>(MarketHistoryAPI, bot, marketHistory, source).ConfigureAwait(false);
+			SteamDataResponse response = await SendSteamData<Steam.MarketHistoryResponse>(MarketHistoryAPI, bot, marketHistory, source, page + 1).ConfigureAwait(false);
 
-			if (message != null) {
-				return message;
+			if (!response.ShowMessage) {
+				return null;
 			}
 
-			if (!success) {
-				return String.Format("API failed to accept Market History (Page {0})!", page + 1);
+			if (response.Message != null) {
+				return response.Message;
+			}
+
+			if (!response.Success) {
+				return String.Format("!API failed to accept Market History (Page {0})!", page + 1);
 			}
 
 			return String.Format("Successfully sent Market History (Page {0})", page + 1);
 		}
 
-		private static async Task<(bool, string?)> SendSteamData<T>(Uri request, Bot bot, T steamData, Uri source) {
-			SteamData<T> data = new SteamData<T>(bot, steamData, source);
-			ObjectResponse<Steam.DataAPIResponse>? response = await bot.ArchiWebHandler.WebBrowser.UrlPostToJsonObject<Steam.DataAPIResponse, SteamData<T>>(request, data: data).ConfigureAwait(false);
+		private static async Task<SteamDataResponse> SendSteamData<T>(Uri request, Bot bot, T steamData, Uri source, uint? page = null) {
+			SteamData<T> data = new SteamData<T>(bot, steamData, source, page);
+			ObjectResponse<SteamDataResponse>? response = await bot.ArchiWebHandler.WebBrowser.UrlPostToJsonObject<SteamDataResponse, SteamData<T>>(request, data: data).ConfigureAwait(false);
 
-			return (response?.Content?.Success ?? false, response?.Content?.Message);
+			if (response == null || response.Content == null) {
+				return new SteamDataResponse();
+			}
+
+			return response.Content;
 		}
 	}
 }

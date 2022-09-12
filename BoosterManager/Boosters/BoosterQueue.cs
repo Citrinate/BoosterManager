@@ -79,12 +79,7 @@ namespace BoosterManager {
 				}
 
 				Bot.ArchiLogger.LogGenericInfo(String.Format("Successfuly created booster from {0}", booster.GameID));
-				if (IsFinished(booster.Type)) {
-					if (booster.Type == BoosterType.OneTime) {
-						BoosterHandler.PerpareStatusReport(String.Format("Finished crafting {0} boosters!", GetNumBoosters(BoosterType.OneTime)));
-					}
-					ClearCraftedBoosters(booster.Type);
-
+				if (CheckIfFinished(booster.Type)) {
 					return;
 				}
 
@@ -217,18 +212,23 @@ namespace BoosterManager {
 			// Sometimes Steam will falsely report that an attempt to craft a booster failed, when it really didn't. It could also happen that the user crafted the booster on their own.
 			// For any error we get, we'll need to refresh the booster page and see if the AvailableAtTime has changed to determine if we really failed to craft
 			void handler() {
-				if (BoosterInfos.TryGetValue(booster.GameID, out Steam.BoosterInfo? boosterInfo)) {
-					if (boosterInfo.Unavailable 
-						&& boosterInfo.AvailableAtTime != booster.Info.AvailableAtTime
-						&& (boosterInfo.AvailableAtTime - booster.Info.AvailableAtTime).Duration().Hours > 2 // Make sure the change in time isn't due to daylight savings
+				if (BoosterInfos.TryGetValue(booster.GameID, out Steam.BoosterInfo? newBoosterInfo)) {
+					if (newBoosterInfo.Unavailable && newBoosterInfo.AvailableAtTime != null
+						&& newBoosterInfo.AvailableAtTime != booster.Info.AvailableAtTime
+						&& (
+							booster.Info.AvailableAtTime == null
+							|| (newBoosterInfo.AvailableAtTime.Value - booster.Info.AvailableAtTime.Value).Duration().Hours > 2 // Make sure the change in time isn't due to daylight savings
+						)
 					) {
 						Bot.ArchiLogger.LogGenericInfo(String.Format("Booster from {0} was recently created either by us or by user", booster.GameID));
 						booster.WasCrafted = true;
+						CheckIfFinished(booster.Type);
 					}
 				} else {
 					// No longer have access to craft boosters for this game (game removed from account, or sometimes due to very rare Steam bugs)
 					BoosterHandler.PerpareStatusReport(String.Format("No longer able to craft boosters from {0} ({1})", booster.Info.Name, booster.GameID));
 					RemoveBooster(booster.GameID);
+					CheckIfFinished(booster.Type);
 				}
 				OnBoosterInfosUpdated -= handler;
 			}
@@ -246,6 +246,20 @@ namespace BoosterManager {
 			}
 
 			return uncraftedBoosters.MinBy(booster => booster.GetAvailableAtTime());
+		}
+
+		internal bool CheckIfFinished(BoosterType type) {
+			bool doneCrafting = GetNumBoosters(type, wasCrafted: true) > 0 && GetNumBoosters(type, wasCrafted: false) == 0;
+			if (!doneCrafting) {
+				return false;
+			}
+
+			if (type == BoosterType.OneTime) {
+				BoosterHandler.PerpareStatusReport(String.Format("Finished crafting {0} boosters!", GetNumBoosters(BoosterType.OneTime)));
+			}
+			ClearCraftedBoosters(type);
+
+			return true;
 		}
 
 		private void ClearCraftedBoosters(BoosterType type) {
@@ -282,10 +296,8 @@ namespace BoosterManager {
 					}
 				}
 			}
-			if (IsFinished(BoosterType.OneTime)) {
-				BoosterHandler.PerpareStatusReport(String.Format("Finished crafting {0} boosters!", GetNumBoosters(BoosterType.OneTime)));
-				ClearCraftedBoosters(BoosterType.OneTime);
-			}
+			CheckIfFinished(BoosterType.OneTime);
+			CheckIfFinished(BoosterType.Permanent);
 
 			return removedGameIDs;
 		}
@@ -340,7 +352,6 @@ namespace BoosterManager {
 		private HashSet<uint> GetBoosterIDs(BoosterType type, bool? wasCrafted = null) => GetBoosters(type, wasCrafted).Select(booster => booster.GameID).ToHashSet<uint>();
 		private int GetNumBoosters(BoosterType type, bool? wasCrafted = null) => GetBoosters(type, wasCrafted).Count;
 		private int GetGemsNeeded(BoosterType type, bool? wasCrafted = null) => GetBoosters(type, wasCrafted).Sum(booster => (int) booster.Info.Price);
-		private bool IsFinished(BoosterType type) => GetNumBoosters(type, wasCrafted: true) > 0 && GetNumBoosters(type, wasCrafted: false) == 0;
 		private void ForceUpdateBoosterInfos() => OnBoosterInfosUpdated -= ForceUpdateBoosterInfos;
 		private static int GetMillisecondsFromNow(DateTime then) => Math.Max(0, (int) (then - DateTime.Now).TotalMilliseconds);
 		private void UpdateTimer(DateTime then) => Timer.Change(GetMillisecondsFromNow(then), Timeout.Infinite);
