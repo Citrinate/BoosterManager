@@ -8,10 +8,17 @@ using ArchiSteamFarm.Web.Responses;
 
 namespace BoosterManager {
 	internal static class WebRequest {
-		internal static async Task<(IDocument?, Uri)> GetBoosterPage(Bot bot) {
+		internal static async Task<(BoosterPageResponse?, Uri)> GetBoosterPage(Bot bot) {
 			Uri request = new(ArchiWebHandler.SteamCommunityURL, "/tradingcards/boostercreator?l=english");
-			HtmlDocumentResponse? boosterPageResponse = await bot.ArchiWebHandler.UrlGetToHtmlDocumentWithSession(request).ConfigureAwait(false);
-			return (boosterPageResponse?.Content, request);
+			HtmlDocumentResponse? boosterPage = await bot.ArchiWebHandler.UrlGetToHtmlDocumentWithSession(request).ConfigureAwait(false);
+
+			try {
+				BoosterPageResponse boosterPageResponse = new BoosterPageResponse(bot, boosterPage?.Content);
+
+				return (boosterPageResponse, request);
+			} catch (Exception) {
+				return (null, request);
+			}
 		}
 
 		internal static async Task<Steam.BoostersResponse?> CreateBooster(Bot bot, uint appID, uint series, TradabilityPreference nTradabilityPreference) {

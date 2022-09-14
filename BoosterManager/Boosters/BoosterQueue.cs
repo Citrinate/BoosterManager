@@ -139,57 +139,22 @@ namespace BoosterManager {
 				return true;
 			}
 
-			(IDocument? boosterPage, _) = await WebRequest.GetBoosterPage(Bot).ConfigureAwait(false);
+			(BoosterPageResponse? boosterPage, _) = await WebRequest.GetBoosterPage(Bot).ConfigureAwait(false);
 			if (boosterPage == null) {
 				Bot.ArchiLogger.LogNullError(boosterPage);
 
 				return false;
 			}
 
-			IEnumerable<Steam.BoosterInfo>? enumerableBoosters = ParseBoosterPage(Bot, boosterPage, this);
-			if (enumerableBoosters == null) {
-				Bot.ArchiLogger.LogNullError(enumerableBoosters);
+			GooAmount = boosterPage.GooAmount;
+			TradableGooAmount = boosterPage.TradableGooAmount;
+			UntradableGooAmount = boosterPage.UntradableGooAmount;
+			BoosterInfos = boosterPage.BoosterInfos.ToDictionary(boosterInfo => boosterInfo.AppID);
 
-				return false;
-			}
-
-			BoosterInfos = enumerableBoosters.ToDictionary(boosterInfo => boosterInfo.AppID);
 			Bot.ArchiLogger.LogGenericInfo("BoosterInfos updated");
 			OnBoosterInfosUpdated?.Invoke();
 
 			return true;
-		}
-
-		internal static IEnumerable<Steam.BoosterInfo>? ParseBoosterPage(Bot bot, IDocument boosterPage, BoosterQueue? boosterQueue = null) {
-			MatchCollection gooAmounts = Regex.Matches(boosterPage.Source.Text, "(?<=parseFloat\\( \")[0-9]+");
-			Match info = Regex.Match(boosterPage.Source.Text, "\\[\\{\"[\\s\\S]*\"}]");
-			if (!info.Success || (gooAmounts.Count != 3)) {
-				bot.ArchiLogger.LogGenericError(string.Format(Strings.ErrorParsingObject, boosterPage));
-
-				return null;
-			}
-
-			if (boosterQueue != null) {
-				boosterQueue.GooAmount = uint.Parse(gooAmounts[0].Value);
-				boosterQueue.TradableGooAmount = uint.Parse(gooAmounts[1].Value);
-				boosterQueue.UntradableGooAmount = uint.Parse(gooAmounts[2].Value);
-			}
-
-			IEnumerable<Steam.BoosterInfo>? enumerableBoosters;
-			try {
-				enumerableBoosters = JsonConvert.DeserializeObject<IEnumerable<Steam.BoosterInfo>>(info.Value, new Steam.BoosterInfoDateConverter());
-			} catch (JsonException ex) {
-				bot.ArchiLogger.LogGenericError(ex.Message);
-
-				return null;
-			}
-			if (enumerableBoosters == null) {
-				bot.ArchiLogger.LogNullError(enumerableBoosters);
-
-				return null;
-			}
-
-			return enumerableBoosters;
 		}
 
 		private async Task<Boolean> CraftBooster(Booster booster) {

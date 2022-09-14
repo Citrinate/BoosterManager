@@ -52,19 +52,13 @@ namespace BoosterManager {
 				await Task.Delay((int)delayInMilliseconds).ConfigureAwait(false);
 			}
 
-			(IDocument? boosterPage, Uri source) = await WebRequest.GetBoosterPage(bot).ConfigureAwait(false);
+			(BoosterPageResponse? boosterPage, Uri source) = await WebRequest.GetBoosterPage(bot).ConfigureAwait(false);
 
 			if (boosterPage == null) {
 				return "!Failed to fetch Booster Data!";
 			}
 
-			IEnumerable<Steam.BoosterInfo>? boosterInfos = BoosterQueue.ParseBoosterPage(bot, boosterPage);
-			
-			if (boosterInfos == null) {
-				return "!Failed to parse Booster Data!";
-			}
-
-			SteamDataResponse response = await SendSteamData<IEnumerable<Steam.BoosterInfo>>(BoosterDataAPI, bot, boosterInfos, source).ConfigureAwait(false);
+			SteamDataResponse response = await SendSteamData<IEnumerable<Steam.BoosterInfo>>(BoosterDataAPI, bot, boosterPage.BoosterInfos, source).ConfigureAwait(false);
 
 			if (!response.ShowMessage) {
 				return null;
