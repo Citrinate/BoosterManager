@@ -2,13 +2,9 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using AngleSharp.Dom;
-using ArchiSteamFarm.Localization;
 using ArchiSteamFarm.Steam;
-using Newtonsoft.Json;
 
 namespace BoosterManager {
 	internal sealed class BoosterQueue : IDisposable {
@@ -61,6 +57,7 @@ namespace BoosterManager {
 			if (booster == null) {
 				return;
 			}
+			
 			if (DateTime.Now >= booster.GetAvailableAtTime().AddSeconds(BoosterDelay)) {
 				if (booster.Info.Price > GooAmount) {
 					BoosterHandler.PerpareStatusReport(String.Format("{0:N0} more gems are needed to finish crafting boosters. Crafting will resume when more gems are available.", GetGemsNeeded(BoosterType.Any, wasCrafted: false) - GooAmount), suppressDuplicateMessages: true);

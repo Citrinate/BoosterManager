@@ -25,6 +25,8 @@ namespace BoosterManager {
 			// "LOGLISTINGS"
 			// "LOGHISTORY"
 			// "LISTINGS"
+			// "TRANSFERFOILS"
+			// "TRANSFERCARDS"
 			switch (args.Length) {
 				case 1:
 					switch (args[0].ToUpperInvariant()) {
