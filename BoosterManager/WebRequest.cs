@@ -41,11 +41,9 @@ namespace BoosterManager {
 			return createBoosterResponse?.Content;
 		}
 
-		internal static async Task<(Steam.MarketListingsResponse?, Uri)> GetMarketListings(Bot bot) {
-			// The "listings" field returned here (the account's active sell orders) is paginated. The limits of the pagination can be stretched by setting the count to -1.  
-			// A Github search suggests this will return as many as 1000 results instead of the standard 100. In my testing I got as high as 1804, seemingly without issue.
-			// I don't intend to implement a way to fetch any/all of the pages however, as I personally don't use this field, and beacuse it can be reproduced using the market history.
-			Uri request = new(ArchiWebHandler.SteamCommunityURL, "/market/mylistings?norender=1");
+		internal static async Task<(Steam.MarketListingsResponse?, Uri)> GetMarketListings(Bot bot, uint start = 0, int count = 0) {
+			count = Math.Min(count, 100);
+			Uri request = new(ArchiWebHandler.SteamCommunityURL, String.Format("/market/mylistings?norender=1&start={0}&count={1}", start, count));
 			ObjectResponse<Steam.MarketListingsResponse>? marketListingsResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<Steam.MarketListingsResponse>(request).ConfigureAwait(false);
 			return (marketListingsResponse?.Content, request);
 		}

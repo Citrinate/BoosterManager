@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using ArchiSteamFarm.Localization;
 using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Steam.Data;
-using ArchiSteamFarm.Steam.Security;
 
 namespace BoosterManager {
 	internal static class GemHandler {

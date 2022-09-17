@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Web.Responses;
+using Newtonsoft.Json.Linq;
 using Nito.Disposables.Internals;
 
 namespace BoosterManager {
@@ -83,6 +84,8 @@ namespace BoosterManager {
 				await Task.Delay((int)delayInMilliseconds).ConfigureAwait(false);
 			}
 
+			// The "listings" field returned here is paginated, though I don't intend to add pagination features here.
+			// Because I personally don't use this field, but also beacuse it can be reproduced using the market history.
 			(Steam.MarketListingsResponse? marketListings, Uri source) = await WebRequest.GetMarketListings(bot).ConfigureAwait(false);
 
 			if (marketListings == null || !marketListings.Success) {
@@ -149,6 +152,106 @@ namespace BoosterManager {
 			}
 
 			return response.Content;
+		}
+
+		internal static async Task<string> GetListings(Bot bot) {
+			uint? listingsValue = await GetMarketListingsValue(bot).ConfigureAwait(false);
+
+			if (listingsValue == null) {
+				return "Failed to load Market Listings";
+			}
+
+			return Commands.FormatBotResponse(bot, String.Format("Listings: {0:#,#0.00} {1}", listingsValue / 100.0, bot.WalletCurrency.ToString()));
+		}
+
+		internal static async Task<string> GetValue(Bot bot, uint subtractFrom = 0) {
+			uint? listingsValue = await GetMarketListingsValue(bot).ConfigureAwait(false);
+
+			if (listingsValue == null) {
+				return "Failed to load Market Listings";
+			}
+
+			if (subtractFrom != 0) {
+				return Commands.FormatBotResponse(bot, String.Format("Remaining: {0:#,#0.00} {1}", subtractFrom - ((listingsValue + bot.WalletBalance) / 100.0), bot.WalletCurrency.ToString()));
+			}
+
+			return Commands.FormatBotResponse(bot, String.Format("Value: {0:#,#0.00} {1}", (listingsValue + bot.WalletBalance) / 100.0, bot.WalletCurrency.ToString()));
+		}
+
+		private static async Task<uint?> GetMarketListingsValue(Bot bot) {
+			Dictionary<ulong, JObject>? listings = await GetFullMarketListings(bot).ConfigureAwait(false);
+
+			if (listings == null) {
+				return null;
+			}
+
+			uint listingsValue = 0;
+			foreach (JObject listing in listings.Values) {
+				JProperty? price = listing.Property("price");
+				if (price == null) {
+					bot.ArchiLogger.LogNullError(price);
+
+					return null;
+				}
+
+				JProperty? fee = listing.Property("fee");
+				if (fee == null) {
+					bot.ArchiLogger.LogNullError(fee);
+
+					return null;
+				}
+
+				listingsValue += (price.Value.ToObject<uint>() - fee.Value.ToObject<uint>());
+			}
+
+			return listingsValue;
+		}
+
+		private static async Task<Dictionary<ulong, JObject>?> GetFullMarketListings(Bot bot) {
+			Dictionary<ulong, JObject>? listings = null;
+			uint totalListings = 0;
+			uint listingsCollected = 0;
+			do {
+				// Normally, the maximum count here is 100, but we can use -1 to return many more than that
+				(Steam.MarketListingsResponse? marketListings, _) = await WebRequest.GetMarketListings(bot, listingsCollected, -1).ConfigureAwait(false);
+
+				if (marketListings == null || !marketListings.Success) {
+					return null;
+				}
+
+				if (marketListings.Listings == null) {
+					// This happens when our start is higher than the number of listings available
+					// This should mean that, unexpectedly, we're finished
+					break;
+				}
+
+				if (marketListings.Listings.GetType() != typeof(JArray)) {
+					bot.ArchiLogger.LogGenericError(String.Format("Unexpected listings type: {0}", marketListings.Listings.GetType()));
+
+					return null;
+				}
+
+				totalListings = marketListings.NumActiveListings;
+
+				if (listings == null) {
+					listings = new Dictionary<ulong, JObject>((int)totalListings);
+				}
+
+				foreach (JObject listing in marketListings.Listings) {
+					JProperty? listingid = listing.Property("listingid");
+					if (listingid == null) {
+						bot.ArchiLogger.LogNullError(listingid);
+						
+						return null;
+					}
+					
+					if (listings.TryAdd(listingid.Value.ToObject<ulong>(), listing)) {
+						listingsCollected++;
+					}
+				}
+			} while (listingsCollected < totalListings);
+
+			return listings;
 		}
 	}
 }

@@ -64,7 +64,7 @@ namespace BoosterManager {
 			internal readonly bool Success;
 
 			[JsonProperty(PropertyName = "pagesize", Required = Required.Always)]
-			internal readonly uint PageSize;
+			internal readonly int PageSize;
 
 			[JsonProperty(PropertyName = "total_count", Required = Required.Always)]
 			internal readonly uint TotalCount;
