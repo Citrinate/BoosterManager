@@ -17,6 +17,7 @@ namespace BoosterManager {
 		private string LastResponse = "";
 		internal static ConcurrentDictionary<string, BoosterHandler> BoosterHandlers = new();
 		private static int DelayBetweenBots = 0; // Delay, in minutes, between when bots will craft boosters
+		internal static bool AllowCraftUntradableBoosters = true;
 
 		internal BoosterHandler(Bot bot) {
 			Bot = bot ?? throw new ArgumentNullException(nameof(bot));

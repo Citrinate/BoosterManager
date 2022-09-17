@@ -26,10 +26,13 @@ namespace BoosterManager {
 				return Task.FromResult(0);
 			}
 
-			// TODO: bool "AllowCraftUntradableBoosters".  Default to true.  If false, don't use untradable gems to craft boosters
-
 			foreach (KeyValuePair<string, JToken> configProperty in additionalConfigProperties) {
 				switch (configProperty.Key) {
+					case "AllowCraftUntradableBoosters" when configProperty.Value.Type == JTokenType.Boolean: {
+						ASF.ArchiLogger.LogGenericInfo("Allow Craft Untradable Boosters : " + configProperty.Value);
+						BoosterHandler.AllowCraftUntradableBoosters = configProperty.Value.ToObject<bool>();
+						break;
+					}
 					case "BoosterDelayBetweenBots" when configProperty.Value.Type == JTokenType.Integer: {
 						ASF.ArchiLogger.LogGenericInfo("Booster Delay Between Bots : " + configProperty.Value);
 						BoosterHandler.UpdateBotDelays((int)configProperty.Value.ToObject<uint>());

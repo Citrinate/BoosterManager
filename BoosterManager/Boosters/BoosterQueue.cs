@@ -59,8 +59,8 @@ namespace BoosterManager {
 			}
 			
 			if (DateTime.Now >= booster.GetAvailableAtTime().AddSeconds(BoosterDelay)) {
-				if (booster.Info.Price > GooAmount) {
-					BoosterHandler.PerpareStatusReport(String.Format("{0:N0} more gems are needed to finish crafting boosters. Crafting will resume when more gems are available.", GetGemsNeeded(BoosterType.Any, wasCrafted: false) - GooAmount), suppressDuplicateMessages: true);
+				if (booster.Info.Price > GetAvailableGems()) {
+					BoosterHandler.PerpareStatusReport(String.Format("{0:N0} more gems are needed to finish crafting boosters. Crafting will resume when more gems are available.", GetGemsNeeded(BoosterType.Any, wasCrafted: false) - GetAvailableGems()), suppressDuplicateMessages: true);
 					OnBoosterInfosUpdated += ForceUpdateBoosterInfos;
 					UpdateTimer(DateTime.Now.AddMinutes(GetNumBoosters(BoosterType.OneTime) > 0 ? 1 : 15));
 
@@ -156,7 +156,9 @@ namespace BoosterManager {
 
 		private async Task<Boolean> CraftBooster(Booster booster) {
 			TradabilityPreference nTp;
-			if (UntradableGooAmount > 0) {
+			if (!BoosterHandler.AllowCraftUntradableBoosters) {
+				nTp = TradabilityPreference.Tradable;
+			} else if (UntradableGooAmount > 0) {
 				nTp = TradableGooAmount >= booster.Info?.Price ? TradabilityPreference.Tradable : TradabilityPreference.Untradable;
 			} else {
 				nTp = TradabilityPreference.Default;
@@ -284,13 +286,13 @@ namespace BoosterManager {
 			}
 
 			HashSet<string> responses = new HashSet<string>();
-			if (GetGemsNeeded(BoosterType.Any, wasCrafted: false) > GooAmount) {
+			if (GetGemsNeeded(BoosterType.Any, wasCrafted: false) > GetAvailableGems()) {
 				responses.Add("Not enough gems!");
-				if (nextBooster.Info.Price > GooAmount) {
-					responses.Add(String.Format("Need {0:N0} more gems for the next booster!", nextBooster.Info.Price - GooAmount));
+				if (nextBooster.Info.Price > GetAvailableGems()) {
+					responses.Add(String.Format("Need {0:N0} more gems for the next booster!", nextBooster.Info.Price - GetAvailableGems()));
 				}
 				if (GetNumBoosters(BoosterType.Any, wasCrafted: false) > 1) {
-					responses.Add(String.Format("Need {0:N0} more gems to finish all boosters!", GetGemsNeeded(BoosterType.Any, wasCrafted: false) - GooAmount));
+					responses.Add(String.Format("Need {0:N0} more gems to finish all boosters!", GetGemsNeeded(BoosterType.Any, wasCrafted: false) - GetAvailableGems()));
 				}
 			}
 			if (GetNumBoosters(BoosterType.OneTime) > 0) {
@@ -317,5 +319,6 @@ namespace BoosterManager {
 		private void ForceUpdateBoosterInfos() => OnBoosterInfosUpdated -= ForceUpdateBoosterInfos;
 		private static int GetMillisecondsFromNow(DateTime then) => Math.Max(0, (int) (then - DateTime.Now).TotalMilliseconds);
 		private void UpdateTimer(DateTime then) => Timer.Change(GetMillisecondsFromNow(then), Timeout.Infinite);
+		private uint GetAvailableGems() => BoosterHandler.AllowCraftUntradableBoosters ? GooAmount : TradableGooAmount;
 	}
 }
