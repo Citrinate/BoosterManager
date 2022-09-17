@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Steam;
+using ArchiSteamFarm.Steam.Data;
 using ArchiSteamFarm.Steam.Integration;
 using ArchiSteamFarm.Web.Responses;
 
@@ -53,6 +54,24 @@ namespace BoosterManager {
 			Uri request = new(ArchiWebHandler.SteamCommunityURL, String.Format("/market/myhistory?norender=1&start={0}&count={1}", start, count));
 			ObjectResponse<Steam.MarketHistoryResponse>? marketHistoryResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<Steam.MarketHistoryResponse>(request).ConfigureAwait(false);
 			return (marketHistoryResponse?.Content, request);
+		}
+
+		internal static async Task<Steam.ExchangeGooResponse?> UnpackGems(Bot bot, ulong assetID, uint amount) {
+			Uri request = new(ArchiWebHandler.SteamCommunityURL, String.Format("/profiles/{0}/ajaxexchangegoo", bot.SteamID));
+
+			// Extra entry for sessionID
+			Dictionary<string, string> data = new(7) {
+				{ "appid", Asset.SteamAppID.ToString() },
+				{ "assetid", assetID.ToString() },
+				{ "goo_denomination_in", "1000" },
+				{ "goo_amount_in", amount.ToString() },
+				{ "goo_denomination_out", "1" },
+				{ "goo_amount_out_expected", (amount * 1000).ToString() }
+			};
+
+			ObjectResponse<Steam.ExchangeGooResponse>? unpackBoostersResponse = await bot.ArchiWebHandler.UrlPostToJsonObjectWithSession<Steam.ExchangeGooResponse>(request, data: data).ConfigureAwait(false);
+
+			return unpackBoostersResponse?.Content;
 		}
 	}
 }

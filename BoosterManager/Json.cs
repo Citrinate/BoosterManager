@@ -123,6 +123,14 @@ namespace BoosterManager {
 			private MarketHistoryResponse() { }
 		}
 
+		internal sealed class ExchangeGooResponse {
+			[JsonProperty(PropertyName = "success", Required = Required.Always)]
+			internal readonly bool Success;
+
+			[JsonConstructor]
+			private ExchangeGooResponse() { }
+		}
+
 		// https://stackoverflow.com/a/51319347
 		internal sealed class BoosterInfoDateConverter : JsonConverter {
 			private List<string> DateTimeFormats = new List<string>() {

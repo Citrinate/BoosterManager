@@ -37,5 +37,29 @@ namespace BoosterManager {
 				(gems.untradable + sacks.untradable) == 0 ? "" : String.Format("; Untradable: {0:N0}{1}", gems.untradable, sacks.untradable == 0 ? "" : String.Format(" (+{0:N0} Sacks)", sacks.untradable))
 			));
 		}
+
+		internal static async Task<string> UnpackGems(Bot bot) {
+			HashSet<Asset> sacks;
+			try {
+				sacks = await bot.ArchiWebHandler.GetInventoryAsync().Where(item => item.ClassID == SackOfGemsClassID && (BoosterHandler.AllowCraftUntradableBoosters || item.Tradable)).ToHashSetAsync().ConfigureAwait(false);
+			} catch (Exception e) {
+				bot.ArchiLogger.LogGenericException(e);
+				return Commands.FormatBotResponse(bot, Strings.WarningFailed);
+			}
+
+			if (sacks.Count == 0) {
+				return Commands.FormatBotResponse(bot, "No gems to unpack");
+			}
+
+			foreach (Asset sack in sacks) {
+				Steam.ExchangeGooResponse? response = await WebRequest.UnpackGems(bot, sack.AssetID, sack.Amount);
+
+				if (response == null || !response.Success) {
+					return Commands.FormatBotResponse(bot, Strings.WarningFailed);
+				}
+			}
+
+			return Commands.FormatBotResponse(bot, Strings.Success);
+		}
 	}
 }

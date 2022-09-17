@@ -45,6 +45,8 @@ namespace BoosterManager {
 							return await ResponseSendItems(bot, access, KeyHandler.KeyAppID, KeyHandler.KeyContextID, KeyHandler.KeyType, KeyHandler.KeyClassID).ConfigureAwait(false);
 						case "LOOTSACKS" or "LOOTSACK":
 							return await ResponseSendItems(bot, access, Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.SteamGems, GemHandler.SackOfGemsClassID).ConfigureAwait(false);
+						case "UNPACKGEMS":
+							return await ResponseUnpackGems(bot, access).ConfigureAwait(false);
 						case "VALUE":
 							return await ResponseValue(bot, access).ConfigureAwait(false);
 						default:
@@ -108,6 +110,8 @@ namespace BoosterManager {
 							return await ResponseSendItemsWithAmounts(bot, access, args[1], args[2], KeyHandler.KeyAppID, KeyHandler.KeyContextID, KeyHandler.KeyType, KeyHandler.KeyClassID).ConfigureAwait(false);
 						case ("TRANSFERSACKS" or "TRANSFERSACK") when args.Length > 2:
 							return await ResponseSendItems(access, steamID, args[1], Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.SteamGems, GemHandler.SackOfGemsClassID, recieverBotName: args[2]).ConfigureAwait(false);
+						case "UNPACKGEMS":
+							return await ResponseUnpackGems(access, steamID, Utilities.GetArgsAsText(args, 1, ",")).ConfigureAwait(false);
 						case "VALUE" when args.Length > 2:
 							return await ResponseValue(access, steamID, args[1], args[2]).ConfigureAwait(false);
 						case "VALUE":
@@ -551,6 +555,36 @@ namespace BoosterManager {
 			}
 
 			return await ResponseSendItemsWithAmounts(sender, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(sender, access, steamID), botNames, amountsString, appID, contextID, type, classID, allowUnmarketable).ConfigureAwait(false);
+		}
+
+		private static async Task<string?> ResponseUnpackGems(Bot bot, EAccess access) {
+			if (access < EAccess.Master) {
+				return null;
+			}
+
+			if (!bot.IsConnectedAndLoggedOn) {
+				return FormatBotResponse(bot, Strings.BotNotConnected);
+			}
+
+			return await GemHandler.UnpackGems(bot).ConfigureAwait(false);
+		}
+
+		private static async Task<string?> ResponseUnpackGems(EAccess access, ulong steamID, string botNames) {
+			if (String.IsNullOrEmpty(botNames)) {
+				throw new ArgumentNullException(nameof(botNames));
+			}
+
+			HashSet<Bot>? bots = Bot.GetBots(botNames);
+
+			if ((bots == null) || (bots.Count == 0)) {
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
+			}
+
+			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseUnpackGems(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)))).ConfigureAwait(false);
+
+			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
+
+			return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
 		}
 
 		private static async Task<string?> ResponseValue(Bot bot, EAccess access, string? subtractFromAsText = null) {
