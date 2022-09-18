@@ -14,10 +14,6 @@ namespace BoosterManager {
 				return null;
 			}
 
-			// TODO:
-			// "LOGBOOSTERS"
-			// "LOGLISTINGS"
-			// "LOGHISTORY"
 			switch (args.Length) {
 				case 1:
 					switch (args[0].ToUpperInvariant()) {

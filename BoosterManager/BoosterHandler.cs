@@ -19,8 +19,8 @@ namespace BoosterManager {
 		private static int DelayBetweenBots = 0; // Delay, in minutes, between when bots will craft boosters
 		internal static bool AllowCraftUntradableBoosters = true;
 
-		internal BoosterHandler(Bot bot) {
-			Bot = bot ?? throw new ArgumentNullException(nameof(bot));
+		private BoosterHandler(Bot bot) {
+			Bot = bot;
 			BoosterQueue = new BoosterQueue(Bot, this);
 			RespondingBot = bot;
 			RecipientSteamID = Bot.Actions.GetFirstSteamMasterID();
@@ -46,14 +46,17 @@ namespace BoosterManager {
 				return;
 			}
 
+			// This assumes that the same bots will be used all of the time, with the same names, and all boosters will be 
+			// crafted when they're scheduled to be crafted (no unexpected delays due to Steam downtime or insufficient gems).  
+			// If all of these things are true then BoosterDelayBetweenBots should work as it's described in the README.  If these 
+			// assumptions are not met, then the delay between bots might become lower than intended, but it should never be higher
+			// I don't intend to fix this.
+			// A workaround for users caught in an undesirable state is to let the 24-hour cooldown on all of their boosters expire.
+
 			DelayBetweenBots = delayInSeconds ?? DelayBetweenBots;
 			List<string> botNames = BoosterHandlers.Keys.ToList<string>();
 			botNames.Sort();
 			foreach (KeyValuePair<string, BoosterHandler> kvp in BoosterHandlers) {
-				// TODO: Need to figure out a better way to implement these kinds of delays
-				// Because of the 24 hour cooldown, any delay will carry over from one day to the next. With a delay of 1 minute, on day one we'll correctly delay for 1 minute.
-				// If two bots were going to craft a booster at say, 12:00; one will craft at 12:00 and the next at 12:01. On day two however, we'll add another 1 minute delay.
-				// The first bot will still craft at 12:00, but the second will now craft at 12:02, and the difference between them will keep drifting apart.
 				int index = botNames.IndexOf(kvp.Key);
 				kvp.Value.BoosterQueue.BoosterDelay = DelayBetweenBots * index;
 			}

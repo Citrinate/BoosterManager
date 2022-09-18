@@ -43,7 +43,7 @@ namespace BoosterManager {
 			return Commands.FormatBotResponse(bot, String.Join(Environment.NewLine, responses));
 		}
 
-		internal static async Task<string?> SendBoosterData(Bot bot, uint delayInMilliseconds = 0) {
+		private static async Task<string?> SendBoosterData(Bot bot, uint delayInMilliseconds = 0) {
 			if (BoosterDataAPI == null) {
 				return null;
 			}
@@ -75,7 +75,7 @@ namespace BoosterManager {
 			return "Successly sent Booster Data";
 		}
 
-		internal static async Task<string?> SendMarketListings(Bot bot, uint delayInMilliseconds = 0) {
+		private static async Task<string?> SendMarketListings(Bot bot, uint delayInMilliseconds = 0) {
 			if (MarketListingsAPI == null) {
 				return null;
 			}
@@ -109,7 +109,7 @@ namespace BoosterManager {
 			return "Successfully sent Market Listings";
 		}
 
-		internal static async Task<string?> SendMarketHistory(Bot bot, uint page = 0, uint delayInMilliseconds = 0) {
+		private static async Task<string?> SendMarketHistory(Bot bot, uint page = 0, uint delayInMilliseconds = 0) {
 			if (MarketHistoryAPI == null) {
 				return null;
 			}
@@ -207,11 +207,15 @@ namespace BoosterManager {
 			return listingsValue;
 		}
 
-		private static async Task<Dictionary<ulong, JObject>?> GetFullMarketListings(Bot bot) {
+		private static async Task<Dictionary<ulong, JObject>?> GetFullMarketListings(Bot bot, uint delayInMilliseconds = 5000) {
 			Dictionary<ulong, JObject>? listings = null;
 			uint totalListings = 0;
 			uint listingsCollected = 0;
 			do {
+				if (listingsCollected > 0 && delayInMilliseconds != 0) {
+					await Task.Delay((int)delayInMilliseconds).ConfigureAwait(false);
+				}
+
 				// Normally, the maximum count here is 100, but we can use -1 to return many more than that
 				(Steam.MarketListingsResponse? marketListings, _) = await WebRequest.GetMarketListings(bot, listingsCollected, -1).ConfigureAwait(false);
 

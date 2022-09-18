@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using ArchiSteamFarm.Localization;
 using ArchiSteamFarm.Steam;
 
 namespace BoosterManager {
@@ -18,6 +19,7 @@ namespace BoosterManager {
 		private uint UntradableGooAmount = 0;
 		private const int MinDelayBetweenBoosters = 5; // Minimum delay, in seconds, between booster crafts
 		internal int BoosterDelay = 0; // Delay, in seconds, added to all booster crafts
+		private readonly BoosterDatabase BoosterDatabase;
 		internal event Action? OnBoosterInfosUpdated;
 
 		internal BoosterQueue(Bot bot, BoosterHandler boosterHandler) {
@@ -29,6 +31,17 @@ namespace BoosterManager {
 				Timeout.Infinite, 
 				Timeout.Infinite
 			);
+
+			string databaseFilePath = Bot.GetFilePath(String.Format("{0}_{1}", bot.BotName, nameof(BoosterManager)), Bot.EFileType.Database);
+			BoosterDatabase? boosterDatabase = BoosterDatabase.CreateOrLoad(databaseFilePath);
+
+			if (boosterDatabase == null) {
+				bot.ArchiLogger.LogGenericError(String.Format(Strings.ErrorDatabaseInvalid, databaseFilePath));
+				
+				throw new InvalidOperationException(nameof(boosterDatabase));
+			}
+
+			BoosterDatabase = boosterDatabase;
 		}
 
 		public void Dispose() {
@@ -58,7 +71,7 @@ namespace BoosterManager {
 				return;
 			}
 			
-			if (DateTime.Now >= booster.GetAvailableAtTime().AddSeconds(BoosterDelay)) {
+			if (DateTime.Now >= booster.GetAvailableAtTime(BoosterDelay)) {
 				if (booster.Info.Price > GetAvailableGems()) {
 					BoosterHandler.PerpareStatusReport(String.Format("{0:N0} more gems are needed to finish crafting boosters. Crafting will resume when more gems are available.", GetGemsNeeded(BoosterType.Any, wasCrafted: false) - GetAvailableGems()), suppressDuplicateMessages: true);
 					OnBoosterInfosUpdated += ForceUpdateBoosterInfos;
@@ -86,7 +99,7 @@ namespace BoosterManager {
 				}
 			}
 
-			DateTime nextBoosterTime = booster.GetAvailableAtTime().AddSeconds(BoosterDelay);
+			DateTime nextBoosterTime = booster.GetAvailableAtTime(BoosterDelay);
 			if (nextBoosterTime < DateTime.Now.AddSeconds(MinDelayBetweenBoosters)) {
 				nextBoosterTime = DateTime.Now.AddSeconds(MinDelayBetweenBoosters);
 			}
@@ -103,7 +116,7 @@ namespace BoosterManager {
 							RemoveBooster(gameID);
 						}
 					}
-					Booster newBooster = new Booster(Bot, gameID, type, boosterInfo);
+					Booster newBooster = new Booster(Bot, gameID, type, boosterInfo, this, GetLastCraft(gameID));
 					if (Boosters.TryAdd(gameID, newBooster)) {
 						Bot.ArchiLogger.LogGenericInfo(String.Format("Added {0} to booster queue.", gameID));
 					}
@@ -185,7 +198,7 @@ namespace BoosterManager {
 						)
 					) {
 						Bot.ArchiLogger.LogGenericInfo(String.Format("Booster from {0} was recently created either by us or by user", booster.GameID));
-						booster.WasCrafted = true;
+						booster.SetWasCrafted();
 						CheckIfFinished(booster.Type);
 					}
 				} else {
@@ -272,7 +285,7 @@ namespace BoosterManager {
 				return null;
 			}
 
-			return String.Format("{0} boosters from {1:N0} gems will be crafted by ~{2:h:mm tt}", GetNumBoosters(BoosterType.OneTime), GetGemsNeeded(BoosterType.OneTime), lastOneTimeBooster.GetAvailableAtTime().AddSeconds(BoosterDelay));
+			return String.Format("{0} boosters from {1:N0} gems will be crafted by ~{2:h:mm tt}", GetNumBoosters(BoosterType.OneTime), GetGemsNeeded(BoosterType.OneTime), lastOneTimeBooster.GetAvailableAtTime(BoosterDelay));
 		}
 
 		internal string GetStatus() {
@@ -298,14 +311,14 @@ namespace BoosterManager {
 			if (GetNumBoosters(BoosterType.OneTime) > 0) {
 				Booster? lastOneTimeBooster = GetNextCraftableBooster(BoosterType.OneTime, getLast: true);
 				if (lastOneTimeBooster != null) {
-					responses.Add(String.Format("Crafted {0}/{1} one-time boosters. Crafting will finish at ~{2:h:mm tt}, and will use {3:N0} gems.", GetNumBoosters(BoosterType.OneTime, wasCrafted: true), GetNumBoosters(BoosterType.OneTime), lastOneTimeBooster.GetAvailableAtTime().AddSeconds(BoosterDelay), GetGemsNeeded(BoosterType.OneTime, wasCrafted: false)));
+					responses.Add(String.Format("Crafted {0}/{1} one-time boosters. Crafting will finish at ~{2:h:mm tt}, and will use {3:N0} gems.", GetNumBoosters(BoosterType.OneTime, wasCrafted: true), GetNumBoosters(BoosterType.OneTime), lastOneTimeBooster.GetAvailableAtTime(BoosterDelay), GetGemsNeeded(BoosterType.OneTime, wasCrafted: false)));
 					responses.Add(String.Format("One-time boosters waiting to be crafted: {0}", String.Join(", ", GetBoosterIDs(BoosterType.OneTime, wasCrafted: false))));
 				}
 			}
 			if (GetNumBoosters(BoosterType.Permanent) > 0) {
 				responses.Add(String.Format("Permanent boosters that will be crafted continually for {0:N0} gems: {1}", GetGemsNeeded(BoosterType.Permanent), String.Join(", ", GetBoosterIDs(BoosterType.Permanent))));
 			}
-			responses.Add(String.Format("Next booster will be crafted at {0:h:mm tt}: {1} ({2})", nextBooster.GetAvailableAtTime().AddSeconds(BoosterDelay), nextBooster.Info.Name, nextBooster.GameID));
+			responses.Add(String.Format("Next booster will be crafted at {0:h:mm tt}: {1} ({2})", nextBooster.GetAvailableAtTime(BoosterDelay), nextBooster.Info.Name, nextBooster.GameID));
 			responses.Add("");
 
 			return String.Join(Environment.NewLine, responses);
@@ -320,5 +333,7 @@ namespace BoosterManager {
 		private static int GetMillisecondsFromNow(DateTime then) => Math.Max(0, (int) (then - DateTime.Now).TotalMilliseconds);
 		private void UpdateTimer(DateTime then) => Timer.Change(GetMillisecondsFromNow(then), Timeout.Infinite);
 		private uint GetAvailableGems() => BoosterHandler.AllowCraftUntradableBoosters ? GooAmount : TradableGooAmount;
+		internal BoosterLastCraft? GetLastCraft(uint appID) => BoosterDatabase.GetLastCraft(appID);
+		internal void UpdateLastCraft(uint appID, DateTime craftTime) => BoosterDatabase.SetLastCraft(appID, craftTime, BoosterDelay);
 	}
 }
