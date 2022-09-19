@@ -194,14 +194,7 @@ namespace BoosterManager {
 					return null;
 				}
 
-				JProperty? fee = listing.Property("fee");
-				if (fee == null) {
-					bot.ArchiLogger.LogNullError(fee);
-
-					return null;
-				}
-
-				listingsValue += (price.Value.ToObject<uint>() - fee.Value.ToObject<uint>());
+				listingsValue += price.Value.ToObject<uint>();
 			}
 
 			return listingsValue;
