@@ -11,6 +11,9 @@ namespace BoosterManager {
 		[JsonProperty(PropertyName = "show_message", Required = Required.DisallowNull)]
 		internal readonly bool ShowMessage = true;
 
+		[JsonProperty(PropertyName = "get_next_page", Required = Required.DisallowNull)]
+		internal readonly bool GetNextPage = false;
+
 		[JsonConstructor]
 		internal SteamDataResponse() { }
 	}

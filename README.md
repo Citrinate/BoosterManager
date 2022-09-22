@@ -85,20 +85,20 @@ You will need to design your API to accept requests and return responses per the
 > `page`|`uint?`|Page number, for when `data` is paginated (only used for `MarketHistoryAPI`, else this is set to `null`)
 > `data`|`JObject`|The data taken from `source`, more details below
 >
-> `MarketListingsAPI` `data` comes directly from `https://steamcommunity.com/market/mylistings?norender=1`
->
-> `MarketHistoryAPI` `data` comes directly from `https://steamcommunity.com/market/myhistory?norender=1`
-> 
-> `BoosterDataAPI` `data` is parsed from `https://steamcommunity.com/tradingcards/boostercreator/` and sent as an array of objects:
->
-> Name | Type | Notes
-> --- | --- | ---
-> `appid`|`uint`|Booster game AppID
-> `name`|`string`|Booster game name
-> `series`|`uint`|Booster series number
-> `price`|`uint`|Price of booster in gems
-> `unavailable`|`bool`|Set to `true` when the booster is on a 24 hour cooldown
-> `available_at_time`|`string?`|A date and time string in ISO 8601 format, if `unavailable` is `false` then this will be `null`|
+> > `MarketListingsAPI` `data` comes directly from `https://steamcommunity.com/market/mylistings?norender=1`
+> >
+> > `MarketHistoryAPI` `data` comes directly from `https://steamcommunity.com/market/myhistory?norender=1`
+> > 
+> > `BoosterDataAPI` `data` is parsed from `https://steamcommunity.com/tradingcards/boostercreator/` and sent as an array of objects:
+> >
+> > Name | Type | Notes
+> > --- | --- | ---
+> > `appid`|`uint`|Booster game AppID
+> > `name`|`string`|Booster game name
+> > `series`|`uint`|Booster series number
+> > `price`|`uint`|Price of booster in gems
+> > `unavailable`|`bool`|Set to `true` when the booster is on a 24 hour cooldown
+> > `available_at_time`|`string?`|A date and time string in ISO 8601 format, if `unavailable` is `false` then this will be `null`|
 
 #### Response
 
