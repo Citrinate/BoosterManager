@@ -19,7 +19,7 @@ namespace BoosterManager {
 		private uint UntradableGooAmount = 0;
 		private const int MinDelayBetweenBoosters = 5; // Minimum delay, in seconds, between booster crafts
 		internal int BoosterDelay = 0; // Delay, in seconds, added to all booster crafts
-		private readonly BoosterDatabase BoosterDatabase;
+		private readonly BoosterDatabase? BoosterDatabase;
 		internal event Action? OnBoosterInfosUpdated;
 
 		internal BoosterQueue(Bot bot, BoosterHandler boosterHandler) {
@@ -33,15 +33,11 @@ namespace BoosterManager {
 			);
 
 			string databaseFilePath = Bot.GetFilePath(String.Format("{0}_{1}", bot.BotName, nameof(BoosterManager)), Bot.EFileType.Database);
-			BoosterDatabase? boosterDatabase = BoosterDatabase.CreateOrLoad(databaseFilePath);
+			BoosterDatabase = BoosterDatabase.CreateOrLoad(databaseFilePath);
 
-			if (boosterDatabase == null) {
+			if (BoosterDatabase == null) {
 				bot.ArchiLogger.LogGenericError(String.Format(Strings.ErrorDatabaseInvalid, databaseFilePath));
-				
-				throw new InvalidOperationException(nameof(boosterDatabase));
 			}
-
-			BoosterDatabase = boosterDatabase;
 		}
 
 		public void Dispose() {
@@ -333,7 +329,7 @@ namespace BoosterManager {
 		private static int GetMillisecondsFromNow(DateTime then) => Math.Max(0, (int) (then - DateTime.Now).TotalMilliseconds);
 		private void UpdateTimer(DateTime then) => Timer.Change(GetMillisecondsFromNow(then), Timeout.Infinite);
 		private uint GetAvailableGems() => BoosterHandler.AllowCraftUntradableBoosters ? GooAmount : TradableGooAmount;
-		internal BoosterLastCraft? GetLastCraft(uint appID) => BoosterDatabase.GetLastCraft(appID);
-		internal void UpdateLastCraft(uint appID, DateTime craftTime) => BoosterDatabase.SetLastCraft(appID, craftTime, BoosterDelay);
+		internal BoosterLastCraft? GetLastCraft(uint appID) => BoosterDatabase?.GetLastCraft(appID);
+		internal void UpdateLastCraft(uint appID, DateTime craftTime) => BoosterDatabase?.SetLastCraft(appID, craftTime, BoosterDelay);
 	}
 }

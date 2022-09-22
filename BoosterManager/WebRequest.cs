@@ -73,5 +73,15 @@ namespace BoosterManager {
 
 			return unpackBoostersResponse?.Content;
 		}
+
+		internal static async Task<bool> RemoveListing(Bot bot, ulong listingID) {
+			Uri request = new(ArchiWebHandler.SteamCommunityURL, $"/market/removelisting/{listingID}");
+			Uri referer = new(ArchiWebHandler.SteamCommunityURL, "/market/");
+			Dictionary<string, string> headers = new(1) {
+				{ "Cookie", bot.ArchiWebHandler.WebBrowser.CookieContainer.GetCookieHeader(ArchiWebHandler.SteamCommunityURL) }
+			};
+
+			return await bot.ArchiWebHandler.UrlPostWithSession(request, referer: referer, headers: headers).ConfigureAwait(false);
+		}
 	}
 }
