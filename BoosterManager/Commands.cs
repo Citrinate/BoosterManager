@@ -19,32 +19,46 @@ namespace BoosterManager {
 					switch (args[0].ToUpperInvariant()) {
 						case "BSTATUS" or "BOOSTERSTATUS":
 							return ResponseBoosterStatus(bot, access);
+						
 						case "BSTOPALL" or "BOOSTERSTOPALL":
 							return ResponseBoosterStopTime(bot, access, "0");
+						
 						case "GEMS" or "GEM":
 							return await ResponseGems(bot, access).ConfigureAwait(false);
+						
 						case "KEYS" or "KEY":
 							return await ResponseKeys(bot, access).ConfigureAwait(false);
+						
 						case "LISTINGS" or "LISTING":
 							return await ResponseListings(bot, access).ConfigureAwait(false);
+						
 						case "LOGDATA" or "SENDDATA":
 							return await ResponseLogData(bot, access).ConfigureAwait(false);
+						
 						case "LOOTBOOSTERS" or "LOOTBOOSTER":
 							return await ResponseSendItems(bot, access, Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.BoosterPack).ConfigureAwait(false);
+						
 						case "LOOTCARDS" or "LOOTCARD":
 							return await ResponseSendItems(bot, access, Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.TradingCard).ConfigureAwait(false);
+						
 						case "LOOTFOILS" or "LOOTFOIL":
 							return await ResponseSendItems(bot, access, Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.FoilTradingCard).ConfigureAwait(false);
+						
 						case "LOOTGEMS" or "LOOTGEM":
 							return await ResponseSendItems(bot, access, Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.SteamGems, GemHandler.GemsClassID, allowUnmarketable: true).ConfigureAwait(false);
+						
 						case "LOOTKEYS" or "LOOTKEY":
 							return await ResponseSendItems(bot, access, KeyHandler.KeyAppID, KeyHandler.KeyContextID, KeyHandler.KeyType, KeyHandler.KeyClassID).ConfigureAwait(false);
+						
 						case "LOOTSACKS" or "LOOTSACK":
 							return await ResponseSendItems(bot, access, Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.SteamGems, GemHandler.SackOfGemsClassID).ConfigureAwait(false);
+						
 						case "UNPACKGEMS":
 							return await ResponseUnpackGems(bot, access).ConfigureAwait(false);
+						
 						case "VALUE":
 							return await ResponseValue(bot, access).ConfigureAwait(false);
+						
 						default:
 							return null;
 					};
@@ -54,80 +68,118 @@ namespace BoosterManager {
 							return ResponseBooster(access, steamID, args[1], Utilities.GetArgsAsText(args, 2, ","), bot);
 						case "BOOSTER" or "BOOSTERS":
 							return ResponseBooster(bot, access, steamID, args[1]);
+						
 						case "BSTATUS" or "BOOSTERSTATUS":
 							return ResponseBoosterStatus(access, steamID, args[1]);
+						
 						case "BSTOP" or "BOOSTERSTOP" when args.Length > 2:
 							return ResponseBoosterStop(access, steamID, args[1], Utilities.GetArgsAsText(args, 2, ","));
 						case "BSTOP" or "BOOSTERSTOP":
 							return ResponseBoosterStop(bot, access, args[1]);
+						
 						case "BSTOPALL" or "BOOSTERSTOPALL":
 							return ResponseBoosterStopTime(access, steamID, args[1], "0");
+						
 						case "BSTOPTIME" or "BOOSTERSTOPTIME" when args.Length > 2:
 							return ResponseBoosterStopTime(access, steamID, args[1], args[2]);
 						case "BSTOPTIME" or "BOOSTERSTOPTIME":
 							return ResponseBoosterStopTime(bot, access, args[1]);
+						
 						case "FINDLISTINGS" or "FINDLISTING" when args.Length > 2:
 							return await ResponseFindListings(access, steamID, args[1], Utilities.GetArgsAsText(args, 2, " ")).ConfigureAwait(false);
 						case "FINDLISTINGS" or "FINDLISTING":
 							return await ResponseFindListings(bot, access, Utilities.GetArgsAsText(args, 1, " ")).ConfigureAwait(false);
+						
 						case "FINDANDREMOVELISTINGS" or "FINDANDREMOVELISTING" or "FINDANDCANCELLISTINGS" or "FINDANDCANCELLISTING" when args.Length > 2:
 							return await ResponseFindAndRemoveListings(access, steamID, args[1], Utilities.GetArgsAsText(args, 2, " ")).ConfigureAwait(false);
 						case "FINDANDREMOVELISTINGS" or "FINDANDREMOVELISTING" or "FINDANDCANCELLISTINGS" or "FINDANDCANCELLISTING":
 							return await ResponseFindAndRemoveListings(bot, access, Utilities.GetArgsAsText(args, 1, " ")).ConfigureAwait(false);
+						
 						case "GEMS" or "GEM":
 							return await ResponseGems(access, steamID, Utilities.GetArgsAsText(args, 1, ",")).ConfigureAwait(false);
+						
 						case "KEYS" or "KEY":
 							return await ResponseKeys(access, steamID, Utilities.GetArgsAsText(args, 1, ",")).ConfigureAwait(false);
+						
 						case "LISTINGS" or "LISTING":
 							return await ResponseListings(access, steamID, Utilities.GetArgsAsText(args, 1, ",")).ConfigureAwait(false);
+						
 						case "LOGDATA" or "SENDDATA" when args.Length > 3:
 							return await ResponseLogData(access, steamID, args[1], args[2], args[3]).ConfigureAwait(false);
 						case "LOGDATA" or "SENDDATA" when args.Length > 2:
 							return await ResponseLogData(access, steamID, args[1], args[2]).ConfigureAwait(false);
 						case "LOGDATA" or "SENDDATA":
 							return await ResponseLogData(access, steamID, Utilities.GetArgsAsText(args, 1, ",")).ConfigureAwait(false);						
+						
 						case "LOOTBOOSTERS" or "LOOTBOOSTER":
 							return await ResponseSendItems(access, steamID, Utilities.GetArgsAsText(args, 1, ","), Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.BoosterPack).ConfigureAwait(false);
+						
 						case "LOOTCARDS" or "LOOTCARD":
 							return await ResponseSendItems(access, steamID, Utilities.GetArgsAsText(args, 1, ","), Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.TradingCard).ConfigureAwait(false);
+						
 						case "LOOTFOILS" or "LOOTFOIL":
 							return await ResponseSendItems(access, steamID, Utilities.GetArgsAsText(args, 1, ","), Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.FoilTradingCard).ConfigureAwait(false);
+						
 						case "LOOTGEMS" or "LOOTGEM":
 							return await ResponseSendItems(access, steamID, Utilities.GetArgsAsText(args, 1, ","), Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.SteamGems, GemHandler.GemsClassID, allowUnmarketable: true).ConfigureAwait(false);
+						
 						case "LOOTITEMS" or "LOOTITEM" when args.Length > 4:
 							return await ResponseSendSpecificItems(access, steamID, args[1], args[2], args[3], args[4]).ConfigureAwait(false);
+						
 						case "LOOTKEYS" or "LOOTKEY":
 							return await ResponseSendItems(access, steamID, Utilities.GetArgsAsText(args, 1, ","), KeyHandler.KeyAppID, KeyHandler.KeyContextID, KeyHandler.KeyType, KeyHandler.KeyClassID).ConfigureAwait(false);
+						
 						case "LOOTSACKS" or "LOOTSACK":
 							return await ResponseSendItems(access, steamID, Utilities.GetArgsAsText(args, 1, ","), Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.SteamGems, GemHandler.SackOfGemsClassID).ConfigureAwait(false);
+						
 						case "TRANSFERBOOSTERS" or "TRANSFERBOOSTER" when args.Length > 2:
 							return await ResponseSendItems(access, steamID, args[1], Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.BoosterPack, recieverBotName: args[2]).ConfigureAwait(false);
+						case "TRANSFERBOOSTERS" or "TRANSFERBOOSTER":
+							return await ResponseSendItems(bot, access, Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.FoilTradingCard, recieverBotName: args[1]).ConfigureAwait(false);
+						
 						case "TRANSFERCARDS" or "TRANSFERCARD" when args.Length > 2:
 							return await ResponseSendItems(access, steamID, args[1], Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.TradingCard, recieverBotName: args[2]).ConfigureAwait(false);
+						case "TRANSFERCARDS" or "TRANSFERCARD":
+							return await ResponseSendItems(bot, access, Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.FoilTradingCard, recieverBotName: args[1]).ConfigureAwait(false);
+						
 						case "TRANSFERFOILS" or "TRANSFERFOIL" when args.Length > 2:
 							return await ResponseSendItems(access, steamID, args[1], Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.FoilTradingCard, recieverBotName: args[2]).ConfigureAwait(false);
+						case "TRANSFERFOILS" or "TRANSFERFOIL":
+							return await ResponseSendItems(bot, access, Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.FoilTradingCard, recieverBotName: args[1]).ConfigureAwait(false);
+						
 						case "TRANSFERGEMS" or "TRANSFERGEM" when args.Length > 3:
 							return await ResponseSendItemsWithAmounts(access, steamID, args[1], args[2], args[3], Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.SteamGems, GemHandler.GemsClassID, allowUnmarketable: true).ConfigureAwait(false);
 						case "TRANSFERGEMS" or "TRANSFERGEM" when args.Length > 2:
 							return await ResponseSendItemsWithAmounts(bot, access, args[1], args[2], Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.SteamGems, GemHandler.GemsClassID, allowUnmarketable: true).ConfigureAwait(false);
+						
 						case "TRANSFERITEMS" or "TRANSFERITEM" when args.Length > 5:
 							return await ResponseSendSpecificItems(access, steamID, args[1], args[3], args[4], args[5], recieverBotName: args[2]).ConfigureAwait(false);
+						case "TRANSFERITEMS" or "TRANSFERITEM" when args.Length > 4:
+							return await ResponseSendSpecificItems(bot, access, args[2], args[3], args[4], recieverBotName: args[1]).ConfigureAwait(false);
+						
 						case "TRANSFERKEYS" or "TRANSFERKEY" when args.Length > 3:
 							return await ResponseSendItemsWithAmounts(access, steamID, args[1], args[2], args[3], KeyHandler.KeyAppID, KeyHandler.KeyContextID, KeyHandler.KeyType, KeyHandler.KeyClassID).ConfigureAwait(false);
 						case "TRANSFERKEYS" or "TRANSFERKEY" when args.Length > 2:
 							return await ResponseSendItemsWithAmounts(bot, access, args[1], args[2], KeyHandler.KeyAppID, KeyHandler.KeyContextID, KeyHandler.KeyType, KeyHandler.KeyClassID).ConfigureAwait(false);
+						
 						case "TRANSFERSACKS" or "TRANSFERSACK" when args.Length > 2:
 							return await ResponseSendItems(access, steamID, args[1], Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.SteamGems, GemHandler.SackOfGemsClassID, recieverBotName: args[2]).ConfigureAwait(false);
+						case "TRANSFERSACKS" or "TRANSFERSACK":
+							return await ResponseSendItems(bot, access, Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.FoilTradingCard, recieverBotName: args[1]).ConfigureAwait(false);
+						
 						case "REMOVELISTINGS" or "REMOVELISTING" or "CANCELLISTINGS" or "CANCELLISTING" when args.Length > 2:
 							return await ResponseRemoveListings(access, steamID, args[1], Utilities.GetArgsAsText(args, 2, ",")).ConfigureAwait(false);
 						case "REMOVELISTINGS" or "REMOVELISTING" or "CANCELLISTINGS" or "CANCELLISTING":
 							return await ResponseRemoveListings(bot, access, Utilities.GetArgsAsText(args, 1, ",")).ConfigureAwait(false);
+						
 						case "UNPACKGEMS":
 							return await ResponseUnpackGems(access, steamID, Utilities.GetArgsAsText(args, 1, ",")).ConfigureAwait(false);
+						
 						case "VALUE" when args.Length > 2:
 							return await ResponseValue(access, steamID, args[1], args[2]).ConfigureAwait(false);
 						case "VALUE":
 							return await ResponseValue(access, steamID, args[1]).ConfigureAwait(false);
+						
 						default:
 							return null;
 					};
@@ -147,7 +199,7 @@ namespace BoosterManager {
 				return FormatBotResponse(bot, Strings.BotNotConnected);
 			}
 
-			string[] gameIDs = targetGameIDs.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+			string[] gameIDs = targetGameIDs.Split(",", StringSplitOptions.RemoveEmptyEntries);
 
 			if (gameIDs.Length == 0) {
 				return FormatBotResponse(bot, String.Format(Strings.ErrorIsEmpty, nameof(gameIDs)));
@@ -169,10 +221,6 @@ namespace BoosterManager {
 		private static string? ResponseBooster(EAccess access, ulong steamID, string botNames, string targetGameIDs, Bot respondingBot) {
 			if (String.IsNullOrEmpty(botNames)) {
 				throw new ArgumentNullException(nameof(botNames));
-			}
-
-			if (String.IsNullOrEmpty(targetGameIDs)) {
-				throw new ArgumentNullException(nameof(targetGameIDs));
 			}
 
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
@@ -231,7 +279,7 @@ namespace BoosterManager {
 				return FormatBotResponse(bot, Strings.BotNotConnected);
 			}
 
-			string[] gameIDs = targetGameIDs.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+			string[] gameIDs = targetGameIDs.Split(",", StringSplitOptions.RemoveEmptyEntries);
 
 			if (gameIDs.Length == 0) {
 				return FormatBotResponse(bot, String.Format(Strings.ErrorIsEmpty, nameof(gameIDs)));
@@ -253,10 +301,6 @@ namespace BoosterManager {
 		private static string? ResponseBoosterStop(EAccess access, ulong steamID, string botNames, string targetGameIDs) {
 			if (String.IsNullOrEmpty(targetGameIDs)) {
 				throw new ArgumentNullException(nameof(botNames));
-			}
-
-			if (String.IsNullOrEmpty(targetGameIDs)) {
-				throw new ArgumentNullException(nameof(targetGameIDs));
 			}
 
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
@@ -310,9 +354,9 @@ namespace BoosterManager {
 			return responses.Count > 0 ? String.Join(Environment.NewLine, responses) : null;
 		}
 
-		private static async Task<string?> ResponseFindListings(Bot bot, EAccess access, string itemName) {
-			if (String.IsNullOrEmpty(itemName)) {
-				throw new ArgumentNullException(nameof(itemName));
+		private static async Task<string?> ResponseFindListings(Bot bot, EAccess access, string itemNamesAsText) {
+			if (String.IsNullOrEmpty(itemNamesAsText)) {
+				throw new ArgumentNullException(nameof(itemNamesAsText));
 			}
 
 			if (access < EAccess.Master) {
@@ -323,10 +367,12 @@ namespace BoosterManager {
 				return FormatBotResponse(bot, Strings.BotNotConnected);
 			}
 
-			return await MarketHandler.FindListings(bot, itemName).ConfigureAwait(false);
+			List<string> itemNames = itemNamesAsText.Split("&&", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+
+			return await MarketHandler.FindListings(bot, itemNames).ConfigureAwait(false);
 		}
 
-		private static async Task<string?> ResponseFindListings(EAccess access, ulong steamID, string botNames, string itemName) {
+		private static async Task<string?> ResponseFindListings(EAccess access, ulong steamID, string botNames, string itemNamesAsText) {
 			if (String.IsNullOrEmpty(botNames)) {
 				throw new ArgumentNullException(nameof(botNames));
 			}
@@ -337,14 +383,18 @@ namespace BoosterManager {
 				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
 			}
 
-			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseFindListings(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), itemName))).ConfigureAwait(false);
+			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseFindListings(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), itemNamesAsText))).ConfigureAwait(false);
 
 			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
 
 			return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
 		}
 
-		private static async Task<string?> ResponseFindAndRemoveListings(Bot bot, EAccess access, string itemName) {
+		private static async Task<string?> ResponseFindAndRemoveListings(Bot bot, EAccess access, string itemNamesAsText) {
+			if (String.IsNullOrEmpty(itemNamesAsText)) {
+				throw new ArgumentNullException(nameof(itemNamesAsText));
+			}
+			
 			if (access < EAccess.Master) {
 				return null;
 			}
@@ -353,10 +403,12 @@ namespace BoosterManager {
 				return FormatBotResponse(bot, Strings.BotNotConnected);
 			}
 
-			return await MarketHandler.FindAndRemoveListings(bot, itemName).ConfigureAwait(false);
+			List<string> itemNames = itemNamesAsText.Split("&&", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+
+			return await MarketHandler.FindAndRemoveListings(bot, itemNames).ConfigureAwait(false);
 		}
 
-		private static async Task<string?> ResponseFindAndRemoveListings(EAccess access, ulong steamID, string botNames, string itemName) {
+		private static async Task<string?> ResponseFindAndRemoveListings(EAccess access, ulong steamID, string botNames, string itemNamesAsText) {
 			if (String.IsNullOrEmpty(botNames)) {
 				throw new ArgumentNullException(nameof(botNames));
 			}
@@ -367,7 +419,7 @@ namespace BoosterManager {
 				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
 			}
 
-			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseFindAndRemoveListings(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), itemName))).ConfigureAwait(false);
+			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseFindAndRemoveListings(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), itemNamesAsText))).ConfigureAwait(false);
 
 			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
 
@@ -525,7 +577,7 @@ namespace BoosterManager {
 				return FormatBotResponse(bot, Strings.BotNotConnected);
 			}
 
-			string[] listingIDsStringArray = listingIDsString.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+			string[] listingIDsStringArray = listingIDsString.Split(",", StringSplitOptions.RemoveEmptyEntries);
 
 			if (listingIDsStringArray.Length == 0) {
 				return FormatBotResponse(bot, String.Format(Strings.ErrorIsEmpty, nameof(listingIDsStringArray)));
@@ -687,7 +739,7 @@ namespace BoosterManager {
 				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
 			}
 
-			string[] amounts = amountsString.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+			string[] amounts = amountsString.Split(",", StringSplitOptions.RemoveEmptyEntries);
 
 			if (amounts.Length == 0) {
 				return FormatBotResponse(bot, String.Format(Strings.ErrorIsEmpty, nameof(amounts)));
