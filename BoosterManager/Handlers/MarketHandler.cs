@@ -75,6 +75,7 @@ namespace BoosterManager {
 		internal static async Task<string> RemoveListings(Bot bot, List<ulong> listingIDs) {
 			List<ulong> failedListingIDs = new List<ulong>();
 			foreach (ulong listingID in listingIDs) {
+				await Task.Delay(100).ConfigureAwait(false);
 				if (!await WebRequest.RemoveListing(bot, listingID).ConfigureAwait(false)) {
 					failedListingIDs.Add(listingID);
 				}
