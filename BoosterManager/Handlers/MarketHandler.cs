@@ -163,7 +163,6 @@ namespace BoosterManager {
 			}
 
 			Dictionary<string, List<ulong>> filteredListings = new Dictionary<string, List<ulong>>();
-			List<ulong> listingIDs = new List<ulong>();
 			foreach ((ulong listingID, JObject listing) in listings) {
 				string? name = listing["asset"]?["name"]?.ToString();
 				if (name == null) {

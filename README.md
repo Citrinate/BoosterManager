@@ -13,7 +13,9 @@ Please note, this plugin only works with ASF-generic.
 
 ## Usage
 
-### Commands
+Note: Parameters in square brackets are `[Optional]`, parameters in angle brackets are `<Required>`
+
+### Booster Commands
 
 Command | Access | Description
 --- | --- | ---
@@ -22,11 +24,52 @@ Command | Access | Description
 `bstop [Bots] <AppIDs>`|`Master`|Removes `AppIDs` from the given bot's booster queue.
 `bstoptime [Bots] <Hours>`|`Master`|Removes everything from the given bot's booster queue that will take more than the given `Hours` to craft.
 `bstopall [Bots]`|`Master`|Removes everything from the given bot's booster queue.
-`gems [Bots]`|`Master`|Displays the number of gems owned by the given bot.|
-`logdata [Bots] [Count] [Start]`|`Master`|Collects data (booster data, market listings, market history) from the given bot and sends it to the [APIs](#boosterdataapi-marketlistingsapi-markethistoryapi) specified in `ASF.json`. The number of pages of market history may be specified using `Count`, and may begin on the page specified by `Start`|
-`transfergems [Bot] <TargetBots> <Amounts>`|`Master`|Sends the provided `Amounts` of gems from the given bot to the given target bots. The `Amounts` specified may be a single amount sent to all targets, or multiple amounts sent to each target respectively.|
 
-Note: Parameters in square brackets are `[Optional]`, parameters in angle brackets are `<Required>`
+### Inventory Commands
+
+Command | Access | Description
+--- | --- | ---
+`gems [Bots]`|`Master`|Displays the number of gems owned by the given bot.
+`keys [Bots]`|`Master`|Displays the number of Mann Co. Supply Crate Keys owned by the given bot.
+`lootboosters [Bots]`|`Master`|Sends all marketable booster packs from the given bot to the `Master` user.
+`lootcards [Bots]`|`Master`|Sends all marketable non-foil trading cards from the given bot to the `Master` user.
+`lootfoils [Bots]`|`Master`|Sends all marketable foil trading cards from the given bot to the `Master` user.
+`lootgems [Bots]`|`Master`|Sends all gems from the given bot to the `Master` user.
+`lootitems [Bots] <AppID> <ContextID> <ClassID>`|`Master`|Sends all items with the matching `AppID`, `ContextID`, and `ClassID` from the given bot to the `Master` user.
+`lootkeys [Bots]`|`Master`|Sends all Mann Co. Supply Crate Keys from the given bot to the `Master` user.
+`lootsacks [Bots]`|`Master`|Sends all Sacks of Gems from the given bot to the `Master` user.
+`transferboosters [Bots] <TargetBot>`|`Master`|Sends all marketable booster packs from the given bot to the given target bot.
+`transfercards [Bots] <TargetBot>`|`Master`|Sends all marketable non-foil trading cards from the given bot to the given target bot.
+`transferfoils [Bots] <TargetBot>`|`Master`|Sends all marketable foil trading cards from the given bot to the given target bot.
+`transfergems [Bot] <TargetBots> <Amounts>`|`Master`|Sends the provided `Amounts` of gems from the given bot to the given target bots. The `Amounts` specified may be a single amount sent to all targets, or multiple amounts sent to each target respectively.|
+`transferitems [Bots] <TargetBot> <AppID> <ContextID> <ClassID>`|`Master`|Sends all items with the matching `AppID`, `ContextID`, and `ClassID` from the given bot to the given target bot.
+`transferkeys [Bot] <TargetBots> <Amounts>`|`Master`|Sends the provided `Amounts` of Mann Co. Supply Crate Keys from the given bot to the given target bots. The `Amounts` specified may be a single amount sent to all targets, or multiple amounts sent to each target respectively.|
+`transfersacks [Bots] <TargetBot>`|`Master`|Sends all Sacks of Gems from the given bot to the given target bot.
+`unpackgems [Bots]`|`Master`|Unpacks all Sacks of Gems owned by the given bot.
+
+
+### Market Commands
+
+Command | Access | Description
+--- | --- | ---
+`findlistings [Bots] <ItemNames>`|`Master`|Displays the `ListingID` of any listings belonging to the given bot with a name matching any of `ItemNames`.  Multiple item names may be provided, but must be separated with `&&`
+`findandremovelistings [Bots] <ItemNames>`|`Master`|Removes any listings belonging to the given bot with a name matching any of `ItemNames`.  Multiple names may be provided, but must be separated with `&&`
+`listings [Bots]`|`Master`|Displays the total value of all listings owned by the given bot.
+`logdata [Bots] [Count] [Start]`|`Master`|Collects data (booster data, market listings, market history) from the given bot and sends it to the [APIs](#boosterdataapi-marketlistingsapi-markethistoryapi) specified in `ASF.json`. The number of pages of market history may be specified using `Count`, and may begin on the page specified by `Start`
+`removelistings [Bot] <ListingIDs>`|`Master`|Removes `ListingIDs` belonging to the given bot.
+`value [Bots] [BalanceLimit]`|`Master`|Displays the combined wallet balance and total value of all listings owned by the given bot.  The maximum allowed balance in your region may be provided as `BalanceLimit`, a whole number, and it will instead display how close the given bot is to reaching that limit.
+
+---
+
+### AllowCraftUntradableBoosters
+
+`"AllowCraftUntradableBoosters": <true/false>,`
+
+Example: `"AllowCraftUntradableBoosters": true,`
+
+This `bool` type configuration setting can be added to your `ASF.json` config file.  If set to `false`, untradable gems will not be used to craft boosters, and the `unpack` command will not unpack untradable Sacks of Gems.
+
+By default, this is set to `true`
 
 ---
 
@@ -109,6 +152,7 @@ You will need to design your API to accept requests and return responses per the
 > `success`|`bool`|Yes|Whether your operations succeeded or failed
 > `message`|`string`|No|A custom message that will be displayed in place of the default succeed/fail message
 > `show_message`|`bool`|No|Whether or not to show any message
+> `get_next_page`|`bool`|No|Whether or not to fetch the next page (for when `source` is paginated)
 
 ---
 
