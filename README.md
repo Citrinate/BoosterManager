@@ -67,7 +67,7 @@ Command | Access | Description
 
 Example: `"AllowCraftUntradableBoosters": true,`
 
-This `bool` type configuration setting can be added to your `ASF.json` config file.  If set to `false`, untradable gems will not be used to craft boosters, and the `unpack` command will not unpack untradable Sacks of Gems.
+This `bool` type configuration setting can be added to your `ASF.json` config file.  If set to `false`, untradable gems will not be used to craft boosters, and the `unpackgems` command will not unpack untradable Sacks of Gems.
 
 By default, this is set to `true`
 
