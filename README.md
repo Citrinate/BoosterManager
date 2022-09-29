@@ -13,7 +13,7 @@ Please note, this plugin only works with ASF-generic.
 
 ## Usage
 
-Note: Parameters in square brackets are `[Optional]`, parameters in angle brackets are `<Required>`
+Note: Parameters in square brackets are sometimes `[Optional]`, parameters in angle brackets are always `<Required>`
 
 ### Booster Commands
 

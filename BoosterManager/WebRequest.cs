@@ -56,6 +56,26 @@ namespace BoosterManager {
 			return (marketHistoryResponse?.Content, request);
 		}
 
+		internal static async Task<(Steam.InventoryHistoryResponse?, Uri)> GetInventoryHistory(Bot bot, List<uint>? appIDs = null, Steam.InventoryHistoryCursor? cursor = null, uint? startTime = null) {
+			List<string> parameters = new List<string>();
+			parameters.Add("ajax=1");
+			if (cursor != null) {
+				parameters.Add($"cursor[time]={cursor.Time}");
+				parameters.Add($"cursor[time_frac]={cursor.TimeFrac}");
+				parameters.Add($"cursor[s]={cursor.S}");
+			} else if (startTime != null) {
+				parameters.Add($"start_time={startTime}");
+			}
+			if (appIDs != null) {
+				foreach (uint appID in appIDs) {
+					parameters.Add($"appid[]={appID}");
+				}
+			}
+			Uri request = new(ArchiWebHandler.SteamCommunityURL, String.Format("/profiles/{0}/inventoryhistory/?{1}", bot.SteamID, String.Join("&", parameters)));
+			ObjectResponse<Steam.InventoryHistoryResponse>? inventoryHistoryResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<Steam.InventoryHistoryResponse>(request).ConfigureAwait(false);
+			return (inventoryHistoryResponse?.Content, request);
+		}
+
 		internal static async Task<Steam.ExchangeGooResponse?> UnpackGems(Bot bot, ulong assetID, uint amount) {
 			Uri request = new(ArchiWebHandler.SteamCommunityURL, String.Format("/profiles/{0}/ajaxexchangegoo", bot.SteamID));
 
@@ -77,11 +97,8 @@ namespace BoosterManager {
 		internal static async Task<bool> RemoveListing(Bot bot, ulong listingID) {
 			Uri request = new(ArchiWebHandler.SteamCommunityURL, $"/market/removelisting/{listingID}");
 			Uri referer = new(ArchiWebHandler.SteamCommunityURL, "/market/");
-			Dictionary<string, string> headers = new(1) {
-				{ "Cookie", bot.ArchiWebHandler.WebBrowser.CookieContainer.GetCookieHeader(ArchiWebHandler.SteamCommunityURL) }
-			};
 
-			return await bot.ArchiWebHandler.UrlPostWithSession(request, referer: referer, headers: headers).ConfigureAwait(false);
+			return await bot.ArchiWebHandler.UrlPostWithSession(request, referer: referer).ConfigureAwait(false);
 		}
 	}
 }

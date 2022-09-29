@@ -123,6 +123,43 @@ namespace BoosterManager {
 			private MarketHistoryResponse() { }
 		}
 
+		internal sealed class InventoryHistoryCursor {
+			[JsonProperty(PropertyName = "time", Required = Required.Always)]
+			internal readonly uint Time;
+
+			[JsonProperty(PropertyName = "time_frac", Required = Required.Always)]
+			internal readonly uint TimeFrac;
+
+			[JsonProperty(PropertyName = "s", Required = Required.Always)]
+			internal readonly string S = "";
+
+			[JsonConstructor]
+			internal InventoryHistoryCursor() { }
+		}
+
+		internal sealed class InventoryHistoryResponse {
+			[JsonProperty(PropertyName = "success", Required = Required.Always)]
+			internal readonly bool Success;
+
+			[JsonProperty(PropertyName = "html", Required = Required.Always)]
+			internal readonly string Html = "";
+
+			[JsonProperty(PropertyName = "num", Required = Required.Always)]
+			internal readonly uint Num;
+
+			[JsonProperty(PropertyName = "descriptions", Required = Required.Always)]
+			internal readonly JToken? Descriptions;
+
+			[JsonProperty(PropertyName = "apps", Required = Required.Always)]
+			internal readonly JArray Apps = new();
+
+			[JsonProperty(PropertyName = "cursor", Required = Required.Default)]
+			internal readonly InventoryHistoryCursor? Cursor;
+
+			[JsonConstructor]
+			private InventoryHistoryResponse() { }
+		}
+
 		internal sealed class ExchangeGooResponse {
 			[JsonProperty(PropertyName = "success", Required = Required.Always)]
 			internal readonly bool Success;

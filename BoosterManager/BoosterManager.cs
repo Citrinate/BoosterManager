@@ -43,6 +43,11 @@ namespace BoosterManager {
 						DataHandler.BoosterDataAPI = new Uri(configProperty.Value.ToObject<string>()!);
 						break;
 					}
+					case "InventoryHistoryAPI" when configProperty.Value.Type == JTokenType.String: {
+						ASF.ArchiLogger.LogGenericInfo("Inventory History API : " + configProperty.Value);
+						DataHandler.InventoryHistoryAPI = new Uri(configProperty.Value.ToObject<string>()!);
+						break;
+					}
 					case "MarketListingsAPI" when configProperty.Value.Type == JTokenType.String: {
 						ASF.ArchiLogger.LogGenericInfo("Market Listings API : " + configProperty.Value);
 						DataHandler.MarketListingsAPI = new Uri(configProperty.Value.ToObject<string>()!);
@@ -53,9 +58,19 @@ namespace BoosterManager {
 						DataHandler.MarketHistoryAPI = new Uri(configProperty.Value.ToObject<string>()!);
 						break;
 					}
-					case "MarketHistoryDelay" when configProperty.Value.Type == JTokenType.Integer: {
-						ASF.ArchiLogger.LogGenericInfo("Market History Delay : " + configProperty.Value);
-						DataHandler.MarketHistoryDelay = configProperty.Value.ToObject<uint>();
+					case "LogDataPageDelay" or "MarketHistoryDelay" when configProperty.Value.Type == JTokenType.Integer: {
+						ASF.ArchiLogger.LogGenericInfo("Log Data Page Delay : " + configProperty.Value);
+						DataHandler.LogDataPageDelay = configProperty.Value.ToObject<uint>();
+						break;
+					}
+					case "InventoryHistoryAppFilter" when configProperty.Value.Type == JTokenType.Array && configProperty.Value.Any(): {
+						ASF.ArchiLogger.LogGenericInfo("Inventory History App Filter : " + string.Join(",", configProperty.Value));
+						List<uint>? appIDs = configProperty.Value.ToObject<List<uint>>();
+						if (appIDs == null) {
+							ASF.ArchiLogger.LogNullError(appIDs);
+						} else {
+							DataHandler.InventoryHistoryAppFilter = appIDs;
+						}
 						break;
 					}
 				}
