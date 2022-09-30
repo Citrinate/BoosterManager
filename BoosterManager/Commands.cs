@@ -113,6 +113,8 @@ namespace BoosterManager {
 						case "LOGDATA" or "SENDDATA":
 							return await ResponseLogData(access, steamID, Utilities.GetArgsAsText(args, 1, ",")).ConfigureAwait(false);
 						
+						case "LOGINVENTORYHISTORY" or "SENDINVENTORYHISTORY" or "LOGIH" or "SENDIH" when args.Length > 3:
+							return await ResponseLogInventoryHistory(access, steamID, args[1], args[2], args[3]).ConfigureAwait(false);
 						case "LOGINVENTORYHISTORY" or "SENDINVENTORYHISTORY" or "LOGIH" or "SENDIH" when args.Length > 2:
 							return await ResponseLogInventoryHistory(access, steamID, args[1], args[2]).ConfigureAwait(false);
 						case "LOGINVENTORYHISTORY" or "SENDINVENTORYHISTORY" or "LOGIH" or "SENDIH":
@@ -560,13 +562,22 @@ namespace BoosterManager {
 			return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
 		}
 
-		private static async Task<string?> ResponseLogInventoryHistory(Bot bot, EAccess access, string? startTimeString = null) {
+		private static async Task<string?> ResponseLogInventoryHistory(Bot bot, EAccess access, string? numPagesString = null, string? startTimeString = null) {
 			if (access < EAccess.Master) {
 				return null;
 			}
 
 			if (!bot.IsConnectedAndLoggedOn) {
 				return FormatBotResponse(bot, Strings.BotNotConnected);
+			}
+
+			uint? numPages = null;
+			if (numPagesString != null) {
+				if (uint.TryParse(numPagesString, out uint outValue)) {
+					numPages = outValue;
+				} else {
+					return FormatStaticResponse(String.Format(Strings.ErrorIsInvalid, nameof(numPages)));
+				}
 			}
 
 			uint? startTime = null;
@@ -578,10 +589,10 @@ namespace BoosterManager {
 				}
 			}
 
-			return await DataHandler.SendInventoryHistoryOnly(bot, startTime).ConfigureAwait(false);
+			return await DataHandler.SendInventoryHistoryOnly(bot, numPages, startTime).ConfigureAwait(false);
 		}
 
-		private static async Task<string?> ResponseLogInventoryHistory(EAccess access, ulong steamID, string botNames, string? startTimeString = null) {
+		private static async Task<string?> ResponseLogInventoryHistory(EAccess access, ulong steamID, string botNames, string? numPagesString = null, string? startTimeString = null) {
 			if (String.IsNullOrEmpty(botNames)) {
 				throw new ArgumentNullException(nameof(botNames));
 			}
@@ -592,14 +603,14 @@ namespace BoosterManager {
 				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
 			}
 
-			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseLogInventoryHistory(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), startTimeString))).ConfigureAwait(false);
+			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseLogInventoryHistory(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), numPagesString, startTimeString))).ConfigureAwait(false);
 
 			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
 
 			return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
 		}
 
-		private static async Task<string?> ResponseLogMarketHistory(Bot bot, EAccess access, string? numMarketHistoryPagesString = null, string? marketHistoryStartPageString = null) {
+		private static async Task<string?> ResponseLogMarketHistory(Bot bot, EAccess access, string? numPagesString = null, string? startPageString = null) {
 			if (access < EAccess.Master) {
 				return null;
 			}
@@ -608,32 +619,32 @@ namespace BoosterManager {
 				return FormatBotResponse(bot, Strings.BotNotConnected);
 			}
 
-			uint? numMarketHistoryPages = null;
-			if (numMarketHistoryPagesString != null) {
-				if (uint.TryParse(numMarketHistoryPagesString, out uint outValue)) {
-					numMarketHistoryPages = outValue;
+			uint? numPages = null;
+			if (numPagesString != null) {
+				if (uint.TryParse(numPagesString, out uint outValue)) {
+					numPages = outValue;
 				} else {
-					return FormatStaticResponse(String.Format(Strings.ErrorIsInvalid, nameof(numMarketHistoryPages)));
+					return FormatStaticResponse(String.Format(Strings.ErrorIsInvalid, nameof(numPages)));
 				}
 			}
 
-			uint? marketHistoryStartPage = null;
-			if (marketHistoryStartPageString != null) {
-				if (uint.TryParse(marketHistoryStartPageString, out uint outValue)) {
+			uint? startPage = null;
+			if (startPageString != null) {
+				if (uint.TryParse(startPageString, out uint outValue)) {
 					if (outValue == 0) {
-						return FormatStaticResponse(String.Format(Strings.ErrorIsInvalid, nameof(marketHistoryStartPage)));
+						return FormatStaticResponse(String.Format(Strings.ErrorIsInvalid, nameof(startPage)));
 					}
 
-					marketHistoryStartPage = outValue - 1;
+					startPage = outValue - 1;
 				} else {
-					return FormatStaticResponse(String.Format(Strings.ErrorIsInvalid, nameof(marketHistoryStartPage)));
+					return FormatStaticResponse(String.Format(Strings.ErrorIsInvalid, nameof(startPage)));
 				}
 			}
 
-			return await DataHandler.SendMarketHistoryOnly(bot, numMarketHistoryPages, marketHistoryStartPage).ConfigureAwait(false);
+			return await DataHandler.SendMarketHistoryOnly(bot, numPages, startPage).ConfigureAwait(false);
 		}
 
-		private static async Task<string?> ResponseLogMarketHistory(EAccess access, ulong steamID, string botNames, string? numMarketHistoryPagesString = null, string? marketHistoryStartPageString = null) {
+		private static async Task<string?> ResponseLogMarketHistory(EAccess access, ulong steamID, string botNames, string? numPagesString = null, string? startPageString = null) {
 			if (String.IsNullOrEmpty(botNames)) {
 				throw new ArgumentNullException(nameof(botNames));
 			}
@@ -644,7 +655,7 @@ namespace BoosterManager {
 				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
 			}
 
-			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseLogMarketHistory(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), numMarketHistoryPagesString, marketHistoryStartPageString))).ConfigureAwait(false);
+			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseLogMarketHistory(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), numPagesString, startPageString))).ConfigureAwait(false);
 
 			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
 
