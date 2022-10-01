@@ -69,7 +69,7 @@ namespace BoosterManager {
 			}
 			if (appIDs != null) {
 				foreach (uint appID in appIDs) {
-					parameters.Add($"appid[]={appID}");
+					parameters.Add($"app[]={appID}");
 				}
 			}
 			Uri request = new(ArchiWebHandler.SteamCommunityURL, String.Format("/profiles/{0}/inventoryhistory/?{1}", bot.SteamID, String.Join("&", parameters)));
