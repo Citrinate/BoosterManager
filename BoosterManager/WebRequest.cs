@@ -57,6 +57,7 @@ namespace BoosterManager {
 		}
 
 		internal static async Task<(Steam.InventoryHistoryResponse?, Uri)> GetInventoryHistory(Bot bot, List<uint>? appIDs = null, Steam.InventoryHistoryCursor? cursor = null, uint? startTime = null) {
+			// This API has a rather restrictive rate limit of 1200 requests, per 12 hours, per IP
 			List<string> parameters = new List<string>();
 			parameters.Add("ajax=1");
 			if (cursor != null) {

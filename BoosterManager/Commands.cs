@@ -35,6 +35,9 @@ namespace BoosterManager {
 						case "LOGDATA" or "SENDDATA":
 							return await ResponseLogData(bot, access).ConfigureAwait(false);
 
+						case "LOGSTOP" or "STOPLOG" or "LOGDATASTOP" or "SENDDATASTOP" or "STOPLOGDATA" or "STOPSENDDATA":
+							return ResponseLogStop(bot, access);
+
 						case "LOGINVENTORYHISTORY" or "SENDINVENTORYHISTORY" or "LOGIH" or "SENDIH":
 							return await ResponseLogInventoryHistory(bot, access).ConfigureAwait(false);
 
@@ -112,6 +115,9 @@ namespace BoosterManager {
 						
 						case "LOGDATA" or "SENDDATA":
 							return await ResponseLogData(access, steamID, Utilities.GetArgsAsText(args, 1, ",")).ConfigureAwait(false);
+
+						case "LOGSTOP" or "STOPLOG" or "LOGDATASTOP" or "SENDDATASTOP" or "STOPLOGDATA" or "STOPSENDDATA":
+							return ResponseLogStop(access, steamID, Utilities.GetArgsAsText(args, 1, ","));
 						
 						case "LOGINVENTORYHISTORY" or "SENDINVENTORYHISTORY" or "LOGIH" or "SENDIH" when args.Length > 3:
 							return await ResponseLogInventoryHistory(access, steamID, args[1], args[2], args[3]).ConfigureAwait(false);
@@ -245,7 +251,7 @@ namespace BoosterManager {
 				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
 			}
 
-			IEnumerable<string?> results = bots.Select(bot =>  ResponseBooster(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), steamID, targetGameIDs, respondingBot));
+			IEnumerable<string?> results = bots.Select(bot => ResponseBooster(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), steamID, targetGameIDs, respondingBot));
 
 			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
 
@@ -560,6 +566,36 @@ namespace BoosterManager {
 			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
 
 			return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
+		}
+
+		private static string? ResponseLogStop(Bot bot, EAccess access) {
+			if (access < EAccess.Master) {
+				return null;
+			}
+
+			if (!bot.IsConnectedAndLoggedOn) {
+				return FormatBotResponse(bot, Strings.BotNotConnected);
+			}
+
+			return DataHandler.StopSend(bot);
+		}
+
+		private static string? ResponseLogStop(EAccess access, ulong steamID, string botNames) {
+			if (String.IsNullOrEmpty(botNames)) {
+				throw new ArgumentNullException(nameof(botNames));
+			}
+
+			HashSet<Bot>? bots = Bot.GetBots(botNames);
+
+			if ((bots == null) || (bots.Count == 0)) {
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
+			}
+
+			IEnumerable<string?> results = bots.Select(bot => ResponseLogStop(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)));
+
+			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
+
+			return responses.Count > 0 ? String.Join(Environment.NewLine, responses) : null;
 		}
 
 		private static async Task<string?> ResponseLogInventoryHistory(Bot bot, EAccess access, string? numPagesString = null, string? startTimeString = null) {

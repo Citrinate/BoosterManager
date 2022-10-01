@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using ArchiSteamFarm.Localization;
 using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Web.Responses;
 using Nito.Disposables.Internals;
@@ -16,6 +17,7 @@ namespace BoosterManager {
 		internal static uint LogDataPageDelay = 15; // Delay, in seconds, between each page fetch
 		internal static List<uint>? InventoryHistoryAppFilter = null;
 		private static ConcurrentDictionary<string, List<Task<string?>>> Tasks = new();
+		private static ConcurrentDictionary<string, bool> ForceStop = new();
 
 		internal static async Task<string> SendAllData(Bot bot) {
 			if (BoosterDataAPI == null && InventoryHistoryAPI == null && MarketListingsAPI == null && MarketHistoryAPI == null) {
@@ -25,6 +27,12 @@ namespace BoosterManager {
 			if (!Tasks.ContainsKey(bot.BotName)) {
 				Tasks.TryAdd(bot.BotName, new List<Task<string?>>());
 			}
+
+			if (!ForceStop.ContainsKey(bot.BotName)) {
+				ForceStop.TryAdd(bot.BotName, false);
+			}
+
+			ForceStop[bot.BotName] = false;
 
 			if (Tasks[bot.BotName].Count != 0) {
 				return Commands.FormatBotResponse(bot, "Bot is already sending data");
@@ -64,6 +72,12 @@ namespace BoosterManager {
 				Tasks.TryAdd(bot.BotName, new List<Task<string?>>());
 			}
 
+			if (!ForceStop.ContainsKey(bot.BotName)) {
+				ForceStop.TryAdd(bot.BotName, false);
+			}
+
+			ForceStop[bot.BotName] = false;
+
 			if (Tasks[bot.BotName].Count != 0) {
 				return Commands.FormatBotResponse(bot, "Bot is already sending data");
 			}
@@ -101,6 +115,12 @@ namespace BoosterManager {
 				Tasks.TryAdd(bot.BotName, new List<Task<string?>>());
 			}
 
+			if (!ForceStop.ContainsKey(bot.BotName)) {
+				ForceStop.TryAdd(bot.BotName, false);
+			}
+
+			ForceStop[bot.BotName] = false;
+			
 			if (Tasks[bot.BotName].Count != 0) {
 				return Commands.FormatBotResponse(bot, "Bot is already sending data");
 			}
@@ -124,6 +144,14 @@ namespace BoosterManager {
 			responses.Add("");
 
 			return Commands.FormatBotResponse(bot, String.Join(Environment.NewLine, responses));
+		}
+
+		public static string StopSend(Bot bot) {
+			if (ForceStop.ContainsKey(bot.BotName)) {
+				ForceStop[bot.BotName] = true;
+			}
+
+			return Commands.FormatBotResponse(bot, Strings.Success);
 		}
 
 		private static async Task<string?> SendBoosterData(Bot bot, uint delayInMilliseconds = 0) {
@@ -161,6 +189,14 @@ namespace BoosterManager {
 		private static async Task<string?> SendInventoryHistory(Bot bot, Steam.InventoryHistoryCursor? cursor = null, uint? startTime = null, uint pagesRemaining = 0, uint delayInMilliseconds = 0) {
 			if (InventoryHistoryAPI == null) {
 				return null;
+			}
+
+			if (ForceStop.ContainsKey(bot.BotName) && ForceStop[bot.BotName]) {
+				if (cursor != null || startTime != null) {
+					return String.Format("Manually stopped before fetching Inventory History for Time < {0}", cursor?.Time ?? startTime);
+				} else {
+					return "Manually stopped before fetching Inventory History";
+				}
 			}
 
 			if (delayInMilliseconds != 0) {
@@ -243,6 +279,10 @@ namespace BoosterManager {
 		private static async Task<string?> SendMarketHistory(Bot bot, uint page = 0, uint pagesRemaining = 0, uint delayInMilliseconds = 0) {
 			if (MarketHistoryAPI == null) {
 				return null;
+			}
+
+			if (ForceStop.ContainsKey(bot.BotName) && ForceStop[bot.BotName]) {
+				return String.Format("Manually stopped before fetching Market History (Page {0})", page + 1);
 			}
 
 			if (delayInMilliseconds != 0) {
