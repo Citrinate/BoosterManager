@@ -13,7 +13,7 @@ namespace BoosterManager {
 		internal static Uri? InventoryHistoryAPI = null;
 		internal static Uri? MarketListingsAPI = null;
 		internal static Uri? MarketHistoryAPI = null;
-		internal static uint LogDataPageDelay = 5; // Delay, in seconds, between each page fetch
+		internal static uint LogDataPageDelay = 15; // Delay, in seconds, between each page fetch
 		internal static List<uint>? InventoryHistoryAppFilter = null;
 		private static ConcurrentDictionary<string, List<Task<string?>>> Tasks = new();
 
