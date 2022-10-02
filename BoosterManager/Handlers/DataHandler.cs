@@ -39,9 +39,9 @@ namespace BoosterManager {
 			}
 
 			Tasks[bot.BotName].Add(SendBoosterData(bot));
-			Tasks[bot.BotName].Add(SendInventoryHistory(bot));
 			Tasks[bot.BotName].Add(SendMarketListings(bot));
 			Tasks[bot.BotName].Add(SendMarketHistory(bot));
+			Tasks[bot.BotName].Add(SendInventoryHistory(bot));
 
 			while (Tasks[bot.BotName].Any(task => !task.IsCompleted)) {
 				await Task.WhenAll(Tasks[bot.BotName]).ConfigureAwait(false);
@@ -191,9 +191,11 @@ namespace BoosterManager {
 				return null;
 			}
 
+			uint? pageTime = cursor?.Time ?? startTime;
+
 			if (ForceStop.ContainsKey(bot.BotName) && ForceStop[bot.BotName]) {
-				if (cursor != null || startTime != null) {
-					return String.Format("Manually stopped before fetching Inventory History for Time < {0}", cursor?.Time ?? startTime);
+				if (pageTime != null) {
+					return String.Format("Manually stopped before fetching Inventory History for Time < {0}", pageTime);
 				} else {
 					return "Manually stopped before fetching Inventory History";
 				}
@@ -206,21 +208,30 @@ namespace BoosterManager {
 			(Steam.InventoryHistoryResponse? inventoryHistory, Uri source) = await WebRequest.GetInventoryHistory(bot, InventoryHistoryAppFilter, cursor, startTime).ConfigureAwait(false);
 
 			if (inventoryHistory == null || !inventoryHistory.Success) {
-				if (cursor != null || startTime != null) {
-					return String.Format("Failed to fetch Inventory History for Time < {0}!", cursor?.Time ?? startTime);
+				if (pageTime != null) {
+					return String.Format("Failed to fetch Inventory History for Time < {0}!", pageTime);
 				} else {
 					return "Failed to fetch Inventory History!";
 				}
 			}
 
-			SteamDataResponse response = await SendSteamData<Steam.InventoryHistoryResponse>(InventoryHistoryAPI, bot, inventoryHistory, source, cursor?.Time ?? startTime).ConfigureAwait(false);
+			SteamDataResponse response = await SendSteamData<Steam.InventoryHistoryResponse>(InventoryHistoryAPI, bot, inventoryHistory, source, pageTime).ConfigureAwait(false);
 
 			if (response.GetNextPage && pagesRemaining == 0) {
 				pagesRemaining = 1;
 			}
 
-			if (pagesRemaining > 0 && inventoryHistory.Cursor != null) {
-				Tasks[bot.BotName].Add(SendInventoryHistory(bot, cursor: inventoryHistory.Cursor, delayInMilliseconds: LogDataPageDelay * 1000, pagesRemaining: pagesRemaining - 1));
+			if (pagesRemaining > 0) {
+				if (inventoryHistory.Cursor != null) {
+					Tasks[bot.BotName].Add(SendInventoryHistory(bot, cursor: inventoryHistory.Cursor, delayInMilliseconds: LogDataPageDelay * 1000, pagesRemaining: pagesRemaining - 1));
+				} else if (pageTime != null) {
+					// Sometimes the returned cursor will be null even if there's more entries, this issue is described in more detail in WebRequest.GetInventoryHistory
+					if (inventoryHistory.Num == 50) {
+						Tasks[bot.BotName].Add(SendInventoryHistory(bot, startTime: pageTime - 1, delayInMilliseconds: LogDataPageDelay * 1000, pagesRemaining: pagesRemaining - 1));
+					} else {
+						Tasks[bot.BotName].Add(SendInventoryHistory(bot, startTime: pageTime, delayInMilliseconds: LogDataPageDelay * 1000, pagesRemaining: pagesRemaining - 1));
+					}
+				}
 			}
 
 			if (!response.ShowMessage) {
@@ -232,14 +243,18 @@ namespace BoosterManager {
 			}
 
 			if (!response.Success) {
-				if (cursor != null || startTime != null) {
-					return String.Format("API failed to accept Inventory History for Time < {0}!", cursor?.Time ?? startTime);
+				if (pageTime != null) {
+					return String.Format("API failed to accept Inventory History for Time < {0}!", pageTime);
 				} else {
 					return "API failed to accept Inventory History!";
 				}
 			}
 
-			return String.Format("Successfully sent Inventory History", cursor?.Time);
+			if (pageTime != null) {
+				return String.Format("Successfully sent Inventory History for Time < {0}", pageTime);
+			} else {
+				return "Successfully sent Inventory History";
+			}
 		}
 
 		private static async Task<string?> SendMarketListings(Bot bot, uint delayInMilliseconds = 0) {
