@@ -207,6 +207,7 @@ namespace BoosterManager {
 
 			(Steam.InventoryHistoryResponse? inventoryHistory, Uri source) = await WebRequest.GetInventoryHistory(bot, InventoryHistoryAppFilter, cursor, startTime).ConfigureAwait(false);
 
+			// This API has a rather restrictive rate limit of 1200 requests per 12 hours, per IP address
 			if (inventoryHistory == null || !inventoryHistory.Success) {
 				if (pageTime != null) {
 					return String.Format("Failed to fetch Inventory History for Time < {0}!", pageTime);
@@ -225,7 +226,7 @@ namespace BoosterManager {
 				if (inventoryHistory.Cursor != null) {
 					Tasks[bot.BotName].Add(SendInventoryHistory(bot, cursor: inventoryHistory.Cursor, delayInMilliseconds: LogDataPageDelay * 1000, pagesRemaining: pagesRemaining - 1));
 				} else if (pageTime != null) {
-					// Sometimes the returned cursor will be null even if there's more entries, this issue is described in more detail in WebRequest.GetInventoryHistory
+					// Sometimes the returned cursor will be null even if there's more entries, this issue is described in detail at /Docs/InventoryHistory.md
 					if (inventoryHistory.Num == 50) {
 						Tasks[bot.BotName].Add(SendInventoryHistory(bot, startTime: pageTime - 1, delayInMilliseconds: LogDataPageDelay * 1000, pagesRemaining: pagesRemaining - 1));
 					} else {

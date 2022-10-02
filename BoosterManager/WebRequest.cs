@@ -57,48 +57,6 @@ namespace BoosterManager {
 		}
 
 		internal static async Task<(Steam.InventoryHistoryResponse?, Uri)> GetInventoryHistory(Bot bot, List<uint>? appIDs = null, Steam.InventoryHistoryCursor? cursor = null, uint? startTime = null) {
-			// This API has a rather restrictive rate limit of 1200 requests per 12 hours, per IP address
-
-			// Below is a description of a very annoying cursor bug.  Dates are used for simplicity, in reality we're working with unix timestamps.
-
-			/**
-			There's no way to fetch specific pages, instead we need to specify a time, and we'll get results older than that time.
-			The API returns a maximum of 50 items.  If more items exist, it will return a cursor object with the time of the very 
-			next item. Sometimes however, the cursor object returned by the API will be missing, even if more items exist.  Repeated 
-			calls will not fix this error.
-
-			For example, a chain of requests starting at 5/2/21 and ending on 4/30/21 with a missing cursor object at the end might 
-			look like this:
-
-			5/2/21 > 5/1/21 > 4/30/21 > nothing
-
-			When this happens, we can sort of "remind" Steam that results older than 4/30/21 exist by using the start_time parameter 
-			with a date older than 4/30/21.  If we make a request with start_time=4/29/21, we can then go back to the 4/30/21 page and 
-			the previously broken chain will be restored. Once the chain is restored it will continue on normally for a while.
-
-			5/2/21 > 5/1/21 > 4/30/21 > 4/29/21 > 4/28/21 > ...
-
-			Special care needs to be taken when selecting a value for start_time.  If we're stopped at 4/30/21 and then make a request 
-			with start_time=1/10/20 instead of start_time=4/29/21, the previous chain of requests will still be restored, but it will 
-			have a gap in it.
-
-			5/2/21 > 5/1/21 > 4/30/21 > 1/10/20 > 1/9/20 > ...
-
-			The gap can be filled in by using start_time to request results between 4/30/21 and 1/1/20.  For example with start_time=4/29/21
-
-			5/2/21 > 5/1/21 > 4/30/21 > 4/29/21 > 4/28/21 > ... > 1/10/20 > 1/9/20 > ...
-
-			It's possible from this point that the chain could break again between 4/28/21 and 1/10/20.  Instead of pointing to nothing, 
-			it will point to 1/10/20
-
-			5/2/21 > 5/1/21 > 4/30/21 > 4/29/21 > 4/28/21 > 4/27/21 > 4/26/21 > 1/10/20 > 1/9/20 > ...
-
-			There's no real way to detect and fix these gaps.  It's best to avoid creating them in the first place.
-
-			This issue was first discovered when trying to fetch history sequentially on a single account starting from 9/30/22 and using
-			an app filter of [753, 730].  The issue arose after about 3,380 pages of history, when it reached 4/30/21.
-			*/
-
 			List<string> parameters = new List<string>();
 			parameters.Add("ajax=1");
 			if (cursor != null) {
