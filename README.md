@@ -117,6 +117,7 @@ These `string` type configuration settings can be added to your `ASF.json` confi
 You will need to design your API to accept requests and return responses per the following specifications:
 
 #### Request
+
 > **Method**: `POST`
 >
 > **Content-Type**: `application/json`
@@ -124,24 +125,42 @@ You will need to design your API to accept requests and return responses per the
 > Name | Type | Description
 > --- | --- | ---
 > `steamid`|`ulong`|SteamID of the bot that `data` belongs to
-> `source`|`string`|The url used to fetch `data`
-> `page`|`uint?`|Page number, for when `data` is paginated (only used for `MarketHistoryAPI`, else this is set to `null`)
-> `data`|`JObject`|The data taken from `source`, more details below
->
-> > `MarketListingsAPI` `data` comes directly from `https://steamcommunity.com/market/mylistings?norender=1`
-> >
-> > `MarketHistoryAPI` `data` comes directly from `https://steamcommunity.com/market/myhistory?norender=1`
-> > 
-> > `BoosterDataAPI` `data` is parsed from `https://steamcommunity.com/tradingcards/boostercreator/` and sent as an array of objects:
-> >
-> > Name | Type | Notes
-> > --- | --- | ---
-> > `appid`|`uint`|Booster game AppID
-> > `name`|`string`|Booster game name
-> > `series`|`uint`|Booster series number
-> > `price`|`uint`|Price of booster in gems
-> > `unavailable`|`bool`|Set to `true` when the booster is on a 24 hour cooldown
-> > `available_at_time`|`string?`|A date and time string in ISO 8601 format, if `unavailable` is `false` then this will be `null`|
+> `source`|`string`|The url used to fetch `data`.  See API-specific details below.
+> `page`|`uint?`|Page number, for when `data` is paginated.  See API-specific details below.
+> `data`|`JObject/JArray`|The data taken from `source`.  See API-specific details below.
+
+###### BoosterDataAPI-specific Details
+
+> Name | Type | Description
+> --- | --- | ---
+> `source`|`string`|`https://steamcommunity.com/tradingcards/boostercreator/`
+> `data`|`JArray`|The data parsed from `source` and sent as an array of objects.  See details below.
+
+###### BoosterDataAPI-specific Data Object Details
+
+> Name | Type | Notes
+> --- | --- | ---
+> `appid`|`uint`|Booster game AppID
+> `name`|`string`|Booster game name
+> `series`|`uint`|Booster series number
+> `price`|`uint`|Price of booster in gems
+> `unavailable`|`bool`|Set to `true` when the booster is on a 24 hour cooldown
+> `available_at_time`|`string?`|A date and time string in ISO 8601 format, if `unavailable` is `false` then this will be `null`|
+
+###### MarketListingsAPI-specific Details
+
+> Name | Type | Description
+> --- | --- | ---
+> `source`|`string`|`https://steamcommunity.com/market/mylistings?norender=1`
+> `data`|`JObject`|The data taken directly from `source`
+
+###### MarketHistoryAPI-specific Details
+
+> Name | Type | Description
+> --- | --- | ---
+> `source`|`string`|`https://steamcommunity.com/market/myhistory?norender=1`
+> `page`|`uint`|Page number
+> `data`|`JObject`|The data taken directly from `source`
 
 #### Response
 

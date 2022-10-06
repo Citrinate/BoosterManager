@@ -93,6 +93,12 @@ Be aware that each of these descriptions describes a unique type of event.  For 
 - You traded with `<UserName>`
 - Your trade with `<UserName>` failed.
 
+## Unknown Asset Bug
+
+Occassionaly `html` will contain "Unknown Asset #[0-9]+" instead of the appropriate item name.  The item will still have a defined `appid`, `classid`, `instanceid`, `contextid`, and `amount`.  However, the item will be missing from `descriptions`.
+
+This bug will resolve itself, all you need to do is to keep re-attempting to fetch the page until it does.
+
 ## Cursor Bug
 
 Below is a description of a bug in the Inventory History API.  Dates are used for simplicity, in reality we're working with unix timestamps.
