@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Localization;
 using ArchiSteamFarm.Steam;
@@ -16,39 +17,24 @@ namespace BoosterManager {
 		internal static Uri? MarketHistoryAPI = null;
 		internal static uint LogDataPageDelay = 15; // Delay, in seconds, between each page fetch
 		internal static List<uint>? InventoryHistoryAppFilter = null;
-		private static ConcurrentDictionary<string, List<Task<string?>>> Tasks = new();
-		private static ConcurrentDictionary<string, bool> ForceStop = new();
+		private static ConcurrentDictionary<string, DateTime> ForceStop = new();
 
 		internal static async Task<string> SendAllData(Bot bot) {
 			if (BoosterDataAPI == null && InventoryHistoryAPI == null && MarketListingsAPI == null && MarketHistoryAPI == null) {
 				return Commands.FormatBotResponse(bot, "API endpoints not defined");
 			}
 
-			if (!Tasks.ContainsKey(bot.BotName)) {
-				Tasks.TryAdd(bot.BotName, new List<Task<string?>>());
+			List<Task<string?>> tasks = new List<Task<string?>>();
+			tasks.Add(SendBoosterData(bot));
+			tasks.Add(SendMarketListings(bot));
+			tasks.Add(SendMarketHistory(bot, tasks, DateTime.Now));
+			tasks.Add(SendInventoryHistory(bot, tasks, DateTime.Now));
+
+			while (tasks.Any(task => !task.IsCompleted)) {
+				await Task.WhenAll(tasks).ConfigureAwait(false);
 			}
 
-			if (!ForceStop.ContainsKey(bot.BotName)) {
-				ForceStop.TryAdd(bot.BotName, false);
-			}
-
-			ForceStop[bot.BotName] = false;
-
-			if (Tasks[bot.BotName].Count != 0) {
-				return Commands.FormatBotResponse(bot, "Bot is already sending data");
-			}
-
-			Tasks[bot.BotName].Add(SendBoosterData(bot));
-			Tasks[bot.BotName].Add(SendMarketListings(bot));
-			Tasks[bot.BotName].Add(SendMarketHistory(bot));
-			Tasks[bot.BotName].Add(SendInventoryHistory(bot));
-
-			while (Tasks[bot.BotName].Any(task => !task.IsCompleted)) {
-				await Task.WhenAll(Tasks[bot.BotName]).ConfigureAwait(false);
-			}
-
-			List<string> responses = Tasks[bot.BotName].Select(task => task.Result).WhereNotNull().ToList<string>();
-			Tasks[bot.BotName].Clear();
+			List<string> responses = tasks.Select(task => task.Result).WhereNotNull().ToList<string>();
 
 			if (responses.Count == 0) {
 				return Commands.FormatBotResponse(bot, "No messages to display");
@@ -59,7 +45,7 @@ namespace BoosterManager {
 			return Commands.FormatBotResponse(bot, String.Join(Environment.NewLine, responses));
 		}
 
-		public static async Task<string> SendInventoryHistoryOnly(Bot bot, uint? numPages = 1, uint? startTime = null) {
+		public static async Task<string> SendInventoryHistoryOnly(Bot bot, Bot respondingBot, ulong recipientSteamID, uint? numPages = 1, uint? startTime = null) {
 			if (InventoryHistoryAPI == null) {
 				return Commands.FormatBotResponse(bot, "Inventory History API endpoint not defined");
 			}
@@ -68,30 +54,15 @@ namespace BoosterManager {
 				return Commands.FormatBotResponse(bot, "Finished sending no pages");
 			}
 
-			if (!Tasks.ContainsKey(bot.BotName)) {
-				Tasks.TryAdd(bot.BotName, new List<Task<string?>>());
-			}
-
-			if (!ForceStop.ContainsKey(bot.BotName)) {
-				ForceStop.TryAdd(bot.BotName, false);
-			}
-
-			ForceStop[bot.BotName] = false;
-
-			if (Tasks[bot.BotName].Count != 0) {
-				return Commands.FormatBotResponse(bot, "Bot is already sending data");
-			}
-
+			List<Task<string?>> tasks = new List<Task<string?>>();
 			numPages = numPages ?? 1;
+			tasks.Add(SendInventoryHistory(bot, tasks, DateTime.Now, startTime: startTime, pagesRemaining: numPages.Value - 1, retryOnRateLimit: true, respondingBot: respondingBot, recipientSteamID: recipientSteamID));
 
-			Tasks[bot.BotName].Add(SendInventoryHistory(bot, startTime: startTime, pagesRemaining: numPages.Value - 1));
-
-			while (Tasks[bot.BotName].Any(task => !task.IsCompleted)) {
-				await Task.WhenAll(Tasks[bot.BotName]).ConfigureAwait(false);
+			while (tasks.Any(task => !task.IsCompleted)) {
+				await Task.WhenAll(tasks).ConfigureAwait(false);
 			}
 
-			List<string> responses = Tasks[bot.BotName].Select(task => task.Result).WhereNotNull().ToList<string>();
-			Tasks[bot.BotName].Clear();
+			List<string> responses = tasks.Select(task => task.Result).WhereNotNull().ToList<string>();
 
 			if (responses.Count == 0) {
 				return Commands.FormatBotResponse(bot, "No messages to display");
@@ -111,31 +82,16 @@ namespace BoosterManager {
 				return Commands.FormatBotResponse(bot, "Finished sending no pages");
 			}
 
-			if (!Tasks.ContainsKey(bot.BotName)) {
-				Tasks.TryAdd(bot.BotName, new List<Task<string?>>());
-			}
-
-			if (!ForceStop.ContainsKey(bot.BotName)) {
-				ForceStop.TryAdd(bot.BotName, false);
-			}
-
-			ForceStop[bot.BotName] = false;
-			
-			if (Tasks[bot.BotName].Count != 0) {
-				return Commands.FormatBotResponse(bot, "Bot is already sending data");
-			}
-
+			List<Task<string?>> tasks = new List<Task<string?>>();
 			numPages = numPages ?? 1;
 			startPage = startPage ?? 0;
+			tasks.Add(SendMarketHistory(bot, tasks, DateTime.Now, startPage.Value, pagesRemaining: numPages.Value - 1));
 
-			Tasks[bot.BotName].Add(SendMarketHistory(bot, startPage.Value, pagesRemaining: numPages.Value - 1));
-
-			while (Tasks[bot.BotName].Any(task => !task.IsCompleted)) {
-				await Task.WhenAll(Tasks[bot.BotName]).ConfigureAwait(false);
+			while (tasks.Any(task => !task.IsCompleted)) {
+				await Task.WhenAll(tasks).ConfigureAwait(false);
 			}
 
-			List<string> responses = Tasks[bot.BotName].Select(task => task.Result).WhereNotNull().ToList<string>();
-			Tasks[bot.BotName].Clear();
+			List<string> responses = tasks.Select(task => task.Result).WhereNotNull().ToList<string>();
 
 			if (responses.Count == 0) {
 				return Commands.FormatBotResponse(bot, "No messages to display");
@@ -147,9 +103,7 @@ namespace BoosterManager {
 		}
 
 		public static string StopSend(Bot bot) {
-			if (ForceStop.ContainsKey(bot.BotName)) {
-				ForceStop[bot.BotName] = true;
-			}
+			ForceStop.AddOrUpdate(bot.BotName, DateTime.Now, (_, _) => DateTime.Now);
 
 			return Commands.FormatBotResponse(bot, Strings.Success);
 		}
@@ -186,16 +140,16 @@ namespace BoosterManager {
 			return "Successly sent Booster Data";
 		}
 
-		private static async Task<string?> SendInventoryHistory(Bot bot, Steam.InventoryHistoryCursor? cursor = null, uint? startTime = null, uint pagesRemaining = 0, uint delayInMilliseconds = 0) {
+		private static async Task<string?> SendInventoryHistory(Bot bot, List<Task<string?>> tasks, DateTime tasksStartedTime, Steam.InventoryHistoryCursor? cursor = null, uint? startTime = null, uint pagesRemaining = 0, uint delayInMilliseconds = 0, bool retryOnRateLimit = false, bool showRateLimitMessage = true, Bot? respondingBot = null, ulong? recipientSteamID = null) {
 			if (InventoryHistoryAPI == null) {
 				return null;
 			}
 
 			uint? pageTime = cursor?.Time ?? startTime;
 
-			if (ForceStop.ContainsKey(bot.BotName) && ForceStop[bot.BotName]) {
+			if (ForceStop.ContainsKey(bot.BotName) && ForceStop[bot.BotName] > tasksStartedTime) {
 				if (pageTime != null) {
-					return String.Format("Manually stopped before fetching Inventory History for Time < {0}", pageTime);
+					return String.Format("Manually stopped before fetching Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})", pageTime, DateTime.UnixEpoch.AddSeconds(pageTime.Value));
 				} else {
 					return "Manually stopped before fetching Inventory History";
 				}
@@ -205,33 +159,61 @@ namespace BoosterManager {
 				await Task.Delay((int)delayInMilliseconds).ConfigureAwait(false);
 			}
 
-			(Steam.InventoryHistoryResponse? inventoryHistory, Uri source) = await WebRequest.GetInventoryHistory(bot, InventoryHistoryAppFilter, cursor, startTime).ConfigureAwait(false);
+			if (!bot.IsConnectedAndLoggedOn) {
+				return await SendInventoryHistory(bot, tasks, tasksStartedTime, cursor, startTime, pagesRemaining, 60 * 1000, retryOnRateLimit, showRateLimitMessage, respondingBot, recipientSteamID).ConfigureAwait(false);
+			}
 
-			// This API has a rather restrictive rate limit of 1200 requests per 12 hours, per IP address
+			Steam.InventoryHistoryResponse? inventoryHistory = null; 
+			Uri? source = null;
+			try {
+				(inventoryHistory, source) = await WebRequest.GetInventoryHistory(bot, InventoryHistoryAppFilter, cursor, startTime).ConfigureAwait(false);
+			} catch (HttpRequestException) {
+				if (retryOnRateLimit) {
+					// This API has a very reachable rate limit of 1200 requests per 12 hours, per IP address
+					if (showRateLimitMessage && respondingBot != null && recipientSteamID != null) {
+						string message = "Rate limit exceeded while attempting to fetch Inventory History. Will keep trying, but it could take up to 12 hours to continue.  If you'd like to stop, use the 'logstop' command.";					
+						await respondingBot.SendMessage(recipientSteamID.Value, Commands.FormatBotResponse(bot, message)).ConfigureAwait(false);
+					}
+
+					// Try again in 15 minutes
+					return await SendInventoryHistory(bot, tasks, tasksStartedTime, cursor, startTime, pagesRemaining, 15 * 60 * 1000, retryOnRateLimit, false, respondingBot, recipientSteamID).ConfigureAwait(false);
+				}
+			}
+
 			if (inventoryHistory == null || !inventoryHistory.Success) {
 				if (pageTime != null) {
-					return String.Format("Failed to fetch Inventory History for Time < {0}!", pageTime);
+					return String.Format("Failed to fetch Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})!", pageTime, DateTime.UnixEpoch.AddSeconds(pageTime.Value));
 				} else {
 					return "Failed to fetch Inventory History!";
 				}
 			}
 
-			SteamDataResponse response = await SendSteamData<Steam.InventoryHistoryResponse>(InventoryHistoryAPI, bot, inventoryHistory, source, pageTime).ConfigureAwait(false);
+			SteamDataResponse response = await SendSteamData<Steam.InventoryHistoryResponse>(InventoryHistoryAPI, bot, inventoryHistory, source!, pageTime).ConfigureAwait(false);
 
 			if (response.GetNextPage && pagesRemaining == 0) {
 				pagesRemaining = 1;
 			}
 
-			if (pagesRemaining > 0) {
+			if (response.Success && pagesRemaining > 0) {
 				if (inventoryHistory.Cursor != null) {
-					Tasks[bot.BotName].Add(SendInventoryHistory(bot, cursor: inventoryHistory.Cursor, delayInMilliseconds: LogDataPageDelay * 1000, pagesRemaining: pagesRemaining - 1));
+					tasks.Add(SendInventoryHistory(bot, tasks, tasksStartedTime, inventoryHistory.Cursor, null, pagesRemaining - 1, LogDataPageDelay * 1000, retryOnRateLimit, true, respondingBot, recipientSteamID));
 				} else if (pageTime != null) {
-					// Sometimes the returned cursor will be null even if there's more entries, this issue is described in detail at /Docs/InventoryHistory.md
-					if (inventoryHistory.Num == 50) {
-						Tasks[bot.BotName].Add(SendInventoryHistory(bot, startTime: pageTime - 1, delayInMilliseconds: LogDataPageDelay * 1000, pagesRemaining: pagesRemaining - 1));
-					} else {
-						Tasks[bot.BotName].Add(SendInventoryHistory(bot, startTime: pageTime, delayInMilliseconds: LogDataPageDelay * 1000, pagesRemaining: pagesRemaining - 1));
+					// Inventory History has ended, possibly due to a bug described in ../Docs/InventoryHistory.md
+					List<string> messages = new List<string>();
+					if (response.ShowMessage) {
+						if (response.Message != null) {
+							messages.Add(response.Message);
+						} else if (!response.Success) {
+							messages.Add(String.Format("API failed to accept Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})!", pageTime, DateTime.UnixEpoch.AddSeconds(pageTime.Value)));
+						} else {
+							messages.Add(String.Format("Successfully sent Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})", pageTime, DateTime.UnixEpoch.AddSeconds(pageTime.Value)));
+						}
 					}
+					messages.Add(String.Format("Inventory History ended at the page starting on {0:MMM d, yyyy @ h:mm:ss tt}", DateTime.UnixEpoch.AddSeconds(pageTime.Value)));
+					messages.Add(String.Format("({0})", source));
+					messages.Add("Please verify that your history actually ends here, as there's a bug on Steam's end which can cause the history to end early.  Refer to the README for more information.");
+
+					return String.Join(Environment.NewLine, messages);
 				}
 			}
 
@@ -245,14 +227,14 @@ namespace BoosterManager {
 
 			if (!response.Success) {
 				if (pageTime != null) {
-					return String.Format("API failed to accept Inventory History for Time < {0}!", pageTime);
+					return String.Format("API failed to accept Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})!", pageTime, DateTime.UnixEpoch.AddSeconds(pageTime.Value));
 				} else {
 					return "API failed to accept Inventory History!";
 				}
 			}
 
 			if (pageTime != null) {
-				return String.Format("Successfully sent Inventory History for Time < {0}", pageTime);
+				return String.Format("Successfully sent Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})", pageTime, DateTime.UnixEpoch.AddSeconds(pageTime.Value));
 			} else {
 				return "Successfully sent Inventory History";
 			}
@@ -292,17 +274,21 @@ namespace BoosterManager {
 			return "Successfully sent Market Listings";
 		}
 
-		private static async Task<string?> SendMarketHistory(Bot bot, uint page = 0, uint pagesRemaining = 0, uint delayInMilliseconds = 0) {
+		private static async Task<string?> SendMarketHistory(Bot bot, List<Task<string?>> tasks, DateTime tasksStartedTime, uint page = 0, uint pagesRemaining = 0, uint delayInMilliseconds = 0) {
 			if (MarketHistoryAPI == null) {
 				return null;
 			}
 
-			if (ForceStop.ContainsKey(bot.BotName) && ForceStop[bot.BotName]) {
+			if (ForceStop.ContainsKey(bot.BotName) && ForceStop[bot.BotName] > tasksStartedTime) {
 				return String.Format("Manually stopped before fetching Market History (Page {0})", page + 1);
 			}
 
 			if (delayInMilliseconds != 0) {
 				await Task.Delay((int)delayInMilliseconds).ConfigureAwait(false);
+			}
+
+			if (!bot.IsConnectedAndLoggedOn) {
+				return await SendMarketHistory(bot, tasks, tasksStartedTime, page, pagesRemaining, 60 * 1000).ConfigureAwait(false);
 			}
 
 			uint count = 500;
@@ -319,8 +305,8 @@ namespace BoosterManager {
 				pagesRemaining = 1;
 			}
 
-			if (pagesRemaining > 0) {
-				Tasks[bot.BotName].Add(SendMarketHistory(bot, page + 1, pagesRemaining - 1, LogDataPageDelay * 1000));
+			if (response.Success && pagesRemaining > 0 && marketHistory.Events.Count > 0) {
+				tasks.Add(SendMarketHistory(bot, tasks, tasksStartedTime, page + 1, pagesRemaining - 1, LogDataPageDelay * 1000));
 			}
 
 			if (!response.ShowMessage) {

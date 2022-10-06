@@ -39,7 +39,7 @@ namespace BoosterManager {
 							return ResponseLogStop(bot, access);
 
 						case "LOGINVENTORYHISTORY" or "SENDINVENTORYHISTORY" or "LOGIH" or "SENDIH":
-							return await ResponseLogInventoryHistory(bot, access).ConfigureAwait(false);
+							return await ResponseLogInventoryHistory(bot, access, steamID).ConfigureAwait(false);
 
 						case "LOGMARKETHISTORY" or "SENDMARKETHISTORY" or "LOGMH" or "SENDMH":
 							return await ResponseLogMarketHistory(bot, access).ConfigureAwait(false);
@@ -120,11 +120,11 @@ namespace BoosterManager {
 							return ResponseLogStop(access, steamID, Utilities.GetArgsAsText(args, 1, ","));
 						
 						case "LOGINVENTORYHISTORY" or "SENDINVENTORYHISTORY" or "LOGIH" or "SENDIH" when args.Length > 3:
-							return await ResponseLogInventoryHistory(access, steamID, args[1], args[2], args[3]).ConfigureAwait(false);
+							return await ResponseLogInventoryHistory(access, steamID, bot, args[1], args[2], args[3]).ConfigureAwait(false);
 						case "LOGINVENTORYHISTORY" or "SENDINVENTORYHISTORY" or "LOGIH" or "SENDIH" when args.Length > 2:
-							return await ResponseLogInventoryHistory(access, steamID, args[1], args[2]).ConfigureAwait(false);
+							return await ResponseLogInventoryHistory(access, steamID, bot, args[1], args[2]).ConfigureAwait(false);
 						case "LOGINVENTORYHISTORY" or "SENDINVENTORYHISTORY" or "LOGIH" or "SENDIH":
-							return await ResponseLogInventoryHistory(access, steamID, Utilities.GetArgsAsText(args, 1, ",")).ConfigureAwait(false);	
+							return await ResponseLogInventoryHistory(access, steamID, bot, Utilities.GetArgsAsText(args, 1, ",")).ConfigureAwait(false);	
 
 						case "LOGMARKETHISTORY" or "SENDMARKETHISTORY" or "LOGMH" or "SENDMH" when args.Length > 3:
 							return await ResponseLogMarketHistory(access, steamID, args[1], args[2], args[3]).ConfigureAwait(false);
@@ -598,7 +598,7 @@ namespace BoosterManager {
 			return responses.Count > 0 ? String.Join(Environment.NewLine, responses) : null;
 		}
 
-		private static async Task<string?> ResponseLogInventoryHistory(Bot bot, EAccess access, string? numPagesString = null, string? startTimeString = null) {
+		private static async Task<string?> ResponseLogInventoryHistory(Bot bot, EAccess access, ulong steamID, string? numPagesString = null, string? startTimeString = null, Bot? respondingBot = null) {
 			if (access < EAccess.Master) {
 				return null;
 			}
@@ -625,10 +625,10 @@ namespace BoosterManager {
 				}
 			}
 
-			return await DataHandler.SendInventoryHistoryOnly(bot, numPages, startTime).ConfigureAwait(false);
+			return await DataHandler.SendInventoryHistoryOnly(bot, respondingBot ?? bot, steamID, numPages, startTime).ConfigureAwait(false);
 		}
 
-		private static async Task<string?> ResponseLogInventoryHistory(EAccess access, ulong steamID, string botNames, string? numPagesString = null, string? startTimeString = null) {
+		private static async Task<string?> ResponseLogInventoryHistory(EAccess access, ulong steamID, Bot respondingBot, string botNames, string? numPagesString = null, string? startTimeString = null) {
 			if (String.IsNullOrEmpty(botNames)) {
 				throw new ArgumentNullException(nameof(botNames));
 			}
@@ -639,7 +639,7 @@ namespace BoosterManager {
 				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
 			}
 
-			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseLogInventoryHistory(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), numPagesString, startTimeString))).ConfigureAwait(false);
+			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseLogInventoryHistory(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), steamID, numPagesString, startTimeString, respondingBot))).ConfigureAwait(false);
 
 			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
 
