@@ -145,7 +145,7 @@ You will need to design your API to accept requests and return responses per the
 > > > `series`|`uint`|Booster series number
 > > > `price`|`uint`|Price of booster in gems
 > > > `unavailable`|`bool`|Set to `true` when the booster is on a 24 hour cooldown
-> > > `available_at_time`|`string?`|A date and time string in ISO 8601 format, if `unavailable = false` then this will be `null`|
+> > > `available_at_time`|`string?`|A date and time string in ISO 8601 format, if `unavailable` is `false` then this will be `null`|
 > >
 > > **MarketListingsAPI-specific Details**:
 > >
