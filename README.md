@@ -128,39 +128,39 @@ You will need to design your API to accept requests and return responses per the
 > `source`|`string`|The url used to fetch `data`.  See API-specific details below.
 > `page`|`uint?`|Page number, for when `data` is paginated, `null` otherwise.  See API-specific details below.
 > `data`|`JObject/JArray`|The data taken from `source`.  See API-specific details below.
-
-###### BoosterDataAPI-specific Details
-
-> Name | Type | Description
-> --- | --- | ---
-> `source`|`string`|`https://steamcommunity.com/tradingcards/boostercreator/`
-> `data`|`JArray`|The data parsed from `source` and sent as an array of objects.  See details below.
-
-###### BoosterDataAPI-specific `data` Details
-
-> Name | Type | Notes
-> --- | --- | ---
-> `appid`|`uint`|Booster game AppID
-> `name`|`string`|Booster game name
-> `series`|`uint`|Booster series number
-> `price`|`uint`|Price of booster in gems
-> `unavailable`|`bool`|Set to `true` when the booster is on a 24 hour cooldown
-> `available_at_time`|`string?`|A date and time string in ISO 8601 format, if `unavailable = false` then this will be `null`|
-
-###### MarketListingsAPI-specific Details
-
-> Name | Type | Description
-> --- | --- | ---
-> `source`|`string`|`https://steamcommunity.com/market/mylistings?norender=1`
-> `data`|`JObject`|The data taken directly from `source`
-
-###### MarketHistoryAPI-specific Details
-
-> Name | Type | Description
-> --- | --- | ---
-> `source`|`string`|`https://steamcommunity.com/market/myhistory?norender=1&count=500`
-> `page`|`uint`|Page number, defined as `floor(data[start] / 500) + 1`
-> `data`|`JObject`|The data taken directly from `source`
+>
+> > **BoosterDataAPI-specific Details**:
+> >
+> > Name | Type | Description
+> > --- | --- | ---
+> > `source`|`string`|`https://steamcommunity.com/tradingcards/boostercreator/`
+> > `data`|`JArray`|The data parsed from `source` and sent as an array of objects.  See array entry details below.
+> >
+> > > **BoosterDataAPI-specific `data` Array Entry Details**:
+> > >
+> > > Name | Type | Notes
+> > > --- | --- | ---
+> > > `appid`|`uint`|Booster game AppID
+> > > `name`|`string`|Booster game name
+> > > `series`|`uint`|Booster series number
+> > > `price`|`uint`|Price of booster in gems
+> > > `unavailable`|`bool`|Set to `true` when the booster is on a 24 hour cooldown
+> > > `available_at_time`|`string?`|A date and time string in ISO 8601 format, if `unavailable = false` then this will be `null`|
+> >
+> > **MarketListingsAPI-specific Details**:
+> >
+> > Name | Type | Description
+> > --- | --- | ---
+> > `source`|`string`|`https://steamcommunity.com/market/mylistings?norender=1`
+> > `data`|`JObject`|The data taken directly from `source`
+> >
+> > **MarketHistoryAPI-specific Details**:
+> >
+> > Name | Type | Description
+> > --- | --- | ---
+> > `source`|`string`|`https://steamcommunity.com/market/myhistory?norender=1&count=500`
+> > `page`|`uint`|Page number, defined as `floor(data[start] / 500) + 1`
+> > `data`|`JObject`|The data taken directly from `source`
 
 #### Response
 
@@ -171,7 +171,7 @@ You will need to design your API to accept requests and return responses per the
 > `success`|`bool`|Yes|Whether your operations succeeded or failed
 > `message`|`string`|No|A custom message that will be displayed in place of the default succeed/fail message
 > `show_message`|`bool`|No|Whether or not to show any message
-> `get_next_page`|`bool`|No|Whether or not to fetch the next page (for when `source` is paginated)
+> `get_next_page`|`bool`|No|Whether or not to fetch the next page (for when `data` is paginated)
 
 ---
 
