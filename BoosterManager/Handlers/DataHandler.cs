@@ -149,7 +149,7 @@ namespace BoosterManager {
 
 			if (ForceStop.ContainsKey(bot.BotName) && ForceStop[bot.BotName] > tasksStartedTime) {
 				if (pageTime != null) {
-					return String.Format("Manually stopped before fetching Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})", pageTime, DateTime.UnixEpoch.AddSeconds(pageTime.Value));
+					return String.Format("Manually stopped before fetching Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})", pageTime, GetDateTimeFromTimestamp(pageTime.Value));
 				} else {
 					return "Manually stopped before fetching Inventory History";
 				}
@@ -182,7 +182,7 @@ namespace BoosterManager {
 
 			if (inventoryHistory == null || !inventoryHistory.Success) {
 				if (pageTime != null) {
-					return String.Format("Failed to fetch Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})!", pageTime, DateTime.UnixEpoch.AddSeconds(pageTime.Value));
+					return String.Format("Failed to fetch Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})!", pageTime, GetDateTimeFromTimestamp(pageTime.Value));
 				} else {
 					return "Failed to fetch Inventory History!";
 				}
@@ -204,14 +204,14 @@ namespace BoosterManager {
 						if (response.Message != null) {
 							messages.Add(response.Message);
 						} else if (!response.Success) {
-							messages.Add(String.Format("API failed to accept Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})!", pageTime, DateTime.UnixEpoch.AddSeconds(pageTime.Value)));
+							messages.Add(String.Format("API failed to accept Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})!", pageTime, GetDateTimeFromTimestamp(pageTime.Value)));
 						} else {
-							messages.Add(String.Format("Successfully sent Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})", pageTime, DateTime.UnixEpoch.AddSeconds(pageTime.Value)));
+							messages.Add(String.Format("Successfully sent Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})", pageTime, GetDateTimeFromTimestamp(pageTime.Value)));
 						}
 					}
-					messages.Add(String.Format("Inventory History ended at the page starting on {0:MMM d, yyyy @ h:mm:ss tt}", DateTime.UnixEpoch.AddSeconds(pageTime.Value)));
-					messages.Add(String.Format("({0})", source));
+					messages.Add(String.Format("Inventory History ended at the page starting on {0:MMM d, yyyy @ h:mm:ss tt}", GetDateTimeFromTimestamp(pageTime.Value)));
 					messages.Add("Please verify that your history actually ends here, as there's a bug on Steam's end which can cause the history to end early.  Refer to the README for more information.");
+					messages.Add(String.Format("({0})", source));
 
 					return String.Join(Environment.NewLine, messages);
 				}
@@ -227,14 +227,14 @@ namespace BoosterManager {
 
 			if (!response.Success) {
 				if (pageTime != null) {
-					return String.Format("API failed to accept Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})!", pageTime, DateTime.UnixEpoch.AddSeconds(pageTime.Value));
+					return String.Format("API failed to accept Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})!", pageTime, GetDateTimeFromTimestamp(pageTime.Value));
 				} else {
 					return "API failed to accept Inventory History!";
 				}
 			}
 
 			if (pageTime != null) {
-				return String.Format("Successfully sent Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})", pageTime, DateTime.UnixEpoch.AddSeconds(pageTime.Value));
+				return String.Format("Successfully sent Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})", pageTime, GetDateTimeFromTimestamp(pageTime.Value));
 			} else {
 				return "Successfully sent Inventory History";
 			}
@@ -334,5 +334,7 @@ namespace BoosterManager {
 
 			return response.Content;
 		}
+
+		private static DateTime GetDateTimeFromTimestamp(uint timestamp) => DateTime.UnixEpoch.AddSeconds(timestamp).ToLocalTime();
 	}
 }

@@ -126,7 +126,7 @@ You will need to design your API to accept requests and return responses per the
 > --- | --- | ---
 > `steamid`|`ulong`|SteamID of the bot that `data` belongs to
 > `source`|`string`|The url used to fetch `data`.  See API-specific details below.
-> `page`|`uint?`|Page number, for when `data` is paginated.  See API-specific details below.
+> `page`|`uint?`|Page number, for when `data` is paginated, `null` otherwise.  See API-specific details below.
 > `data`|`JObject/JArray`|The data taken from `source`.  See API-specific details below.
 
 ###### BoosterDataAPI-specific Details
@@ -136,7 +136,7 @@ You will need to design your API to accept requests and return responses per the
 > `source`|`string`|`https://steamcommunity.com/tradingcards/boostercreator/`
 > `data`|`JArray`|The data parsed from `source` and sent as an array of objects.  See details below.
 
-###### BoosterDataAPI-specific Data Object Details
+###### BoosterDataAPI-specific `data` Details
 
 > Name | Type | Notes
 > --- | --- | ---
@@ -145,7 +145,7 @@ You will need to design your API to accept requests and return responses per the
 > `series`|`uint`|Booster series number
 > `price`|`uint`|Price of booster in gems
 > `unavailable`|`bool`|Set to `true` when the booster is on a 24 hour cooldown
-> `available_at_time`|`string?`|A date and time string in ISO 8601 format, if `unavailable` is `false` then this will be `null`|
+> `available_at_time`|`string?`|A date and time string in ISO 8601 format, if `unavailable = false` then this will be `null`|
 
 ###### MarketListingsAPI-specific Details
 
@@ -158,8 +158,8 @@ You will need to design your API to accept requests and return responses per the
 
 > Name | Type | Description
 > --- | --- | ---
-> `source`|`string`|`https://steamcommunity.com/market/myhistory?norender=1`
-> `page`|`uint`|Page number
+> `source`|`string`|`https://steamcommunity.com/market/myhistory?norender=1&count=500`
+> `page`|`uint`|Page number, defined as `floor(data[start] / 500) + 1`
 > `data`|`JObject`|The data taken directly from `source`
 
 #### Response
@@ -177,9 +177,9 @@ You will need to design your API to accept requests and return responses per the
 
 ### MarketHistoryDelay
 
-`"BoosterDataAPI": <Seconds>,`
+`"MarketHistoryDelay": <Seconds>,`
 
-Example: `"BoosterDataAPI": 15,`
+Example: `"MarketHistoryDelay": 15,`
 
 This `uint` type configuration setting can be added to your `ASF.json` config file.  When using the `logdata` command, it will add a `Seconds` delay between fetching market history pages.
 
