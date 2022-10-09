@@ -19,12 +19,12 @@ I feel the need to provide unofficial documentation here, because doing anything
 >
 > Name | Required | Description
 > --- | --- | ---
-> `ajax`|Yes|With this parameter set to anything, Steam will return the inventory history page as a JSON object
+> `ajax`|No|With this parameter set to anything, Steam will return the inventory history page as a JSON object
 > `app[]`|No|Filters the history to only include events belonging to the specified `appID`.  This parameter can be used multiple times to filter for multiple apps.
 > `cursor[time]`|No|Unix timestamp.  Filters the history to only show events older than the specified time.
 > `cursor[time_frac]`|No|A whole number representing the fractional part of `cursor[time]`, giving it greater precision. Allows for 9 digits of precision, although only the first 3 seem to be used.
 > `cursor[s]`|No|An unknown number.  Seems to be used to differentiate between history events in the case where multiple events might share the same timestamp.  As you go further back into your account's history, this number gets bigger.  It seems to be counting something, but I'm not sure what.
-> `sessionid`|No|Unncessary.  It's not possible to view an account's inventory history with this parameter alone, you still need to send the Session ID in the request header as a cookie.
+> `sessionid`|No|Unnecessary.  It's not possible to view an account's inventory history with this parameter alone, you still need to send the Session ID in the request header as a cookie.
 > `start_time`|No|Seems to be the same as `cursor[time]`.
 
 #### Response
@@ -38,11 +38,13 @@ I feel the need to provide unofficial documentation here, because doing anything
 > `num`|`uint`|Yes|Number of events in `html`
 > `descriptions`|`JObject/JArray`|Yes|Contains information about the Steam Community Items found in `html`.  If `num` is `0`, this will be an empty array.
 > `apps`|`JArray`|Yes|Contains information about the Steam Apps referenced in `html`.
-> `cursor`|`JObject`|No|An object used to uniquely identify the last event in `html`.  This will only be defined if older events exist.
+> `cursor`|`JObject`|No|An object used to uniquely identify the last event in `html`.  Will not be present if older events do not exist, or sometimes due to [a bug](#history-ends-early-bug).
 
 ## Possible Event Descriptions
 
-Much of the inventory history is delivered as `html` that needs to be parsed.  This plugin current does not, and likely never will, support parsing of `html`.  The best I can do is to offer an incomplete list of possible history event descriptions.
+Much of the inventory history is delivered as `html` that needs to be parsed.  
+
+> The BoosterManager plugin does not, and likely never will, support parsing of `html`.  The best I can do is to offer this incomplete list of possible history event descriptions.
 
 Be aware that each of these descriptions describes a unique type of event.  For example, "Listed on the Community Market", "Listed on the Steam Community Market", and "You listed an item on the Community Market." are all different types of events, and not 3 different ways to describe the same event.
 
@@ -93,51 +95,44 @@ Be aware that each of these descriptions describes a unique type of event.  For 
 - You traded with `<UserName>`
 - Your trade with `<UserName>` failed.
 
+## Missing History Bug
+
+It's possible that Steam will skip over parts of your history.  In my experience, when it skips, it's a big skip, creating a gap several months long.  These big gaps tend to be very noticable, but I can't guarantee that the gaps will always be that large.
+
+As an example, assuming you know there should be history on your account between `4/30/21` and `1/5/21`, your history might look like this:
+
+```
+… → 5/2/21 → 5/1/21 → 4/30/21 → 1/5/21 → 1/6/21 → …
+```
+
+This bug can be fixed [in the browser](https://steamcommunity.com/my/inventoryhistory/) by searching for history within the gap.  You can use Steam's "Jump to date" feature, or try setting the `start_date` parameter yourself.  It may take several attempts to find a value for `start_date` that causes the missing history to re-appear.
+
+When you find a missing history at `start_date = x`, history older than `x` should also re-appear, but history newer than `x` will not.  Looking at the previous example and assuming there's history between `4/28/21` and `3/14/21`; if `x = 3/14/21` then the gap will shrink, but not disappear:
+
+```
+… → 5/2/21 → 5/1/21 → 4/30/21 → 3/14/21 → 3/13/21 → … → 1/5/21 → 1/6/21 → …
+```
+
+For this reason it's important to start your search right where the gap begins and proceed gradually.  Setting the `start_date` parameter yourself allows you to move backward 1 second at a time, while the "Jump to date" feature moves in increments of 24 hours.  It's also possible to use the `cursor[time]` and `cursor[time_frac]` parameters to move in increments of 1 millisecond.
+
+> The BoosterManager plugin cannot detect this bug.  You'll need to monitor the plugin's activity yourself to ensure there's no gaps.  Within your `InventoryHistoryAPI`, `page - data["cursor"]["time"]` represents the size of the gap in seconds between the current page and the next page.  Be aware, both `page` and `data["cursor"]` can be `null`.
+
 ## Unknown Asset Bug
 
-Occassionaly `html` will contain "Unknown Asset #[0-9]+" instead of the appropriate item name.  The item will still have a defined `appid`, `classid`, `instanceid`, `contextid`, and `amount`.  However, the item will be missing from `descriptions`.
+Occasionally some items in `html` will be labeled as "Unknown Asset" instead of the appropriate item name.  The affected items will still have defined `appid`, `classid`, `instanceid`, `contextid`, and `amount`, but the items will be missing from `descriptions`.
 
-This bug will resolve itself, all you need to do is to keep re-attempting to fetch the page until it does.
+This bug is likely caused by Steam servers being down, just keep reloading the page until everything appears properly.
 
-## Cursor Bug
+## History Ends Early Bug
 
-Below is a description of a bug in the Inventory History API.  Dates are used for simplicity, in reality we're working with unix timestamps.
+Sometimes Steam will say there's no more history, when really there is.  When using the [Inventory History page](https://steamcommunity.com/my/inventoryhistory/), this bug expresses itself as the "Load More History" button disappearing prematurely.  When that happens, the `cursor` object returned by Steam's API is `null`.  As far as I can tell, this bug only appears when searching for history older than ~1.5 years and/or ~100,000 events.
 
-### Description of the bug
+For example, assuming we have history older than `4/30/21`, this can happen:
 
-The API provides no way to fetch specific pages, instead we specify a time, and get results older than that time. The API returns a maximum of 50 history events.  If more events exist, it will return a `cursor` object we can use to find the very next event.  Ideally, we can use `cursor` to generate a chain of requests from the very first event to the very last event.  Sometimes however, the `cursor` object returned by the API will be missing, even if more events exist; breaking the chain.
+```
+… → 5/2/21 → 5/1/21 → 4/30/21 → Nothing
+```
 
-For example, a chain of requests starting at `5/2/21`, but ending on `4/30/21` with a missing `cursor` object at the end might look like this:
+This is resolved the same way as the [Missing History Bug](#missing-history-bug): by searching for history events at times past the cutoff.
 
-> `5/2/21` &rarr; `5/1/21` &rarr; `4/30/21` &rarr; `Nothing`
-
-If using Steam's inventory history page, this bug expresses itself as the "Load More History" button disappearing prematurely.
-
-**As far as I can tell, this bug only appears when searching for history older than ~1.5 years and/or ~100,000 events.**
-
-### How to fix the bug
-
-There's no nice way to fix this bug.  The plugin will detect when the bug may have occurred, and provide a link to the page where it occurred.  On the `InventoryHistoryAPI` side of things, the value for `data[cursor]` will be `null` when it recieves a page with this bug on it.
-
-This will need to be fixed in the browser.  Take the link the plugin provided and remove the `ajax=1` parameter from it.  Here we should see that there's no "Load More History" button at the bottom of the page.  It's possible that this is really just the end of your account's history; you'll need to determine that yourself.
-
-We'll first need to "remind" Steam that older history events exist; we can do this a few different ways:
-
- - If you have any `app[]` filters, try removing them (it's better to remove them from the url, rather than using the "Filter options")
- - Try using the "Jump to date" feature to jump to an older date
-
-One we've got Steam to display older events, it's likely that there's now a gap between where the history ended before, and where the history continues now.  Using our previous example, the gap might look like this:
-
-> `5/2/21` &rarr; `5/1/21` &rarr; `4/30/21` &rarr; `1/5/21` &rarr; &hellip;
-
-To fill this gap, we need to search for history events within the gap.  Above that would be between `4/28/21` and `1/5/21`.  Preferably as close to where the history stopped as is possible.  We can do this by, again from the link the plugin provided, gradually decreasing the `cursor[time]` parameter until new events begin to appear.  Once they do start to appear, our chain should be properly restored:
-
-> `5/2/21` &rarr; `5/1/21` &rarr; `4/30/21` &rarr; `4/29/21` &rarr; `4/28/21` &rarr; &hellip; &rarr; `1/5/21` &rarr; &hellip;
-
-You can now resume using the plugin per the `!loginventoryhistory` command.
-
-**Warning:** It's possible from this point that the chain may break again, this time somewhere between `4/28/21` and `1/5/21`:
-
-> `5/2/21` &rarr; `5/1/21` &rarr; `4/30/21` &rarr; `4/29/21` &rarr; `4/28/21` &rarr; &hellip; &rarr; `3/14/21` &rarr; `3/13/21` &rarr; `1/5/21` &rarr; &hellip;
-
-If this happens the plugin will not detect it, as the `cursor` object will not be missing.  You'll need to monitor the plugin's activity yourself to ensure that there are no abnormal gaps in your history.  If gaps do exist, you can fill them the same way as before.
+> The BoosterManager plugin will detect when the bug may have occurred and provide a link to the page where it occurred.  On the `InventoryHistoryAPI` side of things, the value for `data[cursor]` will be `null` when it receives a page with this bug on it.
