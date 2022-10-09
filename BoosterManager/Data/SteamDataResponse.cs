@@ -14,6 +14,12 @@ namespace BoosterManager {
 		[JsonProperty(PropertyName = "get_next_page", Required = Required.DisallowNull)]
 		internal readonly bool GetNextPage = false;
 
+		[JsonProperty(PropertyName = "next_page", Required = Required.Default)]
+		internal readonly uint? NextPage = null;
+
+		[JsonProperty(PropertyName = "next_cursor", Required = Required.Default)]
+		internal readonly Steam.InventoryHistoryCursor? NextCursor = null;
+
 		[JsonConstructor]
 		internal SteamDataResponse() { }
 	}

@@ -145,14 +145,10 @@ namespace BoosterManager {
 				return null;
 			}
 
-			uint? pageTime = cursor?.Time ?? startTime;
+			uint pageTime = cursor?.Time ?? startTime ?? (uint) DateTimeOffset.Now.ToUnixTimeSeconds();
 
 			if (ForceStop.ContainsKey(bot.BotName) && ForceStop[bot.BotName] > tasksStartedTime) {
-				if (pageTime != null) {
-					return String.Format("Manually stopped before fetching Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})", pageTime, GetDateTimeFromTimestamp(pageTime.Value));
-				} else {
-					return "Manually stopped before fetching Inventory History";
-				}
+				return String.Format("Manually stopped before fetching Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})", pageTime, GetDateTimeFromTimestamp(pageTime));
 			}
 
 			if (delayInMilliseconds != 0) {
@@ -181,35 +177,35 @@ namespace BoosterManager {
 			}
 
 			if (inventoryHistory == null || !inventoryHistory.Success) {
-				if (pageTime != null) {
-					return String.Format("Failed to fetch Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})!", pageTime, GetDateTimeFromTimestamp(pageTime.Value));
-				} else {
-					return "Failed to fetch Inventory History!";
-				}
+				return String.Format("Failed to fetch Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})!", pageTime, GetDateTimeFromTimestamp(pageTime));
 			}
 
-			SteamDataResponse response = await SendSteamData<Steam.InventoryHistoryResponse>(InventoryHistoryAPI, bot, inventoryHistory, source!, pageTime).ConfigureAwait(false);
+			SteamDataResponse response = await SendSteamData<Steam.InventoryHistoryResponse>(InventoryHistoryAPI, bot, inventoryHistory, source!, pageTime, cursor).ConfigureAwait(false);
 
 			if (response.GetNextPage && pagesRemaining == 0) {
 				pagesRemaining = 1;
 			}
 
 			if (response.Success && pagesRemaining > 0) {
-				if (inventoryHistory.Cursor != null) {
+				if (response.NextCursor != null) {
+					tasks.Add(SendInventoryHistory(bot, tasks, tasksStartedTime, response.NextCursor, null, pagesRemaining - 1, LogDataPageDelay * 1000, retryOnRateLimit, true, respondingBot, recipientSteamID));
+				} else if (response.NextPage != null) {
+					tasks.Add(SendInventoryHistory(bot, tasks, tasksStartedTime, null, response.NextPage, pagesRemaining - 1, LogDataPageDelay * 1000, retryOnRateLimit, true, respondingBot, recipientSteamID));
+				} else if (inventoryHistory.Cursor != null) {
 					tasks.Add(SendInventoryHistory(bot, tasks, tasksStartedTime, inventoryHistory.Cursor, null, pagesRemaining - 1, LogDataPageDelay * 1000, retryOnRateLimit, true, respondingBot, recipientSteamID));
-				} else if (pageTime != null) {
+				} else {
 					// Inventory History has ended, possibly due to a bug described in ../Docs/InventoryHistory.md
 					List<string> messages = new List<string>();
 					if (response.ShowMessage) {
 						if (response.Message != null) {
 							messages.Add(response.Message);
 						} else if (!response.Success) {
-							messages.Add(String.Format("API failed to accept Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})!", pageTime, GetDateTimeFromTimestamp(pageTime.Value)));
+							messages.Add(String.Format("API failed to accept Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})!", pageTime, GetDateTimeFromTimestamp(pageTime)));
 						} else {
-							messages.Add(String.Format("Successfully sent Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})", pageTime, GetDateTimeFromTimestamp(pageTime.Value)));
+							messages.Add(String.Format("Successfully sent Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})", pageTime, GetDateTimeFromTimestamp(pageTime)));
 						}
 					}
-					messages.Add(String.Format("Inventory History ended at the page starting on {0:MMM d, yyyy @ h:mm:ss tt}", GetDateTimeFromTimestamp(pageTime.Value)));
+					messages.Add(String.Format("Inventory History ended at the page starting on {0:MMM d, yyyy @ h:mm:ss tt}", GetDateTimeFromTimestamp(pageTime)));
 					messages.Add("Please verify that your history actually ends here, as there's a bug on Steam's end which can cause the history to end early.  Refer to the README for more information.");
 					messages.Add(String.Format("({0})", source));
 
@@ -226,18 +222,10 @@ namespace BoosterManager {
 			}
 
 			if (!response.Success) {
-				if (pageTime != null) {
-					return String.Format("API failed to accept Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})!", pageTime, GetDateTimeFromTimestamp(pageTime.Value));
-				} else {
-					return "API failed to accept Inventory History!";
-				}
+				return String.Format("API failed to accept Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})!", pageTime, GetDateTimeFromTimestamp(pageTime));
 			}
 
-			if (pageTime != null) {
-				return String.Format("Successfully sent Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})", pageTime, GetDateTimeFromTimestamp(pageTime.Value));
-			} else {
-				return "Successfully sent Inventory History";
-			}
+			return String.Format("Successfully sent Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})", pageTime, GetDateTimeFromTimestamp(pageTime));
 		}
 
 		private static async Task<string?> SendMarketListings(Bot bot, uint delayInMilliseconds = 0) {
@@ -306,7 +294,11 @@ namespace BoosterManager {
 			}
 
 			if (response.Success && pagesRemaining > 0 && marketHistory.Events.Count > 0) {
-				tasks.Add(SendMarketHistory(bot, tasks, tasksStartedTime, page + 1, pagesRemaining - 1, LogDataPageDelay * 1000));
+				if (response.NextPage != null) {
+					tasks.Add(SendMarketHistory(bot, tasks, tasksStartedTime, response.NextPage.Value - 1, pagesRemaining - 1, LogDataPageDelay * 1000));
+				} else {
+					tasks.Add(SendMarketHistory(bot, tasks, tasksStartedTime, page + 1, pagesRemaining - 1, LogDataPageDelay * 1000));
+				}
 			}
 
 			if (!response.ShowMessage) {
@@ -324,8 +316,8 @@ namespace BoosterManager {
 			return String.Format("Successfully sent Market History (Page {0})", page + 1);
 		}
 
-		private static async Task<SteamDataResponse> SendSteamData<T>(Uri request, Bot bot, T steamData, Uri source, uint? page = null) {
-			SteamData<T> data = new SteamData<T>(bot, steamData, source, page);
+		private static async Task<SteamDataResponse> SendSteamData<T>(Uri request, Bot bot, T steamData, Uri source, uint? page = null, Steam.InventoryHistoryCursor? cursor = null) {
+			SteamData<T> data = new SteamData<T>(bot, steamData, source, page, cursor);
 			ObjectResponse<SteamDataResponse>? response = await bot.ArchiWebHandler.WebBrowser.UrlPostToJsonObject<SteamDataResponse, SteamData<T>>(request, data: data).ConfigureAwait(false);
 
 			if (response == null || response.Content == null) {

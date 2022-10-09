@@ -115,13 +115,15 @@ When you find a missing history at `start_date = x`, history older than `x` shou
 
 For this reason it's important to start your search right where the gap begins and proceed gradually.  Setting the `start_date` parameter yourself allows you to move backward 1 second at a time, while the "Jump to date" feature moves in increments of 24 hours.  It's also possible to use the `cursor[time]` and `cursor[time_frac]` parameters to move in increments of 1 millisecond.
 
-> The BoosterManager plugin cannot detect this bug.  You'll need to monitor the plugin's activity yourself to ensure there's no gaps.  Within your `InventoryHistoryAPI`, `page - data["cursor"]["time"]` represents the size of the gap in seconds between the current page and the next page.  Be aware, both `page` and `data["cursor"]` can be `null`.
+> The BoosterManager plugin cannot detect this bug.  You'll need to monitor the plugin's activity yourself to ensure there's no gaps.  Within your `InventoryHistoryAPI`, `page - data["cursor"]["time"]` represents the size of the gap in seconds between the current page and the next page.  Be aware that `data["cursor"]` [can be `null`](#history-ends-early-bug).  You can attempt to address this bug with your API by setting the `next_page` or `next_cursor` response parameters, telling the plugin which page you'd like it to fetch next.
 
 ## Unknown Asset Bug
 
 Occasionally some items in `html` will be labeled as "Unknown Asset" instead of the appropriate item name.  The affected items will still have defined `appid`, `classid`, `instanceid`, `contextid`, and `amount`, but the items will be missing from `descriptions`.
 
 This bug is likely caused by Steam servers being down, just keep reloading the page until everything appears properly.
+
+> The BoosterManager plugin does not detect this bug.  You can tell the plugin to refresh the page by sending back `cursor` and `page` in the `next_cursor` and `next_page` response parameters respectively.
 
 ## History Ends Early Bug
 

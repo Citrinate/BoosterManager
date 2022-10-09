@@ -126,7 +126,7 @@ You will need to design your API to accept requests and return responses per the
 > --- | --- | ---
 > `steamid`|`ulong`|SteamID of the bot that `data` belongs to
 > `source`|`string`|The url used to fetch `data`.  See API-specific details below.
-> `page`|`uint?`|Page number, for when `data` is paginated, `null` otherwise.  See API-specific details below.
+> `page`|`uint?`|Page number, for when `data` is paginated, `null` otherwise.  Paginated `data` is sent sequentally, and not in parallel.  See API-specific details below.
 > `data`|`JObject/JArray`|The data taken from `source`.  See API-specific details below.
 >
 > > **BoosterDataAPI-specific Details**:
