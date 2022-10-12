@@ -9,11 +9,11 @@ This plugin is based off of the [Booster Creator Plugin](https://github.com/Ryzh
 - Unpack the downloaded .zip file to the `plugins` folder inside your ASF folder.
 - (Re)start ASF, you should get a message indicating that the plugin loaded successfully. 
 
-Please note, this plugin only works with ASF-generic.
+> Please note, this plugin's releases only work with ASF-generic.
 
 ## Usage
 
-Note: Parameters in square brackets are sometimes `[Optional]`, parameters in angle brackets are always `<Required>`
+> Parameters in square brackets are sometimes `[Optional]`, parameters in angle brackets are always `<Required>`. Plural parameters such as `[Bots]` can accept multiple values separated by `,` such as `A,B,C`
 
 ### Booster Commands
 
@@ -41,9 +41,9 @@ Command | Access | Description
 `transferboosters [Bots] <TargetBot>`|`Master`|Sends all marketable booster packs from the given bot to the given target bot.
 `transfercards [Bots] <TargetBot>`|`Master`|Sends all marketable non-foil trading cards from the given bot to the given target bot.
 `transferfoils [Bots] <TargetBot>`|`Master`|Sends all marketable foil trading cards from the given bot to the given target bot.
-`transfergems [Bot] <TargetBots> <Amounts>`|`Master`|Sends the provided `Amounts` of gems from the given bot to the given target bots. The `Amounts` specified may be a single amount sent to all targets, or multiple amounts sent to each target respectively.|
+`transfergems [Bot] <TargetBots> <Amounts>`|`Master`|Sends the provided `Amounts` of gems from the given bot to the given target bots. The `Amounts` specified may be a single amount sent to all target bots, or multiple amounts sent to each target bot respectively.|
 `transferitems [Bots] <TargetBot> <AppID> <ContextID> <ClassID>`|`Master`|Sends all items with the matching `AppID`, `ContextID`, and `ClassID` from the given bot to the given target bot.
-`transferkeys [Bot] <TargetBots> <Amounts>`|`Master`|Sends the provided `Amounts` of Mann Co. Supply Crate Keys from the given bot to the given target bots. The `Amounts` specified may be a single amount sent to all targets, or multiple amounts sent to each target respectively.|
+`transferkeys [Bot] <TargetBots> <Amounts>`|`Master`|Sends the provided `Amounts` of Mann Co. Supply Crate Keys from the given bot to the given target bots. The `Amounts` specified may be a single amount sent to all target bots, or multiple amounts sent to each target bot respectively.|
 `transfersacks [Bots] <TargetBot>`|`Master`|Sends all Sacks of Gems from the given bot to the given target bot.
 `unpackgems [Bots]`|`Master`|Unpacks all Sacks of Gems owned by the given bot.
 
@@ -81,7 +81,7 @@ Example: `"GamesToBooster": [730, 570],`
 
 This `HashSet<uint>` type configuration setting can be added to your individual bot config files.  It will automatically add any of the `AppIDs` to that bot's booster queue, and will automatically re-queue them after they've been crafted.
 
-Note: It's not possible to remove any of these `AppIDs` from the booster queue using any commands.  Any changes you want to make will need to be made in the configuration file.
+> Note: It's not possible to remove any of these `AppIDs` from the booster queue using any commands.  Any changes you want to make will need to be made in the configuration file.
 
 ---
 
@@ -93,7 +93,7 @@ Example: `"BoosterDelayBetweenBots": 60,`
 
 This `uint` type configuration setting can be added to your `ASF.json` config file.  It will add a `Seconds` delay between each of your bot's booster crafts.  For example: when crafting a booster at 12:00 using a 60 second delay; Bot 1 will craft at 12:00, Bot 2 will  craft at 12:01, Bot 3 will craft at 12:02, and so on.
 
-By default, this delay is set to `0`, and is not recommended to be used except in the most extreme cases.
+By default this delay is set to `0`, and is not recommended to be used except in the most extreme cases.
 
 ---
 
@@ -152,7 +152,7 @@ You will need to design your API to accept requests and return responses per the
 > > Name | Type | Description
 > > --- | --- | ---
 > > `source`|`string`|`https://steamcommunity.com/market/mylistings?norender=1`
-> > `data`|`JObject`|The data taken directly from `source`
+> > `data`|`JObject`|The data taken directly from `source` with empty string values converted to `null`
 > >
 > > **MarketHistoryAPI-specific Details**:
 > >
@@ -160,7 +160,7 @@ You will need to design your API to accept requests and return responses per the
 > > --- | --- | ---
 > > `source`|`string`|`https://steamcommunity.com/market/myhistory?norender=1&count=500`
 > > `page`|`uint`|Page number, defined as `floor(data[start] / 500) + 1`
-> > `data`|`JObject`|The data taken directly from `source`
+> > `data`|`JObject`|The data taken directly from `source` with empty string values converted to `null`
 
 #### Response
 
@@ -168,10 +168,10 @@ You will need to design your API to accept requests and return responses per the
 >
 > Name | Type | Required | Description
 > --- | --- | --- | ---
-> `success`|`bool`|Yes|Whether your operations succeeded or failed
+> `success`|`bool`|Yes|Whether your operations succeeded or failed.  If there's more pages to fetch, the plugin will only continue when `success` is `true`
 > `message`|`string`|No|A custom message that will be displayed in place of the default succeed/fail message
 > `show_message`|`bool`|No|Whether or not to show any message
-> `get_next_page`|`bool`|No|Whether or not to fetch the next page (for when `data` is paginated)
+> `get_next_page`|`bool`|No|Whether or not to fetch the next page (for when `data` is paginated).  If the plugin was already going to fetch the next page anyway, this does nothing.
 
 ---
 

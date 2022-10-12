@@ -58,6 +58,7 @@ Be aware that each of these descriptions describes a unique type of event.  For 
 - Earned by participating in an event
 - Earned by participating in the Monster Summer Game
 - Earned by participating in the Salien Game
+- Earned by participating in the Summer Adventure
 - Earned by redeeming Steam Points
 - Earned by sale purchases
 - Earned by voting
@@ -82,6 +83,7 @@ Be aware that each of these descriptions describes a unique type of event.  For 
 - Received from the Community Market
 - Received from the Steam Community Market
 - Redeemed a gift in your inventory
+- Redeemed to make a purchase
 - Returned by the Community Market
 - Traded
 - Turned into Gems
@@ -113,21 +115,13 @@ When you find a missing history at `start_date = x`, history older than `x` shou
 … → 5/2/21 → 5/1/21 → 4/30/21 → 3/14/21 → 3/13/21 → … → 1/5/21 → 1/6/21 → …
 ```
 
-For this reason it's important to start your search right where the gap begins and proceed gradually.  Setting the `start_date` parameter yourself allows you to move backward 1 second at a time, while the "Jump to date" feature moves in increments of 24 hours.  It's also possible to use the `cursor[time]` and `cursor[time_frac]` parameters to move in increments of 1 millisecond.
+For this reason it's important to start your search right where the gap begins and proceed gradually.  Setting the `start_date` parameter yourself allows you to move in increments of 1 second.  The "Jump to date" feature moves in increments of 24 hours.  You can also use the `cursor[time]` and `cursor[time_frac]` parameters to move in increments of 1 millisecond.
 
-> The BoosterManager plugin cannot detect this bug.  You'll need to monitor the plugin's activity yourself to ensure there's no gaps.  Within your `InventoryHistoryAPI`, `page - data["cursor"]["time"]` represents the size of the gap in seconds between the current page and the next page.  Be aware that `data["cursor"]` [can be `null`](#history-ends-early-bug).  You can attempt to address this bug with your API by setting the `next_page` or `next_cursor` response parameters, telling the plugin which page you'd like it to fetch next.
-
-## Unknown Asset Bug
-
-Occasionally some items in `html` will be labeled as "Unknown Asset" instead of the appropriate item name.  The affected items will still have defined `appid`, `classid`, `instanceid`, `contextid`, and `amount`, but the items will be missing from `descriptions`.
-
-This bug is likely caused by Steam servers being down, just keep reloading the page until everything appears properly.
-
-> The BoosterManager plugin does not detect this bug.  You can tell the plugin to refresh the page by sending back `cursor` and `page` in the `next_cursor` and `next_page` response parameters respectively.
+> The BoosterManager plugin cannot detect this bug.  You'll need to monitor the plugin's activity yourself to ensure there's no gaps.  Within your `InventoryHistoryAPI`, `page - data["cursor"]["time"]` represents the size of the gap in seconds between the current page and the next page.  Be aware that `data["cursor"]` [can be](#history-ends-early-bug) `null`.  You can attempt to address this bug with your API by setting the `next_page` or `next_cursor` response parameters, telling the plugin which page you'd like it to fetch next.
 
 ## History Ends Early Bug
 
-Sometimes Steam will say there's no more history, when really there is.  When using the [Inventory History page](https://steamcommunity.com/my/inventoryhistory/), this bug expresses itself as the "Load More History" button disappearing prematurely.  When that happens, the `cursor` object returned by Steam's API is `null`.  As far as I can tell, this bug only appears when searching for history older than ~1.5 years and/or ~100,000 events.
+Sometimes Steam will say there's no more history, when really there is.  When using the [Inventory History page](https://steamcommunity.com/my/inventoryhistory/), this bug expresses itself as the "Load More History" button disappearing prematurely.  When that happens, the `cursor` object returned by Steam's API will be missing.
 
 For example, assuming we have history older than `4/30/21`, this can happen:
 
@@ -137,4 +131,12 @@ For example, assuming we have history older than `4/30/21`, this can happen:
 
 This is resolved the same way as the [Missing History Bug](#missing-history-bug): by searching for history events at times past the cutoff.
 
-> The BoosterManager plugin will detect when the bug may have occurred and provide a link to the page where it occurred.  On the `InventoryHistoryAPI` side of things, the value for `data[cursor]` will be `null` when it receives a page with this bug on it.
+> The BoosterManager plugin will detect when the bug may have occurred.  On the `InventoryHistoryAPI` side of things, the value for `data[cursor]` will be `null` when it receives a page with this bug on it.  If your API does not send a `next_page` or `next_cursor` response parameter, then the plugin will stop running and send a link in the Steam Chat to the page where the bug occurred.
+
+## Unknown Asset Bug
+
+Occasionally some items in `html` will have a name starting with "Unknown Asset" instead of the appropriate item name.  The affected items will still have defined `appid`, `classid`, `instanceid`, `contextid`, and `amount`, but the items will be missing from `descriptions`.
+
+This bug is likely caused by Steam servers being down; just keep reloading the page until everything appears properly.
+
+> The BoosterManager plugin does not detect this bug.  You can tell the plugin to refresh the page by sending back `cursor` and `page` in the `next_cursor` and `next_page` response parameters respectively.
