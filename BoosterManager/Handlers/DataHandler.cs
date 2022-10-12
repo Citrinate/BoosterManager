@@ -147,18 +147,25 @@ namespace BoosterManager {
 
 			uint pageTime = cursor?.Time ?? startTime ?? (uint) DateTimeOffset.Now.ToUnixTimeSeconds();
 
-			if (ForceStop.ContainsKey(bot.BotName) && ForceStop[bot.BotName] > tasksStartedTime) {
-				return String.Format("Manually stopped before fetching Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})", pageTime, GetDateTimeFromTimestamp(pageTime));
+			if (delayInMilliseconds != 0) {
+				for (int i = 0; i < delayInMilliseconds; i += 1000) {
+					if (WasManuallyStopped(bot, tasksStartedTime)) {
+						return String.Format("Manually stopped before fetching Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})", pageTime, GetDateTimeFromTimestamp(pageTime));
+					}
+
+					await Task.Delay(1000).ConfigureAwait(false);
+				}
 			}
 
-			if (delayInMilliseconds != 0) {
-				await Task.Delay((int)delayInMilliseconds).ConfigureAwait(false);
+			if (WasManuallyStopped(bot, tasksStartedTime)) {
+				return String.Format("Manually stopped before fetching Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})", pageTime, GetDateTimeFromTimestamp(pageTime));
 			}
 
 			if (!bot.IsConnectedAndLoggedOn) {
 				return await SendInventoryHistory(bot, tasks, tasksStartedTime, cursor, startTime, pagesRemaining, 60 * 1000, retryOnRateLimit, showRateLimitMessage, respondingBot, recipientSteamID).ConfigureAwait(false);
 			}
 
+			pageTime = cursor?.Time ?? startTime ?? (uint) DateTimeOffset.Now.ToUnixTimeSeconds();
 			Steam.InventoryHistoryResponse? inventoryHistory = null; 
 			Uri? source = null;
 			try {
@@ -267,12 +274,18 @@ namespace BoosterManager {
 				return null;
 			}
 
-			if (ForceStop.ContainsKey(bot.BotName) && ForceStop[bot.BotName] > tasksStartedTime) {
-				return String.Format("Manually stopped before fetching Market History (Page {0})", page + 1);
+			if (delayInMilliseconds != 0) {
+				for (int i = 0; i < delayInMilliseconds; i += 1000) {
+					if (WasManuallyStopped(bot, tasksStartedTime)) {
+						return String.Format("Manually stopped before fetching Market History (Page {0})", page + 1);
+					}
+
+					await Task.Delay(1000).ConfigureAwait(false);
+				}
 			}
 
-			if (delayInMilliseconds != 0) {
-				await Task.Delay((int)delayInMilliseconds).ConfigureAwait(false);
+			if (WasManuallyStopped(bot, tasksStartedTime)) {
+				return String.Format("Manually stopped before fetching Market History (Page {0})", page + 1);
 			}
 
 			if (!bot.IsConnectedAndLoggedOn) {
@@ -328,5 +341,6 @@ namespace BoosterManager {
 		}
 
 		private static DateTime GetDateTimeFromTimestamp(uint timestamp) => DateTime.UnixEpoch.AddSeconds(timestamp).ToLocalTime();
+		private static bool WasManuallyStopped(Bot bot, DateTime tasksStartedTime) => ForceStop.ContainsKey(bot.BotName) && ForceStop[bot.BotName] > tasksStartedTime;
 	}
 }
