@@ -6,7 +6,9 @@ I feel the need to provide unofficial documentation here, because doing anything
 
 #### Rate Limit
 
-1200 requests per 12 hours, per IP address
+15 requests per 1 minute, per IP address
+
+600 requests per 12 hours, per IP address
 
 #### Request
 > **Method**: `GET`
@@ -19,7 +21,7 @@ I feel the need to provide unofficial documentation here, because doing anything
 >
 > Name | Required | Description
 > --- | --- | ---
-> `ajax`|No|With this parameter set to anything, Steam will return the inventory history page as a JSON object
+> `ajax`|No|With this parameter set to anything other than `0`, Steam will return the inventory history page as a JSON object described below
 > `app[]`|No|Filters the history to only include events belonging to the specified `appID`.  This parameter can be used multiple times to filter for multiple apps.
 > `cursor[time]`|No|Unix timestamp.  Filters the history to only show events older than the specified time.
 > `cursor[time_frac]`|No|A whole number representing the fractional part of `cursor[time]`, giving it greater precision. Allows for 9 digits of precision, although only the first 3 seem to be used.
@@ -52,6 +54,7 @@ Be aware that each of these descriptions describes a unique type of event.  For 
 - Earned
 - Earned a booster pack
 - Earned because you own `<GameName>`
+- Earned by claiming a free sale reward.
 - Earned by completing your Store Discovery Queue
 - Earned by crafting
 - Earned by joining a team in the Summer Adventure
@@ -70,6 +73,7 @@ Be aware that each of these descriptions describes a unique type of event.  For 
 - Listed on the Community Market
 - Listed on the Steam Community Market
 - Moved to Storage Unit
+- Name Tag applied
 - Packed Gems into a Sack
 - Purchased a gift
 - Purchased from the store
@@ -107,15 +111,15 @@ As an example, assuming you know there should be history on your account between
 … → 5/2/21 → 5/1/21 → 4/30/21 → 1/5/21 → 1/6/21 → …
 ```
 
-This bug can be fixed [in the browser](https://steamcommunity.com/my/inventoryhistory/) by searching for history within the gap.  You can use Steam's "Jump to date" feature, or try setting the `start_date` parameter yourself.  It may take several attempts to find a value for `start_date` that causes the missing history to re-appear.
+This bug can be fixed [in the browser](https://steamcommunity.com/my/inventoryhistory/) by searching for history within the gap.  You can use Steam's "Jump to date" feature, or try setting the `start_time` parameter yourself.  It may take several attempts to find a value for `start_time` that causes the missing history to re-appear.
 
-When you find a missing history at `start_date = x`, history older than `x` should also re-appear, but history newer than `x` will not.  Looking at the previous example and assuming there's history between `4/28/21` and `3/14/21`; if `x = 3/14/21` then the gap will shrink, but not disappear:
+When a missing history reappears at date `x`, history older than `x` should also re-appear, but history newer than `x` might not.  Looking at the previous example and assuming there's history between `4/28/21` and `3/14/21`; if `x = 3/14/21` then the gap may shrink, but not disappear:
 
 ```
 … → 5/2/21 → 5/1/21 → 4/30/21 → 3/14/21 → 3/13/21 → … → 1/5/21 → 1/6/21 → …
 ```
 
-For this reason it's important to start your search right where the gap begins and proceed gradually.  Setting the `start_date` parameter yourself allows you to move in increments of 1 second.  The "Jump to date" feature moves in increments of 24 hours.  You can also use the `cursor[time]` and `cursor[time_frac]` parameters to move in increments of 1 millisecond.
+For this reason it's better to start your search right where the gap begins and proceed gradually.  Setting the `start_time` parameter yourself allows you to move in increments of 1 second.  The "Jump to date" feature moves in increments of 24 hours.  You can also use the `cursor[time]` and `cursor[time_frac]` parameters to move in increments of 1 millisecond.
 
 > The BoosterManager plugin cannot detect this bug.  You'll need to monitor the plugin's activity yourself to ensure there's no gaps.  Within your `InventoryHistoryAPI`, `page - data["cursor"]["time"]` represents the size of the gap in seconds between the current page and the next page.  Be aware that `data["cursor"]` [can be](#history-ends-early-bug) `null`.  You can attempt to address this bug with your API by setting the `next_page` or `next_cursor` response parameters, telling the plugin which page you'd like it to fetch next.
 

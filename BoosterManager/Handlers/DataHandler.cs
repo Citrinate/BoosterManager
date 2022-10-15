@@ -172,7 +172,7 @@ namespace BoosterManager {
 				(inventoryHistory, source) = await WebRequest.GetInventoryHistory(bot, InventoryHistoryAppFilter, cursor, startTime).ConfigureAwait(false);
 			} catch (HttpRequestException) {
 				if (retryOnRateLimit) {
-					// This API has a very reachable rate limit of 1200 requests per 12 hours, per IP address
+					// This API has a very reachable rate limit
 					if (showRateLimitMessage && respondingBot != null && recipientSteamID != null) {
 						string message = "Rate limit exceeded while attempting to fetch Inventory History. Will keep trying, but it could take up to 12 hours to continue.  If you'd like to stop, use the 'logstop' command.";					
 						await respondingBot.SendMessage(recipientSteamID.Value, Commands.FormatBotResponse(bot, message)).ConfigureAwait(false);
