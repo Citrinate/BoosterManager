@@ -32,6 +32,9 @@ namespace BoosterManager {
 						case "LISTINGS" or "LISTING":
 							return await ResponseListings(bot, access).ConfigureAwait(false);
 						
+						case "LOGBOOSTERDATA" or "SENDBOOSTERDATA" or "LOGBOOSTERS" or "SENDBOOSTERS" or "LOGBD" or "SENDBD" or "LOGB" or "SENDB":
+							return await ResponseLogBoosterData(bot, access).ConfigureAwait(false);
+
 						case "LOGDATA" or "SENDDATA":
 							return await ResponseLogData(bot, access).ConfigureAwait(false);
 
@@ -43,6 +46,9 @@ namespace BoosterManager {
 
 						case "LOGMARKETHISTORY" or "SENDMARKETHISTORY" or "LOGMH" or "SENDMH":
 							return await ResponseLogMarketHistory(bot, access).ConfigureAwait(false);
+
+						case "LOGMARKETLISTINGS" or "SENDMARKETLISTINGS" or "LOGML" or "SENDML":
+							return await ResponseLogMarketListings(bot, access).ConfigureAwait(false);
 						
 						case "LOOTBOOSTERS" or "LOOTBOOSTER":
 							return await ResponseSendItems(bot, access, Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.BoosterPack).ConfigureAwait(false);
@@ -113,6 +119,9 @@ namespace BoosterManager {
 						case "LISTINGS" or "LISTING":
 							return await ResponseListings(access, steamID, Utilities.GetArgsAsText(args, 1, ",")).ConfigureAwait(false);
 						
+						case "LOGBOOSTERDATA" or "SENDBOOSTERDATA" or "LOGBOOSTERS" or "SENDBOOSTERS" or "LOGBD" or "SENDBD" or "LOGB" or "SENDB":
+							return await ResponseLogBoosterData(access, steamID, Utilities.GetArgsAsText(args, 1, ",")).ConfigureAwait(false);
+
 						case "LOGDATA" or "SENDDATA":
 							return await ResponseLogData(access, steamID, Utilities.GetArgsAsText(args, 1, ",")).ConfigureAwait(false);
 
@@ -131,7 +140,10 @@ namespace BoosterManager {
 						case "LOGMARKETHISTORY" or "SENDMARKETHISTORY" or "LOGMH" or "SENDMH" when args.Length > 2:
 							return await ResponseLogMarketHistory(access, steamID, args[1], args[2]).ConfigureAwait(false);
 						case "LOGMARKETHISTORY" or "SENDMARKETHISTORY" or "LOGMH" or "SENDMH":
-							return await ResponseLogMarketHistory(access, steamID, Utilities.GetArgsAsText(args, 1, ",")).ConfigureAwait(false);						
+							return await ResponseLogMarketHistory(access, steamID, Utilities.GetArgsAsText(args, 1, ",")).ConfigureAwait(false);
+
+						case "LOGMARKETLISTINGS" or "SENDMARKETLISTINGS" or "LOGML" or "SENDML":
+							return await ResponseLogMarketListings(access, steamID, Utilities.GetArgsAsText(args, 1, ",")).ConfigureAwait(false);
 						
 						case "LOOTBOOSTERS" or "LOOTBOOSTER":
 							return await ResponseSendItems(access, steamID, Utilities.GetArgsAsText(args, 1, ","), Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.BoosterPack).ConfigureAwait(false);
@@ -538,6 +550,36 @@ namespace BoosterManager {
 			return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
 		}
 
+		private static async Task<string?> ResponseLogBoosterData(Bot bot, EAccess access) {
+			if (access < EAccess.Master) {
+				return null;
+			}
+
+			if (!bot.IsConnectedAndLoggedOn) {
+				return FormatBotResponse(bot, Strings.BotNotConnected);
+			}
+
+			return await DataHandler.SendBoosterDataOnly(bot).ConfigureAwait(false);
+		}
+
+		private static async Task<string?> ResponseLogBoosterData(EAccess access, ulong steamID, string botNames) {
+			if (String.IsNullOrEmpty(botNames)) {
+				throw new ArgumentNullException(nameof(botNames));
+			}
+
+			HashSet<Bot>? bots = Bot.GetBots(botNames);
+
+			if ((bots == null) || (bots.Count == 0)) {
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
+			}
+
+			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseLogBoosterData(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)))).ConfigureAwait(false);
+
+			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
+
+			return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
+		}
+
 		private static async Task<string?> ResponseLogData(Bot bot, EAccess access) {
 			if (access < EAccess.Master) {
 				return null;
@@ -692,6 +734,36 @@ namespace BoosterManager {
 			}
 
 			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseLogMarketHistory(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), numPagesString, startPageString))).ConfigureAwait(false);
+
+			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
+
+			return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
+		}
+
+		private static async Task<string?> ResponseLogMarketListings(Bot bot, EAccess access) {
+			if (access < EAccess.Master) {
+				return null;
+			}
+
+			if (!bot.IsConnectedAndLoggedOn) {
+				return FormatBotResponse(bot, Strings.BotNotConnected);
+			}
+
+			return await DataHandler.SendMarketListingsOnly(bot).ConfigureAwait(false);
+		}
+
+		private static async Task<string?> ResponseLogMarketListings(EAccess access, ulong steamID, string botNames) {
+			if (String.IsNullOrEmpty(botNames)) {
+				throw new ArgumentNullException(nameof(botNames));
+			}
+
+			HashSet<Bot>? bots = Bot.GetBots(botNames);
+
+			if ((bots == null) || (bots.Count == 0)) {
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
+			}
+
+			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseLogMarketListings(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)))).ConfigureAwait(false);
 
 			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
 

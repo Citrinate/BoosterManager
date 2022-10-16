@@ -25,10 +25,33 @@ namespace BoosterManager {
 			}
 
 			List<Task<string?>> tasks = new List<Task<string?>>();
-			tasks.Add(SendBoosterData(bot));
+			tasks.Add(SendBoosterData(bot, DateTime.Now));
 			tasks.Add(SendMarketListings(bot));
 			tasks.Add(SendMarketHistory(bot, tasks, DateTime.Now));
 			tasks.Add(SendInventoryHistory(bot, tasks, DateTime.Now));
+
+			while (tasks.Any(task => !task.IsCompleted)) {
+				await Task.WhenAll(tasks).ConfigureAwait(false);
+			}
+
+			List<string> responses = tasks.Select(task => task.Result).WhereNotNull().ToList<string>();
+
+			if (responses.Count == 0) {
+				return Commands.FormatBotResponse(bot, "No messages to display");
+			}
+
+			responses.Add("");
+
+			return Commands.FormatBotResponse(bot, String.Join(Environment.NewLine, responses));
+		}
+
+		public static async Task<string> SendBoosterDataOnly(Bot bot) {
+			if (BoosterDataAPI == null) {
+				return Commands.FormatBotResponse(bot, "Booster Data API endpoint not defined");
+			}
+
+			List<Task<string?>> tasks = new List<Task<string?>>();
+			tasks.Add(SendBoosterData(bot, DateTime.Now, retryOnFailure: true));
 
 			while (tasks.Any(task => !task.IsCompleted)) {
 				await Task.WhenAll(tasks).ConfigureAwait(false);
@@ -57,6 +80,29 @@ namespace BoosterManager {
 			List<Task<string?>> tasks = new List<Task<string?>>();
 			numPages = numPages ?? 1;
 			tasks.Add(SendInventoryHistory(bot, tasks, DateTime.Now, startTime: startTime, pagesRemaining: numPages.Value - 1, retryOnRateLimit: true, respondingBot: respondingBot, recipientSteamID: recipientSteamID));
+
+			while (tasks.Any(task => !task.IsCompleted)) {
+				await Task.WhenAll(tasks).ConfigureAwait(false);
+			}
+
+			List<string> responses = tasks.Select(task => task.Result).WhereNotNull().ToList<string>();
+
+			if (responses.Count == 0) {
+				return Commands.FormatBotResponse(bot, "No messages to display");
+			}
+
+			responses.Add("");
+
+			return Commands.FormatBotResponse(bot, String.Join(Environment.NewLine, responses));
+		}
+
+		public static async Task<string> SendMarketListingsOnly(Bot bot) {
+			if (MarketListingsAPI == null) {
+				return Commands.FormatBotResponse(bot, "Market Listings API endpoint not defined");
+			}
+
+			List<Task<string?>> tasks = new List<Task<string?>>();
+			tasks.Add(SendMarketListings(bot));
 
 			while (tasks.Any(task => !task.IsCompleted)) {
 				await Task.WhenAll(tasks).ConfigureAwait(false);
@@ -108,18 +154,32 @@ namespace BoosterManager {
 			return Commands.FormatBotResponse(bot, Strings.Success);
 		}
 
-		private static async Task<string?> SendBoosterData(Bot bot, uint delayInMilliseconds = 0) {
+		private static async Task<string?> SendBoosterData(Bot bot, DateTime tasksStartedTime, uint delayInMilliseconds = 0, bool retryOnFailure = false) {
 			if (BoosterDataAPI == null) {
 				return null;
 			}
 
 			if (delayInMilliseconds != 0) {
-				await Task.Delay((int)delayInMilliseconds).ConfigureAwait(false);
+				for (int i = 0; i < delayInMilliseconds; i += 1000) {
+					if (WasManuallyStopped(bot, tasksStartedTime)) {
+						return String.Format("Manually stopped before fetching Booster Data");
+					}
+
+					await Task.Delay(1000).ConfigureAwait(false);
+				}
+			}
+
+			if (WasManuallyStopped(bot, tasksStartedTime)) {
+				return String.Format("Manually stopped before fetching Booster Data");
 			}
 
 			(BoosterPageResponse? boosterPage, Uri source) = await WebRequest.GetBoosterPage(bot).ConfigureAwait(false);
 
 			if (boosterPage == null) {
+				if (retryOnFailure) {
+					return await SendBoosterData(bot, tasksStartedTime, LogDataPageDelay * 1000, retryOnFailure).ConfigureAwait(false);
+				}
+
 				return "Failed to fetch Booster Data!";
 			}
 
