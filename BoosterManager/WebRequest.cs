@@ -108,5 +108,16 @@ namespace BoosterManager {
 
 			return await bot.ArchiWebHandler.UrlPostWithSession(request, referer: referer).ConfigureAwait(false);
 		}
+
+		internal static async Task<SteamDataResponse> SendSteamData<T>(Uri request, Bot bot, T steamData, Uri source, uint? page = null, Steam.InventoryHistoryCursor? cursor = null) {
+			SteamData<T> data = new SteamData<T>(bot, steamData, source, page, cursor);
+			ObjectResponse<SteamDataResponse>? response = await bot.ArchiWebHandler.WebBrowser.UrlPostToJsonObject<SteamDataResponse, SteamData<T>>(request, data: data).ConfigureAwait(false);
+
+			if (response == null || response.Content == null) {
+				return new SteamDataResponse();
+			}
+
+			return response.Content;
+		}
 	}
 }

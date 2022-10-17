@@ -6,7 +6,6 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Localization;
 using ArchiSteamFarm.Steam;
-using ArchiSteamFarm.Web.Responses;
 using Nito.Disposables.Internals;
 
 namespace BoosterManager {
@@ -63,8 +62,6 @@ namespace BoosterManager {
 				return Commands.FormatBotResponse(bot, "No messages to display");
 			}
 
-			responses.Add("");
-
 			return Commands.FormatBotResponse(bot, String.Join(Environment.NewLine, responses));
 		}
 
@@ -113,8 +110,6 @@ namespace BoosterManager {
 			if (responses.Count == 0) {
 				return Commands.FormatBotResponse(bot, "No messages to display");
 			}
-
-			responses.Add("");
 
 			return Commands.FormatBotResponse(bot, String.Join(Environment.NewLine, responses));
 		}
@@ -183,7 +178,7 @@ namespace BoosterManager {
 				return "Failed to fetch Booster Data!";
 			}
 
-			SteamDataResponse response = await SendSteamData<IEnumerable<Steam.BoosterInfo>>(BoosterDataAPI, bot, boosterPage.BoosterInfos, source).ConfigureAwait(false);
+			SteamDataResponse response = await WebRequest.SendSteamData<IEnumerable<Steam.BoosterInfo>>(BoosterDataAPI, bot, boosterPage.BoosterInfos, source).ConfigureAwait(false);
 
 			if (!response.ShowMessage) {
 				return null;
@@ -247,7 +242,7 @@ namespace BoosterManager {
 				return String.Format("Failed to fetch Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})!", pageTime, GetDateTimeFromTimestamp(pageTime));
 			}
 
-			SteamDataResponse response = await SendSteamData<Steam.InventoryHistoryResponse>(InventoryHistoryAPI, bot, inventoryHistory, source!, pageTime, cursor).ConfigureAwait(false);
+			SteamDataResponse response = await WebRequest.SendSteamData<Steam.InventoryHistoryResponse>(InventoryHistoryAPI, bot, inventoryHistory, source!, pageTime, cursor).ConfigureAwait(false);
 
 			if (response.GetNextPage && pagesRemaining == 0) {
 				pagesRemaining = 1;
@@ -312,7 +307,7 @@ namespace BoosterManager {
 				return "Failed to fetch Market Listings!";
 			}
 			
-			SteamDataResponse response = await SendSteamData<Steam.MarketListingsResponse>(MarketListingsAPI, bot, marketListings, source).ConfigureAwait(false);
+			SteamDataResponse response = await WebRequest.SendSteamData<Steam.MarketListingsResponse>(MarketListingsAPI, bot, marketListings, source).ConfigureAwait(false);
 
 			if (!response.ShowMessage) {
 				return null;
@@ -360,7 +355,7 @@ namespace BoosterManager {
 				return String.Format("Failed to fetch Market History (Page {0})!", page + 1);
 			}
 
-			SteamDataResponse response = await SendSteamData<Steam.MarketHistoryResponse>(MarketHistoryAPI, bot, marketHistory, source, page + 1).ConfigureAwait(false);
+			SteamDataResponse response = await WebRequest.SendSteamData<Steam.MarketHistoryResponse>(MarketHistoryAPI, bot, marketHistory, source, page + 1).ConfigureAwait(false);
 
 			if (response.GetNextPage && pagesRemaining == 0) {
 				pagesRemaining = 1;
@@ -387,17 +382,6 @@ namespace BoosterManager {
 			}
 
 			return String.Format("Successfully sent Market History (Page {0})", page + 1);
-		}
-
-		private static async Task<SteamDataResponse> SendSteamData<T>(Uri request, Bot bot, T steamData, Uri source, uint? page = null, Steam.InventoryHistoryCursor? cursor = null) {
-			SteamData<T> data = new SteamData<T>(bot, steamData, source, page, cursor);
-			ObjectResponse<SteamDataResponse>? response = await bot.ArchiWebHandler.WebBrowser.UrlPostToJsonObject<SteamDataResponse, SteamData<T>>(request, data: data).ConfigureAwait(false);
-
-			if (response == null || response.Content == null) {
-				return new SteamDataResponse();
-			}
-
-			return response.Content;
 		}
 
 		private static DateTime GetDateTimeFromTimestamp(uint timestamp) => DateTime.UnixEpoch.AddSeconds(timestamp).ToLocalTime();
