@@ -152,6 +152,7 @@ You will need to design your API to accept requests and return responses per the
 > > Name | Type | Description
 > > --- | --- | ---
 > > `source`|`string`|`https://steamcommunity.com/market/mylistings?norender=1`
+> > `page`|`N/A`|Always set to `null`.  Pagination is not supported.  While `source` does support pagination for `data[listings]`, that information can be recreated using the Market History API.
 > > `data`|`JObject`|The data taken directly from `source` with empty string values converted to `null`
 > >
 > > **MarketHistoryAPI-specific Details**:
