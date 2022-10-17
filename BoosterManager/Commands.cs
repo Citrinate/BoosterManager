@@ -100,14 +100,14 @@ namespace BoosterManager {
 						case "BSTOPTIME" or "BOOSTERSTOPTIME":
 							return ResponseBoosterStopTime(bot, access, args[1]);
 						
-						case "FINDLISTINGS" or "FINDLISTING" when args.Length > 2:
+						case "FINDLISTINGS" or "FINDLISTING" or "FLISTINGS" or "FLISTING" or "FINDL" when args.Length > 2:
 							return await ResponseFindListings(access, steamID, args[1], Utilities.GetArgsAsText(args, 2, " ")).ConfigureAwait(false);
-						case "FINDLISTINGS" or "FINDLISTING":
+						case "FINDLISTINGS" or "FINDLISTING" or "FLISTINGS" or "FLISTING" or "FINDL":
 							return await ResponseFindListings(bot, access, Utilities.GetArgsAsText(args, 1, " ")).ConfigureAwait(false);
 						
-						case "FINDANDREMOVELISTINGS" or "FINDANDREMOVELISTING" or "FINDANDCANCELLISTINGS" or "FINDANDCANCELLISTING" when args.Length > 2:
+						case "FINDANDREMOVELISTINGS" or "FINDANDREMOVELISTING" or "FINDREMOVELISTINGS" or "FINDREMOVELISTING" or "FINDANDCANCELLISTINGS" or "FINDANDCANCELLISTING" or "FINDCANCELLISTINGS" or "FINDCANCELLISTING" or "FRLISTINGS" or "FRLISTING" or "FINDREMOVEL" when args.Length > 2:
 							return await ResponseFindAndRemoveListings(access, steamID, args[1], Utilities.GetArgsAsText(args, 2, " ")).ConfigureAwait(false);
-						case "FINDANDREMOVELISTINGS" or "FINDANDREMOVELISTING" or "FINDANDCANCELLISTINGS" or "FINDANDCANCELLISTING":
+						case "FINDANDREMOVELISTINGS" or "FINDANDREMOVELISTING" or "FINDREMOVELISTINGS" or "FINDREMOVELISTING" or "FINDANDCANCELLISTINGS" or "FINDANDCANCELLISTING" or "FINDCANCELLISTINGS" or "FINDCANCELLISTING" or "FRLISTINGS" or "FRLISTING" or "FINDREMOVEL":
 							return await ResponseFindAndRemoveListings(bot, access, Utilities.GetArgsAsText(args, 1, " ")).ConfigureAwait(false);
 						
 						case "GEMS" or "GEM":
@@ -201,9 +201,9 @@ namespace BoosterManager {
 						case "TRANSFERSACKS" or "TRANSFERSACK":
 							return await ResponseSendItems(bot, access, Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.FoilTradingCard, recieverBotName: args[1]).ConfigureAwait(false);
 						
-						case "REMOVELISTINGS" or "REMOVELISTING" or "CANCELLISTINGS" or "CANCELLISTING" when args.Length > 2:
+						case "REMOVELISTINGS" or "REMOVELISTING" or "CANCELLISTINGS" or "CANCELLISTING" or "RLISTINGS" or "RLISTING" or "REMOVEL" when args.Length > 2:
 							return await ResponseRemoveListings(access, steamID, args[1], Utilities.GetArgsAsText(args, 2, ",")).ConfigureAwait(false);
-						case "REMOVELISTINGS" or "REMOVELISTING" or "CANCELLISTINGS" or "CANCELLISTING":
+						case "REMOVELISTINGS" or "REMOVELISTING" or "CANCELLISTINGS" or "CANCELLISTING" or "RLISTINGS" or "RLISTING" or "REMOVEL":
 							return await ResponseRemoveListings(bot, access, Utilities.GetArgsAsText(args, 1, ",")).ConfigureAwait(false);
 						
 						case "UNPACKGEMS":
