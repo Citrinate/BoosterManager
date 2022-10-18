@@ -65,7 +65,7 @@ namespace BoosterManager {
 			return Commands.FormatBotResponse(bot, String.Join(Environment.NewLine, responses));
 		}
 
-		public static async Task<string> SendInventoryHistoryOnly(Bot bot, Bot respondingBot, ulong recipientSteamID, uint? numPages = 1, uint? startTime = null) {
+		public static async Task<string> SendInventoryHistoryOnly(Bot bot, Bot respondingBot, ulong recipientSteamID, uint? numPages = 1, uint? startTime = null, uint? timeFrac = null, string? s = null) {
 			if (InventoryHistoryAPI == null) {
 				return Commands.FormatBotResponse(bot, "Inventory History API endpoint not defined");
 			}
@@ -76,7 +76,12 @@ namespace BoosterManager {
 
 			List<Task<string?>> tasks = new List<Task<string?>>();
 			numPages = numPages ?? 1;
-			tasks.Add(SendInventoryHistory(bot, tasks, DateTime.Now, startTime: startTime, pagesRemaining: numPages.Value - 1, retryOnRateLimit: true, respondingBot: respondingBot, recipientSteamID: recipientSteamID));
+			if (startTime != null && timeFrac != null && s != null) {
+				Steam.InventoryHistoryCursor cursor = new Steam.InventoryHistoryCursor(startTime.Value, timeFrac.Value, s);
+				tasks.Add(SendInventoryHistory(bot, tasks, DateTime.Now, cursor: cursor, pagesRemaining: numPages.Value - 1, retryOnRateLimit: true, respondingBot: respondingBot, recipientSteamID: recipientSteamID));
+			} else {
+				tasks.Add(SendInventoryHistory(bot, tasks, DateTime.Now, startTime: startTime, pagesRemaining: numPages.Value - 1, retryOnRateLimit: true, respondingBot: respondingBot, recipientSteamID: recipientSteamID));
+			}
 
 			while (tasks.Any(task => !task.IsCompleted)) {
 				await Task.WhenAll(tasks).ConfigureAwait(false);

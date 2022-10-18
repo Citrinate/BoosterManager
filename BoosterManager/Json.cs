@@ -135,22 +135,28 @@ namespace BoosterManager {
 
 			[JsonConstructor]
 			internal InventoryHistoryCursor() { }
+
+			internal InventoryHistoryCursor(uint time, uint timeFrac, string s) {
+				Time = time;
+				TimeFrac = timeFrac;
+				S = s;
+			}
 		}
 
 		internal sealed class InventoryHistoryResponse {
 			[JsonProperty(PropertyName = "success", Required = Required.Always)]
 			internal readonly bool Success;
 
-			[JsonProperty(PropertyName = "html", Required = Required.Always)]
+			[JsonProperty(PropertyName = "html", Required = Required.Default)]
 			internal readonly string Html = "";
 
-			[JsonProperty(PropertyName = "num", Required = Required.Always)]
-			internal readonly uint Num;
+			[JsonProperty(PropertyName = "num", Required = Required.Default)]
+			internal readonly uint Num = 0;
 
-			[JsonProperty(PropertyName = "descriptions", Required = Required.Always)]
+			[JsonProperty(PropertyName = "descriptions", Required = Required.Default)]
 			internal readonly JToken? Descriptions;
 
-			[JsonProperty(PropertyName = "apps", Required = Required.Always)]
+			[JsonProperty(PropertyName = "apps", Required = Required.Default)]
 			internal readonly JArray Apps = new();
 
 			[JsonProperty(PropertyName = "cursor", Required = Required.Default)]

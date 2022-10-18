@@ -128,6 +128,8 @@ namespace BoosterManager {
 						case "LOGSTOP" or "STOPLOG" or "LOGDATASTOP" or "SENDDATASTOP" or "STOPLOGDATA" or "STOPSENDDATA":
 							return ResponseLogStop(access, steamID, Utilities.GetArgsAsText(args, 1, ","));
 						
+						case "LOGINVENTORYHISTORY" or "SENDINVENTORYHISTORY" or "LOGIH" or "SENDIH" when args.Length > 5:
+							return await ResponseLogInventoryHistory(access, steamID, bot, args[1], args[2], args[3], args[4], args[5]).ConfigureAwait(false);
 						case "LOGINVENTORYHISTORY" or "SENDINVENTORYHISTORY" or "LOGIH" or "SENDIH" when args.Length > 3:
 							return await ResponseLogInventoryHistory(access, steamID, bot, args[1], args[2], args[3]).ConfigureAwait(false);
 						case "LOGINVENTORYHISTORY" or "SENDINVENTORYHISTORY" or "LOGIH" or "SENDIH" when args.Length > 2:
@@ -640,7 +642,7 @@ namespace BoosterManager {
 			return responses.Count > 0 ? String.Join(Environment.NewLine, responses) : null;
 		}
 
-		private static async Task<string?> ResponseLogInventoryHistory(Bot bot, EAccess access, ulong steamID, string? numPagesString = null, string? startTimeString = null, Bot? respondingBot = null) {
+		private static async Task<string?> ResponseLogInventoryHistory(Bot bot, EAccess access, ulong steamID, string? numPagesString = null, string? startTimeString = null, string? timeFracString = null, string? sString = null, Bot? respondingBot = null) {
 			if (access < EAccess.Master) {
 				return null;
 			}
@@ -666,11 +668,29 @@ namespace BoosterManager {
 					return FormatStaticResponse(String.Format(Strings.ErrorIsInvalid, nameof(startTime)));
 				}
 			}
+			
+			uint? timeFrac = null;
+			if (timeFracString != null) {
+				if (uint.TryParse(timeFracString, out uint outValue)) {
+					timeFrac = outValue;
+				} else {
+					return FormatStaticResponse(String.Format(Strings.ErrorIsInvalid, nameof(timeFrac)));
+				}
+			}
+			
+			string? s = null;
+			if (sString != null) {
+				if (ulong.TryParse(sString, out ulong outValue)) {
+					s = outValue.ToString();
+				} else {
+					return FormatStaticResponse(String.Format(Strings.ErrorIsInvalid, nameof(s)));
+				}
+			}
 
-			return await DataHandler.SendInventoryHistoryOnly(bot, respondingBot ?? bot, steamID, numPages, startTime).ConfigureAwait(false);
+			return await DataHandler.SendInventoryHistoryOnly(bot, respondingBot ?? bot, steamID, numPages, startTime, timeFrac, s).ConfigureAwait(false);
 		}
 
-		private static async Task<string?> ResponseLogInventoryHistory(EAccess access, ulong steamID, Bot respondingBot, string botNames, string? numPagesString = null, string? startTimeString = null) {
+		private static async Task<string?> ResponseLogInventoryHistory(EAccess access, ulong steamID, Bot respondingBot, string botNames, string? numPagesString = null, string? startTimeString = null, string? timeFracString = null, string? sString = null) {
 			if (String.IsNullOrEmpty(botNames)) {
 				throw new ArgumentNullException(nameof(botNames));
 			}
@@ -681,7 +701,7 @@ namespace BoosterManager {
 				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
 			}
 
-			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseLogInventoryHistory(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), steamID, numPagesString, startTimeString, respondingBot))).ConfigureAwait(false);
+			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseLogInventoryHistory(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), steamID, numPagesString, startTimeString, timeFracString, sString, respondingBot))).ConfigureAwait(false);
 
 			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
 

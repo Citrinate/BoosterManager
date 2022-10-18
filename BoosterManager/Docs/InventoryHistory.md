@@ -113,10 +113,10 @@ As an example, assuming you know there should be history on your account between
 
 This bug can be fixed [in the browser](https://steamcommunity.com/my/inventoryhistory/) by searching for history within the gap.  You can use Steam's "Jump to date" feature, or try setting the `start_time` parameter yourself.  It may take several attempts to find a value for `start_time` that causes the missing history to re-appear.
 
-When a missing history reappears at date `x`, history older than `x` should also re-appear, but history newer than `x` might not.  Looking at the previous example and assuming there's history between `4/28/21` and `3/14/21`; if `x = 3/14/21` then the gap may shrink, but not disappear:
+If you search at date `x` and find missing history there, then history older than `x` should also re-appear, but history newer than `x` might not.  Looking at the previous example and assuming there's history between `4/28/21` and `3/14/21`; if `x = 3/14/21` then the gap may shrink, but not disappear, and some of the missing history may also show up right before `3/14/21`:
 
 ```
-… → 5/2/21 → 5/1/21 → 4/30/21 → 3/14/21 → 3/13/21 → … → 1/5/21 → 1/6/21 → …
+… → 5/2/21 → 5/1/21 → 4/30/21 → 3/13/21 → 3/14/21 → 3/13/21 → … → 1/5/21 → 1/6/21 → …
 ```
 
 For this reason it's better to start your search right where the gap begins and proceed gradually.  Setting the `start_time` parameter yourself allows you to move in increments of 1 second.  The "Jump to date" feature moves in increments of 24 hours.  You can also use the `cursor[time]` and `cursor[time_frac]` parameters to move in increments of 1 millisecond.
