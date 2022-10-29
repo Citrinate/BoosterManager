@@ -39,8 +39,9 @@ namespace BoosterManager {
 				return Commands.FormatBotResponse(bot, "No messages to display");
 			}
 
-			responses.Add("");
-
+			if (responses.Count > 1) {
+				responses.Add("");
+			}
 			return Commands.FormatBotResponse(bot, String.Join(Environment.NewLine, responses));
 		}
 
@@ -62,6 +63,9 @@ namespace BoosterManager {
 				return Commands.FormatBotResponse(bot, "No messages to display");
 			}
 
+			if (responses.Count > 1) {
+				responses.Add("");
+			}
 			return Commands.FormatBotResponse(bot, String.Join(Environment.NewLine, responses));
 		}
 
@@ -93,8 +97,9 @@ namespace BoosterManager {
 				return Commands.FormatBotResponse(bot, "No messages to display");
 			}
 
-			responses.Add("");
-
+			if (responses.Count > 1) {
+				responses.Add("");
+			}
 			return Commands.FormatBotResponse(bot, String.Join(Environment.NewLine, responses));
 		}
 
@@ -116,6 +121,9 @@ namespace BoosterManager {
 				return Commands.FormatBotResponse(bot, "No messages to display");
 			}
 
+			if (responses.Count > 1) {
+				responses.Add("");
+			}
 			return Commands.FormatBotResponse(bot, String.Join(Environment.NewLine, responses));
 		}
 
@@ -143,8 +151,9 @@ namespace BoosterManager {
 				return Commands.FormatBotResponse(bot, "No messages to display");
 			}
 
-			responses.Add("");
-
+			if (responses.Count > 1) {
+				responses.Add("");
+			}
 			return Commands.FormatBotResponse(bot, String.Join(Environment.NewLine, responses));
 		}
 
@@ -244,6 +253,14 @@ namespace BoosterManager {
 			}
 
 			if (inventoryHistory == null || !inventoryHistory.Success) {
+				if (!bot.IsConnectedAndLoggedOn) {
+					return await SendInventoryHistory(bot, tasks, tasksStartedTime, cursor, startTime, pagesRemaining, 60 * 1000, retryOnRateLimit, showRateLimitMessage, respondingBot, recipientSteamID).ConfigureAwait(false);
+				}
+
+				if (inventoryHistory?.Error != null) {
+					return String.Format("Failed to fetch Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt}): {2}", pageTime, GetDateTimeFromTimestamp(pageTime), inventoryHistory.Error);
+				}
+
 				return String.Format("Failed to fetch Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})!", pageTime, GetDateTimeFromTimestamp(pageTime));
 			}
 

@@ -152,6 +152,9 @@ namespace BoosterManager {
 				}
 
 				messages.Add(String.Join(Environment.NewLine, BoosterHandlers[botName].StoredResponses));
+				if (BoosterHandlers[botName].StoredResponses.Count > 1) {
+					messages.Add("");
+				}
 				BoosterHandlers[botName].StoredResponses.Clear();
 			}
 			

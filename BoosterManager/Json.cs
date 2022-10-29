@@ -147,6 +147,9 @@ namespace BoosterManager {
 			[JsonProperty(PropertyName = "success", Required = Required.Always)]
 			internal readonly bool Success;
 
+			[JsonProperty(PropertyName = "error", Required = Required.Default)]
+			internal readonly string? Error = "";
+
 			[JsonProperty(PropertyName = "html", Required = Required.Default)]
 			internal readonly string Html = "";
 
