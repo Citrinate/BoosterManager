@@ -21,26 +21,27 @@ I feel the need to provide unofficial documentation here, because doing anything
 >
 > Name | Required | Description
 > --- | --- | ---
-> `ajax`|No|With this parameter set to anything other than `0`, Steam will return the inventory history page as a JSON object described below
+> `ajax`|No|With this parameter set to anything other than `0`, Steam will return the inventory history page as a JSON object described below.
 > `app[]`|No|Filters the history to only include events belonging to the specified `appID`.  This parameter can be used multiple times to filter for multiple apps.
 > `cursor[time]`|No|Unix timestamp.  Filters the history to only show events older than the specified time.
 > `cursor[time_frac]`|No|A whole number representing the fractional part of `cursor[time]`, giving it greater precision. Allows for 9 digits of precision, although only the first 3 seem to be used.
 > `cursor[s]`|No|An unknown number.  Seems to be used to differentiate between history events in the case where multiple events might share the same timestamp.  As you go further back into your account's history, this number gets bigger.  It seems to be counting something, but I'm not sure what.
 > `sessionid`|No|Unnecessary.  It's not possible to view an account's inventory history with this parameter alone, you still need to send the Session ID in the request header as a cookie.
-> `start_time`|No|Seems to be the same as `cursor[time]`.
+> `start_time`|No|Seems to be the same as `cursor[time]`
 
 #### Response
 
 > **Content-Type**: `application/json`
 >
-> Name | Type | Required | Description
-> --- | --- | --- |  ---
-> `success`|`bool`|Yes|Success status
-> `html`|`string`|Yes|The inventory history events
-> `num`|`uint`|Yes|Number of events in `html`
-> `descriptions`|`JObject/JArray`|Yes|Contains information about the Steam Community Items found in `html`.  If `num` is `0`, this will be an empty array.
-> `apps`|`JArray`|Yes|Contains information about the Steam Apps referenced in `html`.
-> `cursor`|`JObject`|No|An object used to uniquely identify the last event in `html`.  Will not be present if older events do not exist, or sometimes due to [a bug](#history-ends-early-bug).
+> Name | Type | Description
+> --- | --- | ---
+> `success`|`bool`|Success status
+> `error`|`string`|An error message for when `success` is `false`
+> `html`|`string`|The inventory history events
+> `num`|`uint`|Number of events in `html`
+> `descriptions`|`JObject/JArray`|Contains information about the Steam Community Items found in `html`.  If `num` is `0`, this will be an empty array.  This can also be an empty array due to [a bug](#missing-descriptions-bugs).
+> `apps`|`JArray`|Contains information about the Steam Apps referenced in `html`
+> `cursor`|`JObject`|An object used to uniquely identify the last event in `html`.  Will not be present if older events do not exist, or sometimes due to [a bug](#history-ends-early-bug).
 
 ## Possible Event Descriptions
 
@@ -70,6 +71,7 @@ Be aware that each of these descriptions describes a unique type of event.  For 
 - Expired
 - Gift sent to and redeemed by `<UserName>`
 - Granted by Steam Support
+- Guest pass sent to and redeemed by `<UserName>`
 - Listed on the Community Market
 - Listed on the Steam Community Market
 - Moved to Storage Unit
@@ -137,10 +139,16 @@ This is resolved the same way as the [Missing History Bug](#missing-history-bug)
 
 > The BoosterManager plugin will detect when the bug may have occurred.  On the `InventoryHistoryAPI` side of things, the value for `data[cursor]` will be `null` when it receives a page with this bug on it.  If your API does not send a `next_page` or `next_cursor` response parameter, then the plugin will stop running and send a link in the Steam Chat to the page where the bug occurred.
 
-## Unknown Asset Bug
+## Missing Descriptions Bugs
 
-Occasionally some items in `html` will have a name starting with "Unknown Asset" instead of the appropriate item name.  The affected items will still have defined `appid`, `classid`, `instanceid`, `contextid`, and `amount`, but the items will be missing from `descriptions`.
+Every item appearing in `html` is meant to have an entry in `descriptions` located at `descriptions[appid][classid_instanceid]`
 
-This bug is likely caused by Steam servers being down; just keep reloading the page until everything appears properly.
+There are several conditions in which this is not true:
 
-> The BoosterManager plugin does not detect this bug.  You can tell the plugin to refresh the page by sending back `cursor` and `page` in the `next_cursor` and `next_page` response parameters respectively.
+- Occasionally some items in `html` will have a name starting with "Unknown Asset" instead of the appropriate item name.  The affected items will still have defined `appid`, `classid`, `instanceid`, `contextid`, and `amount`, but they'll have no entry in `descriptions`.
+- It can sometimes happen that all of the item names do appear properly, but `descriptions` is just an empty array.
+- It can also sometimes happen that all of the item names do appear properly and `descriptions` is filled with entries, but some items will just be missing from `descriptions` for no apparent reason.
+
+These sorts of bugs are likely caused by Steam servers being down, and will eventually go away on their own.
+
+> The BoosterManager plugin does not detect these bugs.  You can tell the plugin to refresh the page by sending back `cursor` and `page` in the `next_cursor` and `next_page` response parameters respectively.
