@@ -161,6 +161,8 @@ namespace BoosterManager {
 						
 						case "LOOTITEMS" or "LOOTITEM" when args.Length > 4:
 							return await ResponseSendSpecificItems(access, steamID, args[1], args[2], args[3], args[4]).ConfigureAwait(false);
+						case "LOOTITEMS" or "LOOTITEM" when args.Length > 3:
+							return await ResponseSendSpecificItems(access, steamID, args[1], args[2], args[3]).ConfigureAwait(false);
 						
 						case "LOOTKEYS" or "LOOTKEY":
 							return await ResponseSendItems(access, steamID, Utilities.GetArgsAsText(args, 1, ","), KeyHandler.KeyAppID, KeyHandler.KeyContextID, KeyHandler.KeyType, KeyHandler.KeyClassID).ConfigureAwait(false);
@@ -191,7 +193,7 @@ namespace BoosterManager {
 						case "TRANSFERITEMS" or "TRANSFERITEM" when args.Length > 5:
 							return await ResponseSendSpecificItems(access, steamID, args[1], args[3], args[4], args[5], recieverBotName: args[2]).ConfigureAwait(false);
 						case "TRANSFERITEMS" or "TRANSFERITEM" when args.Length > 4:
-							return await ResponseSendSpecificItems(bot, access, args[2], args[3], args[4], recieverBotName: args[1]).ConfigureAwait(false);
+							return await ResponseSendSpecificItems(access, steamID, args[1], args[3], args[4], recieverBotName: args[2]).ConfigureAwait(false);
 						
 						case "TRANSFERKEYS" or "TRANSFERKEY" when args.Length > 3:
 							return await ResponseSendItemsWithAmounts(access, steamID, args[1], args[2], args[3], KeyHandler.KeyAppID, KeyHandler.KeyContextID, KeyHandler.KeyType, KeyHandler.KeyClassID).ConfigureAwait(false);
@@ -884,17 +886,13 @@ namespace BoosterManager {
 			return responses.Count > 0 ? String.Join(Environment.NewLine, responses) : null;
 		}
 
-		private static async Task<string?> ResponseSendSpecificItems(Bot bot, EAccess access, string appIDAsText, string contextIDAsText, string classIDAsText, string? recieverBotName = null) {
+		private static async Task<string?> ResponseSendSpecificItems(Bot bot, EAccess access, string appIDAsText, string contextIDAsText, string? classIDAsText = null, string? recieverBotName = null) {
 			if (String.IsNullOrEmpty(appIDAsText)) {
 				throw new ArgumentNullException(nameof(appIDAsText));
 			}
 
 			if (String.IsNullOrEmpty(contextIDAsText)) {
 				throw new ArgumentNullException(nameof(contextIDAsText));
-			}
-
-			if (String.IsNullOrEmpty(classIDAsText)) {
-				throw new ArgumentNullException(nameof(classIDAsText));
 			}
 			
 			if (access < EAccess.Master) {
@@ -913,14 +911,19 @@ namespace BoosterManager {
 				return FormatBotResponse(bot, String.Format(Strings.ErrorIsInvalid, nameof(contextIDAsText)));
 			}
 
-			if (!ulong.TryParse(classIDAsText, out ulong classID)) {
-				return FormatBotResponse(bot, String.Format(Strings.ErrorIsInvalid, nameof(classIDAsText)));
+			ulong? classID = null;
+			if (classIDAsText != null) {
+				if (uint.TryParse(classIDAsText, out uint outValue)) {
+					classID = outValue;
+				} else {
+					return FormatStaticResponse(String.Format(Strings.ErrorIsInvalid, nameof(classIDAsText)));
+				}
 			}
 
 			return await ResponseSendItems(bot, access, appID, contextID, null, classID, allowUnmarketable: true, recieverBotName: recieverBotName).ConfigureAwait(false);
 		}
 
-		private static async Task<string?> ResponseSendSpecificItems(EAccess access, ulong steamID, string senderBotNames, string appIDAsText, string contextIDAsText, string classIDAsText, string? recieverBotName = null) {
+		private static async Task<string?> ResponseSendSpecificItems(EAccess access, ulong steamID, string senderBotNames, string appIDAsText, string contextIDAsText, string? classIDAsText = null, string? recieverBotName = null) {
 			if (String.IsNullOrEmpty(senderBotNames)) {
 				throw new ArgumentNullException(nameof(senderBotNames));
 			}
