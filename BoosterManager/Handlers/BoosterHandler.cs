@@ -13,7 +13,7 @@ namespace BoosterManager {
 		private Bot RespondingBot; // When we send status alerts, they'll come from this bot
 		private ulong RecipientSteamID; // When we send status alerts, they'll go to this SteamID
 		internal static ConcurrentDictionary<string, Timer> ResponseTimers = new();
-		internal HashSet<string> StoredResponses = new();
+		internal List<string> StoredResponses = new();
 		private string LastResponse = "";
 		internal static ConcurrentDictionary<string, BoosterHandler> BoosterHandlers = new();
 		private static int DelayBetweenBots = 0; // Delay, in minutes, between when bots will craft boosters
@@ -142,7 +142,7 @@ namespace BoosterManager {
 			}
 
 			ResponseTimers.TryRemove(respondingBot.BotName, out Timer? _);
-			HashSet<string> messages = new HashSet<string>();
+			List<string> messages = new List<string>();
 			List<string> botNames = BoosterHandlers.Keys.ToList<string>();
 			botNames.Sort();
 			foreach (string botName in botNames) {
