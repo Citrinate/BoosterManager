@@ -980,7 +980,7 @@ namespace BoosterManager {
 
 			List<uint> amountNums = new List<uint>();
 			foreach (string amount in amounts) {
-				if (!uint.TryParse(amount, out uint amountNum) || (amountNum == 0)) {
+				if (!uint.TryParse(amount, out uint amountNum)) {
 					return FormatBotResponse(bot, String.Format(Strings.ErrorParsingObject, nameof(amountNum)));
 				}
 
