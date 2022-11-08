@@ -6,7 +6,7 @@ I feel the need to provide unofficial documentation here, because doing anything
 
 #### Rate Limit
 
-15 requests per 1 minute, per IP address
+~25 requests per 1 minute, per IP address
 
 600 requests per 12 hours, per IP address
 
@@ -49,8 +49,11 @@ Much of the inventory history is delivered as `html` that needs to be parsed.
 
 > The BoosterManager plugin does not, and likely never will, support parsing of `html`.  The best I can do is to offer this incomplete list of possible history event descriptions.
 
-Be aware that each of these descriptions describes a unique type of event.  For example, "Listed on the Community Market", "Listed on the Steam Community Market", and "You listed an item on the Community Market." are all different types of events, and not 3 different ways to describe the same event.
+Be aware that each of these descriptions describes a unique type of event.  For example, "Listed on the Community Market" and "You listed an item on the Community Market." are all different types of events, and not two different ways to describe the same event.
 
+#### Steam Events
+
+- Auction bid returned
 - Crafted
 - Earned
 - Earned a booster pack
@@ -68,15 +71,14 @@ Be aware that each of these descriptions describes a unique type of event.  For 
 - Earned by voting
 - Earned due to a Steam error in your favor
 - Earned due to game play time
+- Exchanged Gems
 - Expired
 - Gift sent to and redeemed by `<UserName>`
 - Granted by Steam Support
 - Guest pass sent to and redeemed by `<UserName>`
 - Listed on the Community Market
-- Listed on the Steam Community Market
-- Moved to Storage Unit
-- Name Tag applied
 - Packed Gems into a Sack
+- Placed a bid in an auction
 - Purchased a gift
 - Purchased from the store
 - Purchased on the Community Market
@@ -86,11 +88,10 @@ Be aware that each of these descriptions describes a unique type of event.  For 
 - Received a guest pass
 - Received by entering product code
 - Received from completing tasks during an event
-- Received from the Community Market
-- Received from the Steam Community Market
 - Redeemed a gift in your inventory
 - Redeemed to make a purchase
 - Returned by the Community Market
+- Revoked
 - Traded
 - Turned into Gems
 - Unpacked Gems from Sack
@@ -103,9 +104,19 @@ Be aware that each of these descriptions describes a unique type of event.  For 
 - You traded with `<UserName>`
 - Your trade with `<UserName>` failed.
 
+#### Valve Game Events
+
+Event descriptions for Valve games can be found in the following files as strings starting with `ItemHistory_Action`
+
+- Artifact Classic: [game/dcg/resource/dcg_common_english.txt](https://github.com/SteamDatabase/GameTracking-Artifact/blob/master/game/dcg/resource/dcg_common_english.txt)
+- Counter-Strike: Global Offensive: [csgo/resource/csgo_english.txt](https://github.com/SteamDatabase/GameTracking-CSGO/blob/master/csgo/resource/csgo_english.txt)
+- Dota 2: [game/dota/pak01_dir/resource/localization/dota_english.txt](https://github.com/SteamDatabase/GameTracking-Dota2/blob/master/game/dota/pak01_dir/resource/localization/dota_english.txt)
+- Portal 2: [portal2/portal2/resource/portal2_english.txt](https://github.com/SteamDatabase/GameTracking/blob/master/portal2/portal2/resource/portal2_english.txt)
+- Team Fortress 2: [tf/resource/tf_english.txt](https://github.com/SteamDatabase/GameTracking-TF2/blob/master/tf/resource/tf_english.txt)
+
 ## Missing History Bug
 
-It's possible that Steam will skip over parts of your history.  In my experience, when it skips, it's a big skip, creating a gap several months long.  These big gaps tend to be very noticable, but I can't guarantee that the gaps will always be that large.
+The Inventory History API provides no way to fetch specific pages, instead we specify a time, and get results older than that time. It can return a maximum of 50 history events. If more events exist, it will also return a `cursor` object that we can use to find the very next event.  It's possible however that as you go through your history, it will unexpectedly jump ahead, skipping over events.
 
 As an example, assuming you know there should be history on your account between `4/30/21` and `1/5/21`, your history might look like this:
 
@@ -113,9 +124,9 @@ As an example, assuming you know there should be history on your account between
 … → 5/2/21 → 5/1/21 → 4/30/21 → 1/5/21 → 1/6/21 → …
 ```
 
-This bug can be fixed [in the browser](https://steamcommunity.com/my/inventoryhistory/) by searching for history within the gap.  You can use Steam's "Jump to date" feature, or try setting the `start_time` parameter yourself.  It may take several attempts to find a value for `start_time` that causes the missing history to re-appear.
+This bug can be addressed by searching for history within the gap.  You can use the in-browser "Jump to date" feature, or try setting the `start_time` parameter yourself.  It may take several attempts to find a value for `start_time` that causes the missing history to re-appear.
 
-If you search at date `x` and find missing history there, then history older than `x` should also re-appear, but history newer than `x` might not.  Looking at the previous example and assuming there's history between `4/28/21` and `3/14/21`; if `x = 3/14/21` then the gap may shrink, but not disappear, and some of the missing history may also show up right before `3/14/21`:
+If you search at date `x` and find missing history there, then history older than `x` should also re-appear, but history newer than `x` might not.  Looking at the previous example and assuming there's history between `4/30/21` and `3/14/21`; if `x = 3/14/21` then the gap may shrink, but not disappear, and some of the missing history may also show up right before `3/14/21`:
 
 ```
 … → 5/2/21 → 5/1/21 → 4/30/21 → 3/13/21 → 3/14/21 → 3/13/21 → … → 1/5/21 → 1/6/21 → …
@@ -123,11 +134,13 @@ If you search at date `x` and find missing history there, then history older tha
 
 For this reason it's better to start your search right where the gap begins and proceed gradually.  Setting the `start_time` parameter yourself allows you to move in increments of 1 second.  The "Jump to date" feature moves in increments of 24 hours.  You can also use the `cursor[time]` and `cursor[time_frac]` parameters to move in increments of 1 millisecond.
 
+Not all gaps are as large as in the examples above.  The issue tends to also arise when too many events share the same time (ex: confirming multiple market listings at once).  Here the gap can be less than a second and may skip as few as 1 event.  These gaps can be addressed in the same way as large gaps, but because of how small they are, they're hard to notice.  In my experience, because small gaps tend to only happen due to market-related activity, they can be safely ignored, as market history is more accurately collected from the Market History API.
+
 > The BoosterManager plugin cannot detect this bug.  You'll need to monitor the plugin's activity yourself to ensure there's no gaps.  Within your `InventoryHistoryAPI`, `page - data["cursor"]["time"]` represents the size of the gap in seconds between the current page and the next page.  Be aware that `data["cursor"]` [can be](#history-ends-early-bug) `null`.  You can attempt to address this bug with your API by setting the `next_page` or `next_cursor` response parameters, telling the plugin which page you'd like it to fetch next.
 
 ## History Ends Early Bug
 
-Sometimes Steam will say there's no more history, when really there is.  When using the [Inventory History page](https://steamcommunity.com/my/inventoryhistory/), this bug expresses itself as the "Load More History" button disappearing prematurely.  When that happens, the `cursor` object returned by Steam's API will be missing.
+Sometimes Steam will say there's no more history, when really there is.  When `ajax=0`, this bug expresses itself as the "Load More History" button disappearing prematurely.  When that happens, the `cursor` object returned by the API will be missing.
 
 For example, assuming we have history older than `4/30/21`, this can happen:
 
@@ -149,6 +162,10 @@ There are several conditions in which this is not true:
 - It can sometimes happen that all of the item names do appear properly, but `descriptions` is just an empty array.
 - It can also sometimes happen that all of the item names do appear properly and `descriptions` is filled with entries, but some items will just be missing from `descriptions` for no apparent reason.
 
-These sorts of bugs are likely caused by Steam servers being down, and will eventually go away on their own.
+These sorts of bugs are likely caused by Steam servers being down, and will eventually go away on their own if you refresh the page.
+
+There's at least one instance where this type of error will never go away by reloading the page:
+
+- Most events involving Steam Gems on or before December 12, 2014 will appear as "Unknown Asset" in place of the gems, and will have no `descriptions` entry.  This is likely due to a gem duplication exploit and the resulting rollbacks.
 
 > The BoosterManager plugin does not detect these bugs.  You can tell the plugin to refresh the page by sending back `cursor` and `page` in the `next_cursor` and `next_page` response parameters respectively.
