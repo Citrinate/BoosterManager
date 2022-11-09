@@ -121,7 +121,7 @@ The Inventory History API provides no way to fetch specific pages, instead we sp
 As an example, assuming you know there should be history on your account between `4/30/21` and `1/5/21`, your history might look like this:
 
 ```
-… → 5/2/21 → 5/1/21 → 4/30/21 → 1/5/21 → 1/6/21 → …
+… → 5/2/21 → 5/1/21 → 4/30/21 → 1/5/21 → 1/4/21 → …
 ```
 
 This bug can be addressed by searching for history within the gap.  You can use the in-browser "Jump to date" feature, or try setting the `start_time` parameter yourself.  It may take several attempts to find a value for `start_time` that causes the missing history to re-appear.
@@ -129,12 +129,14 @@ This bug can be addressed by searching for history within the gap.  You can use 
 If you search at date `x` and find missing history there, then history older than `x` should also re-appear, but history newer than `x` might not.  Looking at the previous example and assuming there's history between `4/30/21` and `3/14/21`; if `x = 3/14/21` then the gap may shrink, but not disappear, and some of the missing history may also show up right before `3/14/21`:
 
 ```
-… → 5/2/21 → 5/1/21 → 4/30/21 → 3/13/21 → 3/14/21 → 3/13/21 → … → 1/5/21 → 1/6/21 → …
+… → 5/2/21 → 5/1/21 → 4/30/21 → 3/15/21 → 3/14/21 → 3/13/21 → … → 1/5/21 → 1/4/21 → …
 ```
 
 For this reason it's better to start your search right where the gap begins and proceed gradually.  Setting the `start_time` parameter yourself allows you to move in increments of 1 second.  The "Jump to date" feature moves in increments of 24 hours.  You can also use the `cursor[time]` and `cursor[time_frac]` parameters to move in increments of 1 millisecond.
 
-Not all gaps are as large as in the examples above.  The issue tends to also arise when too many events share the same time (ex: confirming multiple market listings at once).  Here the gap can be less than a second and may skip as few as 1 event.  These gaps can be addressed in the same way as large gaps, but because of how small they are, they're hard to notice.  In my experience, because small gaps tend to only happen due to market-related activity, they can be safely ignored, as market history is more accurately collected from the Market History API.
+Not all gaps are as large as in the examples above.  It's very common to have lots of small gaps when numerous events share the same time (ex: confirming multiple market listings at once).  Here the gaps length can be shorter than a second, and may skip as few as 1 event.  These gaps can be addressed in the same way as large gaps, but because of how small they are, they're very hard to identify and correct for.
+
+In my experience, because small gaps tend to only happen due to market-related activity, they can be safely ignored, as market history is more accurately collected using the Market History API.
 
 > The BoosterManager plugin cannot detect this bug.  You'll need to monitor the plugin's activity yourself to ensure there's no gaps.  Within your `InventoryHistoryAPI`, `page - data["cursor"]["time"]` represents the size of the gap in seconds between the current page and the next page.  Be aware that `data["cursor"]` [can be](#history-ends-early-bug) `null`.  You can attempt to address this bug with your API by setting the `next_page` or `next_cursor` response parameters, telling the plugin which page you'd like it to fetch next.
 
