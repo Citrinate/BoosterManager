@@ -47,17 +47,35 @@ Command | Access | Description
 `transfersacks [Bots] <TargetBot>`|`Master`|Sends all Sacks of Gems from the given bot to the given target bot.
 `unpackgems [Bots]`|`Master`|Unpacks all Sacks of Gems owned by the given bot.
 
-
 ### Market Commands
 
 Command | Access | Description
 --- | --- | ---
-`findlistings [Bots] <ItemNames>`|`Master`|Displays the `ListingID` of any listings belonging to the given bot with a name matching any of `ItemNames`.  Multiple item names may be provided, but must be separated with `&&`
-`findandremovelistings [Bots] <ItemNames>`|`Master`|Removes any listings belonging to the given bot with a name matching any of `ItemNames`.  Multiple names may be provided, but must be separated with `&&`
-`listings [Bots]`|`Master`|Displays the total value of all listings owned by the given bot.
-`logdata [Bots] [Count] [Start]`|`Master`|Collects data (booster data, market listings, market history) from the given bot and sends it to the [APIs](#boosterdataapi-marketlistingsapi-markethistoryapi) specified in `ASF.json`. The number of pages of market history may be specified using `Count`, and may begin on the page specified by `Start`
-`removelistings [Bot] <ListingIDs>`|`Master`|Removes `ListingIDs` belonging to the given bot.
-`value [Bots] [BalanceLimit]`|`Master`|Displays the combined wallet balance and total value of all listings owned by the given bot.  The maximum allowed balance in your region may be provided as `BalanceLimit`, a whole number, and it will instead display how close the given bot is to reaching that limit.
+`findlistings [Bots] <ItemNames>`|`Master`|Displays the `ListingID` of any market listings belonging to the given bot with a name matching any of `ItemNames`.  Multiple item names may be provided, but must be separated with `&&`
+`findandremovelistings [Bots] <ItemNames>`|`Master`|Removes any market listings belonging to the given bot with a name matching any of `ItemNames`.  Multiple names may be provided, but must be separated with `&&`
+`listings [Bots]`|`Master`|Displays the total value of all market listings owned by the given bot.
+`logboosterdata [Bots]`|`Master`|Collects booster data from the given bot and sends it to [`BoosterDataAPI`](#boosterdataapi-inventoryhistoryapi-marketlistingsapi-markethistoryapi)
+`logdata [Bots]`|`Master`|A combination of the `logboosterdata`, `loginventoryhistory`, `logmarketlistings` and `logmarkethistory` commands.
+`loginventoryhistory [Bots] [Count] [Time] [TimeFrac] [S]`|`Master`|Collects inventory history data from the given bot and sends it to [`InventoryHistoryAPI`](#boosterdataapi-inventoryhistoryapi-marketlistingsapi-markethistoryapi).  The number of pages of inventory history may be specified using `Count`, and may begin on the page specified by `Time`, `TimeFrac`, and `S`
+`logmarketlistings [Bots]`|`Master`|Collects market listings data from the given bot and sends it to [`MarketListingsAPI`](#boosterdataapi-inventoryhistoryapi-marketlistingsapi-markethistoryapi)
+`logmarkethistory [Bots] [Count] [Start]`|`Master`|Collects market history data from the given bot and sends it to [`MarketHistoryAPI`](#boosterdataapi-inventoryhistoryapi-marketlistingsapi-markethistoryapi).  The number of pages of market history may be specified using `Count`, and may begin on the page specified by `Start`
+`logstop [Bots]`|`Master`|Stops any actively running `loginventoryhistory` or `logmarkethistory` commands.
+`removelistings [Bot] <ListingIDs>`|`Master`|Removes market `ListingIDs` belonging to the given bot.
+`value [Bots] [BalanceLimit]`|`Master`|Displays the combined wallet balance and total value of all market listings owned by the given bot.  The maximum allowed balance in your region may be provided as `BalanceLimit`, a whole number, and it will instead display how close the given bot is to reaching that limit.
+
+### Command Aliases
+
+Most pluralized commands also have a non-pluralized alias; ex: `lootboosters` has the alias `lootbooster`
+
+Command | Alias |
+--- | --- |
+`findlistings`|`flistings`
+`findandremovelistings`|`frlistings`
+`removelistings`|`rlistings`
+`logboosterdata`|`logbd`
+`loginventoryhistory`|`logih`
+`logmarketlistings`|`logml`
+`logmarkethistory`|`logmh`
 
 ---
 
@@ -97,10 +115,11 @@ By default this delay is set to `0`, and is not recommended to be used except in
 
 ---
 
-### BoosterDataAPI, MarketListingsAPI, MarketHistoryAPI
+### BoosterDataAPI, InventoryHistoryAPI, MarketListingsAPI, MarketHistoryAPI
 
 ```
 "BoosterDataAPI": "<Url>",
+"InventoryHistoryAPI": "<Url>",
 "MarketListingsAPI": "<Url>",
 "MarketHistoryAPI": "<Url>",
 ```
@@ -108,11 +127,12 @@ By default this delay is set to `0`, and is not recommended to be used except in
 Example: 
 ```
 "BoosterDataAPI": "http://localhost/api/boosters", 
+"InventoryHistoryAPI": "http://localhost/api/inventoryhistory", 
 "MarketListingsAPI": "http://localhost/api/listings", 
-"MarketHistoryAPI": "http://localhost/api/history",
+"MarketHistoryAPI": "http://localhost/api/markethistory",
 ```
 
-These `string` type configuration settings can be added to your `ASF.json` config file.  When the `logdata` command is used, data from each of three sources will be gathered and sent to API at the associated `Url`.  The `logdata` command will not function unless at least one of these are defined.  
+These `string` type configuration settings can be added to your `ASF.json` config file.  When any of the `log` commands are used, data from four possible sources will be gathered and sent to the API at the associated `Url`.
 
 You will need to design your API to accept requests and return responses per the following specifications:
 
@@ -126,42 +146,53 @@ You will need to design your API to accept requests and return responses per the
 > --- | --- | ---
 > `steamid`|`ulong`|SteamID of the bot that `data` belongs to
 > `source`|`string`|The url used to fetch `data`.  See API-specific details below.
-> `page`|`uint?`|Page number, for when `data` is paginated, `null` otherwise.  Paginated `data` is sent sequentally, and not in parallel.  See API-specific details below.
+> `page`|`uint?`|Page number, for when `data` is paginated, `null` otherwise.  Paginated `data` is sent sequentially, and not in parallel.  See API-specific details below.
 > `data`|`JObject/JArray`|The data taken from `source`.  See API-specific details below.
+
+> **BoosterDataAPI-specific Details**:
 >
-> > **BoosterDataAPI-specific Details**:
+> Name | Type | Description
+> --- | --- | ---
+> `source`|`string`|`https://steamcommunity.com/tradingcards/boostercreator/`
+> `data`|`JArray`|The data parsed from `source` and sent as an array of objects.  See array entry details below.
+>
+> > **BoosterDataAPI-specific `data` Array Entry Details**:
 > >
-> > Name | Type | Description
+> > Name | Type | Notes
 > > --- | --- | ---
-> > `source`|`string`|`https://steamcommunity.com/tradingcards/boostercreator/`
-> > `data`|`JArray`|The data parsed from `source` and sent as an array of objects.  See array entry details below.
-> >
-> > > **BoosterDataAPI-specific `data` Array Entry Details**:
-> > >
-> > > Name | Type | Notes
-> > > --- | --- | ---
-> > > `appid`|`uint`|Booster game AppID
-> > > `name`|`string`|Booster game name
-> > > `series`|`uint`|Booster series number
-> > > `price`|`uint`|Price of booster in gems
-> > > `unavailable`|`bool`|Set to `true` when the booster is on a 24 hour cooldown
-> > > `available_at_time`|`string?`|A date and time string in ISO 8601 format, if `unavailable` is `false` then this will be `null`|
-> >
-> > **MarketListingsAPI-specific Details**:
-> >
-> > Name | Type | Description
-> > --- | --- | ---
-> > `source`|`string`|`https://steamcommunity.com/market/mylistings?norender=1`
-> > `page`|`N/A`|Always set to `null`.  Pagination is not supported.  While `source` does support pagination for `data[listings]`, that information can be recreated using the Market History API.
-> > `data`|`JObject`|The data taken directly from `source` with empty string values converted to `null`
-> >
-> > **MarketHistoryAPI-specific Details**:
-> >
-> > Name | Type | Description
-> > --- | --- | ---
-> > `source`|`string`|`https://steamcommunity.com/market/myhistory?norender=1&count=500`
-> > `page`|`uint`|Page number, defined as `floor(data[start] / 500) + 1`
-> > `data`|`JObject`|The data taken directly from `source` with empty string values converted to `null`
+> > `appid`|`uint`|Booster game AppID
+> > `name`|`string`|Booster game name
+> > `series`|`uint`|Booster series number
+> > `price`|`uint`|Price of booster in gems
+> > `unavailable`|`bool`|Set to `true` when the booster is on a 24 hour cooldown
+> > `available_at_time`|`string?`|A date and time string in ISO 8601 format, if `unavailable` is `false` then this will be `null`|
+
+> **InventoryHistoryAPI-specific Details**:
+>
+> Important Inventory History API documentation can be found [here](https://github.com/Citrinate/BoosterManager/blob/master/BoosterManager/Docs/InventoryHistory.md)
+>
+> Name | Type | Description
+> --- | --- | ---
+> `source`|`string`|`https://steamcommunity.com/my/inventoryhistory/?ajax=1`
+> `page`|`uint`|The value of the `start_time` query parameter used to request `source`.  If a cursor object was used to request `source` instead, this will be equal to `cursor[time]`
+> `cursor`|`JObject`|The value of the `cursor` object query parameter used to request `source`
+> `data`|`JObject`|The data taken directly from `source` with empty string values converted to `null`
+
+> **MarketListingsAPI-specific Details**:
+>
+> Name | Type | Description
+> --- | --- | ---
+> `source`|`string`|`https://steamcommunity.com/market/mylistings?norender=1`
+> `page`|`N/A`|Always set to `null`.  Pagination is not supported.  While `source` does support pagination for `data[listings]`, that information can be recreated using the Market History API.
+> `data`|`JObject`|The data taken directly from `source` with empty string values converted to `null`
+
+> **MarketHistoryAPI-specific Details**:
+>
+> Name | Type | Description
+> --- | --- | ---
+> `source`|`string`|`https://steamcommunity.com/market/myhistory?norender=1&count=500`
+> `page`|`uint`|Page number, defined as `floor(data[start] / 500) + 1`
+> `data`|`JObject`|The data taken directly from `source` with empty string values converted to `null`
 
 #### Response
 
@@ -173,15 +204,27 @@ You will need to design your API to accept requests and return responses per the
 > `message`|`string`|No|A custom message that will be displayed in place of the default succeed/fail message
 > `show_message`|`bool`|No|Whether or not to show any message
 > `get_next_page`|`bool`|No|Whether or not to fetch the next page (for when `data` is paginated).  If the plugin was already going to fetch the next page anyway, this does nothing.
+> `next_page`|`uint`|No|If `get_next_page` is set to `true`, the next page will be fetched using this page number
+> `next_cursor`|`JObject`|No|If `get_next_page` is set to `true`, the next page will be fetched using this cursor object (only used for Inventory History)
 
 ---
 
-### MarketHistoryDelay
+### LogDataPageDelay
 
-`"MarketHistoryDelay": <Seconds>,`
+`"LogDataPageDelay": <Seconds>,`
 
-Example: `"MarketHistoryDelay": 15,`
+Example: `"LogDataPageDelay": 15,`
 
-This `uint` type configuration setting can be added to your `ASF.json` config file.  When using the `logdata` command, it will add a `Seconds` delay between fetching market history pages.
+This `uint` type configuration setting can be added to your `ASF.json` config file.  When using the `loginventoryhistory` or `logmarkethistory` commands to fetch multiple pages, it will add a `Seconds` delay between each page fetch.
 
 By default, this is set to `15`
+
+---
+
+### InventoryHistoryAppFilter
+
+`"InventoryHistoryAppFilter": [<AppIDs>],`
+
+Example: `"InventoryHistoryAppFilter": [730, 570],`
+
+This `HashSet<uint>` type configuration setting can be added to your `ASF.json` config file.  When using the `loginventoryhistory` command, the results will be filtered to only show inventory history events from these `AppIDs`
