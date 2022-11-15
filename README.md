@@ -69,9 +69,9 @@ Most pluralized commands also have a non-pluralized alias; ex: `lootboosters` ha
 
 Command | Alias |
 --- | --- |
-`findlistings`|`flistings`
-`findandremovelistings`|`frlistings`
-`removelistings`|`rlistings`
+`findlistings`|`flistings`, `findl`
+`findandremovelistings`|`frlistings`, `findremovel`
+`removelistings`|`rlistings`, `removel`
 `logboosterdata`|`logbd`
 `loginventoryhistory`|`logih`
 `logmarketlistings`|`logml`
