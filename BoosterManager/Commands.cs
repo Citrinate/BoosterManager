@@ -987,7 +987,7 @@ namespace BoosterManager {
 				amountNums.Add(amountNum);
 			}
 
-			List<(Bot reciever, uint amount)> recievers = bots.Zip(amountNums).Select(pair => (pair.First, pair.Second)).ToList();
+			List<(Bot reciever, uint amount)> recievers = Zip(bots, amountNums).ToList();
 
 			return await InventoryHandler.BatchSendItemsWithAmounts(bot, recievers, appID, contextID, type, classID, allowUnmarketable).ConfigureAwait(false);
 		}
@@ -1075,5 +1075,13 @@ namespace BoosterManager {
 
 		internal static string FormatStaticResponse(string response) => ArchiSteamFarm.Steam.Interaction.Commands.FormatStaticResponse(response);
 		internal static string FormatBotResponse(Bot bot, string response) => bot.Commands.FormatBotResponse(response);
+
+		// https://learn.microsoft.com/en-us/archive/blogs/ericlippert/zip-me-up
+		private static IEnumerable<(TFirst, TSecond)> Zip<TFirst, TSecond> (IEnumerable<TFirst> first, IEnumerable<TSecond> second) {
+			using (IEnumerator<TFirst> e1 = first.GetEnumerator())
+				using (IEnumerator<TSecond> e2 = second.GetEnumerator())
+					while (e1.MoveNext() && e2.MoveNext())
+						yield return (e1.Current, e2.Current);
+		}
 	}
 }

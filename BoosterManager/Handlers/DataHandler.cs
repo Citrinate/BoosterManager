@@ -239,7 +239,7 @@ namespace BoosterManager {
 			Uri? source = null;
 			try {
 				(inventoryHistory, source) = await WebRequest.GetInventoryHistory(bot, InventoryHistoryAppFilter, cursor, startTime).ConfigureAwait(false);
-			} catch (HttpRequestException) {
+			} catch (InventoryHistoryException) {
 				if (retryOnRateLimit) {
 					// This API has a very reachable rate limit
 					if (showRateLimitMessage && respondingBot != null && recipientSteamID != null) {

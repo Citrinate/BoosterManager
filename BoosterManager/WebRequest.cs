@@ -78,7 +78,7 @@ namespace BoosterManager {
 			ObjectResponse<Steam.InventoryHistoryResponse>? inventoryHistoryResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<Steam.InventoryHistoryResponse>(request, requestOptions: WebBrowser.ERequestOptions.ReturnClientErrors | WebBrowser.ERequestOptions.AllowInvalidBodyOnErrors).ConfigureAwait(false);
 			
 			if (inventoryHistoryResponse?.StatusCode == HttpStatusCode.TooManyRequests) {
-				throw new HttpRequestException();
+				throw new InventoryHistoryException();
 			}
 
 			return (inventoryHistoryResponse?.Content, request);

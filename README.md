@@ -9,7 +9,7 @@ This plugin is based off of the [Booster Creator Plugin](https://github.com/Ryzh
 - Unpack the downloaded .zip file to the `plugins` folder inside your ASF folder.
 - (Re)start ASF, you should get a message indicating that the plugin loaded successfully. 
 
-> Please note, this plugin's releases only work with ASF-generic.
+> Please note, this plugin is only tested to work with ASF-generic.  It may or may not work with other ASF variants.
 
 ## Usage
 

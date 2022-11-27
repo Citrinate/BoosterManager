@@ -214,11 +214,12 @@ namespace BoosterManager {
 				return null;
 			}
 
+			IOrderedEnumerable<Booster> orderedUncraftedBoosters = uncraftedBoosters.OrderBy<Booster, DateTime>(booster => booster.GetAvailableAtTime());
 			if (getLast) {
-				return uncraftedBoosters.MaxBy(booster => booster.GetAvailableAtTime());
+				return orderedUncraftedBoosters.Last();
 			}
 
-			return uncraftedBoosters.MinBy(booster => booster.GetAvailableAtTime());
+			return orderedUncraftedBoosters.First();
 		}
 
 		internal bool CheckIfFinished(BoosterType type) {
