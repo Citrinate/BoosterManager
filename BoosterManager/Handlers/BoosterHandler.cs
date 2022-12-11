@@ -1,4 +1,6 @@
+using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Steam;
+using SteamKit2;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -159,7 +161,12 @@ namespace BoosterManager {
 			}
 			
 			string message = String.Join(Environment.NewLine, messages);
-			await respondingBot.SendMessage(recipientSteamID, message).ConfigureAwait(false);
+
+			if (recipientSteamID == 0 || !new SteamID(recipientSteamID).IsIndividualAccount) {
+				ASF.ArchiLogger.LogGenericInfo(message);
+			} else {
+				await respondingBot.SendMessage(recipientSteamID, message).ConfigureAwait(false);
+			}
 		}
 
 		private static int GetMillisecondsFromNow(DateTime then) => Math.Max(0, (int) (then - DateTime.Now).TotalMilliseconds);
