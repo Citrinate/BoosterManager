@@ -158,15 +158,12 @@ You will need to design your API to accept requests and return responses per the
 > `steamid`|`ulong`|SteamID of the bot that `data` belongs to
 > `source`|`string`|`https://steamcommunity.com/tradingcards/boostercreator/`
 > `data`|`JArray`|The data parsed from `source` and sent as an array of objects.  Detailed below.
->
-> > Name | Type | Notes
-> > --- | --- | ---
-> > `appid`|`uint`|Booster game AppID
-> > `name`|`string`|Booster game name
-> > `series`|`uint`|Booster series number
-> > `price`|`uint`|Price of booster in gems
-> > `unavailable`|`bool`|Set to `true` when the booster is on a 24 hour cooldown
-> > `available_at_time`|`string?`|A date and time string in ISO 8601 format, if `unavailable` is `false` then this will be `null`|
+> `data[][appid]`|`uint`|Booster game AppID
+> `data[][name]`|`string`|Booster game name
+> `data[][series]`|`uint`|Booster series number
+> `data[][price]`|`uint`|Price of booster in gems
+> `data[][unavailable]`|`bool`|Set to `true` when the booster is on a 24 hour cooldown
+> `data[][available_at_time]`|`string?`|A date and time string in ISO 8601 format, if `unavailable` is `false` then this will be `null`|
 
 #### Response
 
@@ -242,7 +239,7 @@ You will need to design your API to accept requests and return responses per the
 >
 > **Content-Type**: `application/json`
 >
-> **Note**: Multiple pages of `data` will be sent sequentially, and not in parallel.
+> **Note**: Multiple pages of `data` will be requested sequentially, and not in parallel.
 >
 > Name | Type | Description
 > --- | --- | ---
@@ -288,7 +285,7 @@ You will need to design your API to accept requests and return responses per the
 >
 > **Note**: Important documentation of Steam's Inventory History API can be found [here](https://github.com/Citrinate/BoosterManager/blob/master/BoosterManager/Docs/InventoryHistory.md)
 >
-> **Note**: Multiple pages of `data` will be sent sequentially, and not in parallel.
+> **Note**: Multiple pages of `data` will be requested sequentially, and not in parallel.
 >
 > Name | Type | Description
 > --- | --- | ---
