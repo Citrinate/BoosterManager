@@ -219,7 +219,7 @@ namespace BoosterManager {
 			if (delayInMilliseconds != 0) {
 				for (int i = 0; i < delayInMilliseconds; i += 1000) {
 					if (WasManuallyStopped(bot, tasksStartedTime)) {
-						return String.Format("Manually stopped before fetching Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})", pageTime, GetDateTimeFromTimestamp(pageTime));
+						return String.Format("Manually stopped before fetching Inventory History for Time < {0} ({1:MMM d, yyyy} @ {1:T})", pageTime, GetDateTimeFromTimestamp(pageTime));
 					}
 
 					await Task.Delay(1000).ConfigureAwait(false);
@@ -227,7 +227,7 @@ namespace BoosterManager {
 			}
 
 			if (WasManuallyStopped(bot, tasksStartedTime)) {
-				return String.Format("Manually stopped before fetching Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})", pageTime, GetDateTimeFromTimestamp(pageTime));
+				return String.Format("Manually stopped before fetching Inventory History for Time < {0} ({1:MMM d, yyyy} @ {1:T})", pageTime, GetDateTimeFromTimestamp(pageTime));
 			}
 
 			if (!bot.IsConnectedAndLoggedOn) {
@@ -258,10 +258,10 @@ namespace BoosterManager {
 				}
 
 				if (inventoryHistory?.Error != null) {
-					return String.Format("Failed to fetch Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt}): {2}", pageTime, GetDateTimeFromTimestamp(pageTime), inventoryHistory.Error);
+					return String.Format("Failed to fetch Inventory History for Time < {0} ({1:MMM d, yyyy} @ {1:T}): {2}", pageTime, GetDateTimeFromTimestamp(pageTime), inventoryHistory.Error);
 				}
 
-				return String.Format("Failed to fetch Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})!", pageTime, GetDateTimeFromTimestamp(pageTime));
+				return String.Format("Failed to fetch Inventory History for Time < {0} ({1:MMM d, yyyy} @ {1:T})!", pageTime, GetDateTimeFromTimestamp(pageTime));
 			}
 
 			SteamDataResponse response = await WebRequest.SendSteamData<Steam.InventoryHistoryResponse>(InventoryHistoryAPI, bot, inventoryHistory, source!, pageTime, cursor).ConfigureAwait(false);
@@ -284,12 +284,12 @@ namespace BoosterManager {
 						if (response.Message != null) {
 							messages.Add(response.Message);
 						} else if (!response.Success) {
-							messages.Add(String.Format("API failed to accept Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})!", pageTime, GetDateTimeFromTimestamp(pageTime)));
+							messages.Add(String.Format("API failed to accept Inventory History for Time < {0} ({1:MMM d, yyyy} @ {1:T})!", pageTime, GetDateTimeFromTimestamp(pageTime)));
 						} else {
-							messages.Add(String.Format("Successfully sent Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})", pageTime, GetDateTimeFromTimestamp(pageTime)));
+							messages.Add(String.Format("Successfully sent Inventory History for Time < {0} ({1:MMM d, yyyy} @ {1:T})", pageTime, GetDateTimeFromTimestamp(pageTime)));
 						}
 					}
-					messages.Add(String.Format("Inventory History ended at the page starting on {0:MMM d, yyyy @ h:mm:ss tt}", GetDateTimeFromTimestamp(pageTime)));
+					messages.Add(String.Format("Inventory History ended at the page starting on {0:MMM d, yyyy} @ {0:T}", GetDateTimeFromTimestamp(pageTime)));
 					messages.Add("Please verify that your history actually ends here, as there's a bug on Steam's end which can cause the history to end early.  Refer to the README for more information.");
 					messages.Add(String.Format("({0})", source));
 
@@ -306,10 +306,10 @@ namespace BoosterManager {
 			}
 
 			if (!response.Success) {
-				return String.Format("API failed to accept Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})!", pageTime, GetDateTimeFromTimestamp(pageTime));
+				return String.Format("API failed to accept Inventory History for Time < {0} ({1:MMM d, yyyy} @ {1:T})!", pageTime, GetDateTimeFromTimestamp(pageTime));
 			}
 
-			return String.Format("Successfully sent Inventory History for Time < {0} ({1:MMM d, yyyy @ h:mm:ss tt})", pageTime, GetDateTimeFromTimestamp(pageTime));
+			return String.Format("Successfully sent Inventory History for Time < {0} ({1:MMM d, yyyy} @ {1:T})", pageTime, GetDateTimeFromTimestamp(pageTime));
 		}
 
 		private static async Task<string?> SendMarketListings(Bot bot, uint delayInMilliseconds = 0) {
