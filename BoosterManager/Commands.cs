@@ -17,24 +17,34 @@ namespace BoosterManager {
 			switch (args.Length) {
 				case 1:
 					switch (args[0].ToUpperInvariant()) {
+						case "BSA":
+							return ResponseBoosterStatus(access, steamID, "ASF");
 						case "BSTATUS" or "BOOSTERSTATUS":
 							return ResponseBoosterStatus(bot, access);
 						
 						case "BSTOPALL" or "BOOSTERSTOPALL":
 							return ResponseBoosterStopTime(bot, access, "0");
 						
+						case "GA":
+							return await ResponseGems(access, steamID, "ASF").ConfigureAwait(false);
 						case "GEMS" or "GEM":
 							return await ResponseGems(bot, access).ConfigureAwait(false);
 						
+						case "KA":
+							return await ResponseKeys(access, steamID, "ASF").ConfigureAwait(false);
 						case "KEYS" or "KEY":
 							return await ResponseKeys(bot, access).ConfigureAwait(false);
 						
+						case "LIA":
+							return await ResponseListings(access, steamID, "ASF").ConfigureAwait(false);
 						case "LISTINGS" or "LISTING":
 							return await ResponseListings(bot, access).ConfigureAwait(false);
 						
 						case "LOGBOOSTERDATA" or "SENDBOOSTERDATA" or "LOGBOOSTERS" or "SENDBOOSTERS" or "LOGBD" or "SENDBD" or "LOGB" or "SENDB":
 							return await ResponseLogBoosterData(bot, access).ConfigureAwait(false);
 
+						case "LDA" or "LOGA":
+							return await ResponseLogData(access, steamID, "ASF").ConfigureAwait(false);
 						case "LOGDATA" or "SENDDATA":
 							return await ResponseLogData(bot, access).ConfigureAwait(false);
 
@@ -71,6 +81,8 @@ namespace BoosterManager {
 						case "UNPACKGEMS":
 							return await ResponseUnpackGems(bot, access).ConfigureAwait(false);
 						
+						case "VA":
+							return await ResponseValue(access, steamID, "ASF").ConfigureAwait(false);
 						case "VALUE":
 							return await ResponseValue(bot, access).ConfigureAwait(false);
 						
@@ -170,16 +182,22 @@ namespace BoosterManager {
 						case "LOOTSACKS" or "LOOTSACK":
 							return await ResponseSendItems(access, steamID, Utilities.GetArgsAsText(args, 1, ","), Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.SteamGems, GemHandler.SackOfGemsClassID).ConfigureAwait(false);
 						
+						case "TBA":
+							return await ResponseSendItems(access, steamID, "ASF", Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.BoosterPack, recieverBotName: args[1]).ConfigureAwait(false);
 						case "TRANSFERBOOSTERS" or "TRANSFERBOOSTER" when args.Length > 2:
 							return await ResponseSendItems(access, steamID, args[1], Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.BoosterPack, recieverBotName: args[2]).ConfigureAwait(false);
 						case "TRANSFERBOOSTERS" or "TRANSFERBOOSTER":
 							return await ResponseSendItems(bot, access, Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.FoilTradingCard, recieverBotName: args[1]).ConfigureAwait(false);
 						
+						case "TCA":
+							return await ResponseSendItems(access, steamID, "ASF", Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.TradingCard, recieverBotName: args[1]).ConfigureAwait(false);
 						case "TRANSFERCARDS" or "TRANSFERCARD" when args.Length > 2:
 							return await ResponseSendItems(access, steamID, args[1], Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.TradingCard, recieverBotName: args[2]).ConfigureAwait(false);
 						case "TRANSFERCARDS" or "TRANSFERCARD":
 							return await ResponseSendItems(bot, access, Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.FoilTradingCard, recieverBotName: args[1]).ConfigureAwait(false);
 						
+						case "TFA":
+							return await ResponseSendItems(access, steamID, "ASF", Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.FoilTradingCard, recieverBotName: args[1]).ConfigureAwait(false);
 						case "TRANSFERFOILS" or "TRANSFERFOIL" when args.Length > 2:
 							return await ResponseSendItems(access, steamID, args[1], Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.FoilTradingCard, recieverBotName: args[2]).ConfigureAwait(false);
 						case "TRANSFERFOILS" or "TRANSFERFOIL":
@@ -213,6 +231,8 @@ namespace BoosterManager {
 						case "UNPACKGEMS":
 							return await ResponseUnpackGems(access, steamID, Utilities.GetArgsAsText(args, 1, ",")).ConfigureAwait(false);
 						
+						case "VA":
+							return await ResponseValue(access, steamID, "ASF", args[1]).ConfigureAwait(false);
 						case "VALUE" when args.Length > 2:
 							return await ResponseValue(access, steamID, args[1], args[2]).ConfigureAwait(false);
 						case "VALUE":

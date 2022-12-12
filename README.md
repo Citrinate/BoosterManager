@@ -54,14 +54,19 @@ Command | Access | Description
 `findlistings [Bots] <ItemNames>`|`Master`|Displays the `ListingID` of any market listings belonging to the given bot with a name matching any of `ItemNames`.  Multiple item names may be provided, but must be separated with `&&`
 `findandremovelistings [Bots] <ItemNames>`|`Master`|Removes any market listings belonging to the given bot with a name matching any of `ItemNames`.  Multiple names may be provided, but must be separated with `&&`
 `listings [Bots]`|`Master`|Displays the total value of all market listings owned by the given bot.
-`logboosterdata [Bots]`|`Master`|Collects booster data from the given bot and sends it to [`BoosterDataAPI`](#boosterdataapi-inventoryhistoryapi-marketlistingsapi-markethistoryapi)
-`logdata [Bots]`|`Master`|A combination of the `logboosterdata`, `loginventoryhistory`, `logmarketlistings` and `logmarkethistory` commands.
-`loginventoryhistory [Bots] [Count] [Time] [TimeFrac] [S]`|`Master`|Collects inventory history data from the given bot and sends it to [`InventoryHistoryAPI`](#boosterdataapi-inventoryhistoryapi-marketlistingsapi-markethistoryapi).  The number of pages of inventory history may be specified using `Count`, and may begin on the page specified by `Time`, `TimeFrac`, and `S`
-`logmarketlistings [Bots]`|`Master`|Collects market listings data from the given bot and sends it to [`MarketListingsAPI`](#boosterdataapi-inventoryhistoryapi-marketlistingsapi-markethistoryapi)
-`logmarkethistory [Bots] [Count] [Start]`|`Master`|Collects market history data from the given bot and sends it to [`MarketHistoryAPI`](#boosterdataapi-inventoryhistoryapi-marketlistingsapi-markethistoryapi).  The number of pages of market history may be specified using `Count`, and may begin on the page specified by `Start`
-`logstop [Bots]`|`Master`|Stops any actively running `loginventoryhistory` or `logmarkethistory` commands.
 `removelistings [Bot] <ListingIDs>`|`Master`|Removes market `ListingIDs` belonging to the given bot.
 `value [Bots] [BalanceLimit]`|`Master`|Displays the combined wallet balance and total value of all market listings owned by the given bot.  The maximum allowed balance in your region may be provided as `BalanceLimit`, a whole number, and it will instead display how close the given bot is to reaching that limit.
+
+### Log Commands
+
+Command | Access | Description
+--- | --- | ---
+`logdata [Bots]`|`Master`|A combination of the `logboosterdata`, `loginventoryhistory`, `logmarketlistings` and `logmarkethistory` commands.
+`logboosterdata [Bots]`|`Master`|Collects booster data from the given bot and sends it to [`BoosterDataAPI`](#boosterdataapi)
+`loginventoryhistory [Bots] [Count] [Time] [TimeFrac] [S]`|`Master`|Collects inventory history data from the given bot and sends it to [`InventoryHistoryAPI`](#inventoryhistoryapi).  The number of pages of inventory history may be specified using `Count`, and may begin on the page specified by `Time`, `TimeFrac`, and `S`
+`logmarketlistings [Bots]`|`Master`|Collects market listings data from the given bot and sends it to [`MarketListingsAPI`](#marketlistingsapi)
+`logmarkethistory [Bots] [Count] [Start]`|`Master`|Collects market history data from the given bot and sends it to [`MarketHistoryAPI`](#markethistoryapi).  The number of pages of market history may be specified using `Count`, and may begin on the page specified by `Start`
+`logstop [Bots]`|`Master`|Stops any actively running `loginventoryhistory` or `logmarkethistory` commands.
 
 ### Command Aliases
 
@@ -76,6 +81,18 @@ Command | Alias |
 `loginventoryhistory`|`logih`
 `logmarketlistings`|`logml`
 `logmarkethistory`|`logmh`
+
+Command | Alias |
+--- | --- |
+`bstatus ASF`|`bsa`
+`gems ASF`|`ga`
+`keys ASF`|`ka`
+`listings ASF`|`lia`
+`logdata ASF`|`lda`, `loga`
+`transferboosters ASF <TargetBot>`|`tba <TargetBot>`
+`transfercards ASF <TargetBot>`|`tca <TargetBot>`
+`transferfoils ASF <TargetBot>`|`tfa <TargetBot>`
+`value ASF [BalanceLimit]`|`va [BalanceLimit]`
 
 ---
 
@@ -97,7 +114,7 @@ By default, this is set to `true`
 
 Example: `"GamesToBooster": [730, 570],`
 
-This `HashSet<uint>` type configuration setting can be added to your individual bot config files.  It will automatically add any of the `AppIDs` to that bot's booster queue, and will automatically re-queue them after they've been crafted.
+This `HashSet<uint>` type configuration setting can be added to your individual bot config files.  It will automatically add all of the `AppIDs` to that bot's booster queue, and will automatically re-queue them after they've been crafted.
 
 > Note: It's not possible to remove any of these `AppIDs` from the booster queue using any commands.  Any changes you want to make will need to be made in the configuration file.
 
@@ -115,24 +132,18 @@ By default this delay is set to `0`, and is not recommended to be used except in
 
 ---
 
-### BoosterDataAPI, InventoryHistoryAPI, MarketListingsAPI, MarketHistoryAPI
+### BoosterDataAPI
 
 ```
 "BoosterDataAPI": "<Url>",
-"InventoryHistoryAPI": "<Url>",
-"MarketListingsAPI": "<Url>",
-"MarketHistoryAPI": "<Url>",
 ```
 
 Example: 
 ```
 "BoosterDataAPI": "http://localhost/api/boosters", 
-"InventoryHistoryAPI": "http://localhost/api/inventoryhistory", 
-"MarketListingsAPI": "http://localhost/api/listings", 
-"MarketHistoryAPI": "http://localhost/api/markethistory",
 ```
 
-These `string` type configuration settings can be added to your `ASF.json` config file.  When any of the `log` commands are used, data from four possible sources will be gathered and sent to the API at the associated `Url`.
+This `string` type configuration settings can be added to your `ASF.json` config file.  When the `logboosterdata` command is used, booster data will be gathered and sent to the API located at `Url`.
 
 You will need to design your API to accept requests and return responses per the following specifications:
 
@@ -145,19 +156,9 @@ You will need to design your API to accept requests and return responses per the
 > Name | Type | Description
 > --- | --- | ---
 > `steamid`|`ulong`|SteamID of the bot that `data` belongs to
-> `source`|`string`|The url used to fetch `data`.  See API-specific details below.
-> `page`|`uint?`|Page number, for when `data` is paginated, `null` otherwise.  Paginated `data` is sent sequentially, and not in parallel.  See API-specific details below.
-> `data`|`JObject/JArray`|The data taken from `source`.  See API-specific details below.
-
-> **BoosterDataAPI-specific Details**:
->
-> Name | Type | Description
-> --- | --- | ---
 > `source`|`string`|`https://steamcommunity.com/tradingcards/boostercreator/`
-> `data`|`JArray`|The data parsed from `source` and sent as an array of objects.  See array entry details below.
+> `data`|`JArray`|The data parsed from `source` and sent as an array of objects.  Detailed below.
 >
-> > **BoosterDataAPI-specific `data` Array Entry Details**:
-> >
 > > Name | Type | Notes
 > > --- | --- | ---
 > > `appid`|`uint`|Booster game AppID
@@ -167,29 +168,85 @@ You will need to design your API to accept requests and return responses per the
 > > `unavailable`|`bool`|Set to `true` when the booster is on a 24 hour cooldown
 > > `available_at_time`|`string?`|A date and time string in ISO 8601 format, if `unavailable` is `false` then this will be `null`|
 
-> **InventoryHistoryAPI-specific Details**:
->
-> Important Inventory History API documentation can be found [here](https://github.com/Citrinate/BoosterManager/blob/master/BoosterManager/Docs/InventoryHistory.md)
->
-> Name | Type | Description
-> --- | --- | ---
-> `source`|`string`|`https://steamcommunity.com/my/inventoryhistory/?ajax=1`
-> `page`|`uint`|The value of the `start_time` query parameter used to request `source`.  If a cursor object was used to request `source` instead, this will be equal to `cursor[time]`
-> `cursor`|`JObject`|The value of the `cursor` object query parameter used to request `source`
-> `data`|`JObject`|The data taken directly from `source` with empty string values converted to `null`
+#### Response
 
-> **MarketListingsAPI-specific Details**:
+> **Content-Type**: `application/json`
+>
+> Name | Type | Required | Description
+> --- | --- | --- | ---
+> `success`|`bool`|Yes|Whether your operations succeeded or failed.
+> `message`|`string`|No|A custom message that will be displayed in place of the default succeed/fail message
+> `show_message`|`bool`|No|Whether or not to show any message
+
+---
+
+### MarketListingsAPI
+
+```
+"MarketListingsAPI": "<Url>",
+```
+
+Example: 
+```
+"MarketListingsAPI": "http://localhost/api/listings", 
+```
+
+This `string` type configuration settings can be added to your `ASF.json` config file.  When the `logmarketlistings` command is used, market listing data will be gathered and sent to the API located at `Url`.
+
+You will need to design your API to accept requests and return responses per the following specifications:
+
+#### Request
+
+> **Method**: `POST`
+>
+> **Content-Type**: `application/json`
+>
+> **Note**: Pagination here is not supported.  While `source` does support pagination for `data[listings]`, that information can be recreated using the Market History API.
 >
 > Name | Type | Description
 > --- | --- | ---
+> `steamid`|`ulong`|SteamID of the bot that `data` belongs to
 > `source`|`string`|`https://steamcommunity.com/market/mylistings?norender=1`
-> `page`|`N/A`|Always set to `null`.  Pagination is not supported.  While `source` does support pagination for `data[listings]`, that information can be recreated using the Market History API.
 > `data`|`JObject`|The data taken directly from `source` with empty string values converted to `null`
 
-> **MarketHistoryAPI-specific Details**:
+#### Response
+
+> **Content-Type**: `application/json`
+>
+> Name | Type | Required | Description
+> --- | --- | --- | ---
+> `success`|`bool`|Yes|Whether your operations succeeded or failed.
+> `message`|`string`|No|A custom message that will be displayed in place of the default succeed/fail message
+> `show_message`|`bool`|No|Whether or not to show any message
+
+---
+
+### MarketHistoryAPI
+
+```
+"MarketHistoryAPI": "<Url>",
+```
+
+Example: 
+```
+"MarketHistoryAPI": "http://localhost/api/markethistory",
+```
+
+This `string` type configuration settings can be added to your `ASF.json` config file.  When the `logmarkethistory` command is used, market history data will be gathered and sent to the API located at `Url`.
+
+You will need to design your API to accept requests and return responses per the following specifications:
+
+#### Request
+
+> **Method**: `POST`
+>
+> **Content-Type**: `application/json`
+>
+> **Note**: Multiple pages of `data` will be sent sequentially, and not in parallel.
 >
 > Name | Type | Description
 > --- | --- | ---
+> `steamid`|`ulong`|SteamID of the bot that `data` belongs to
 > `source`|`string`|`https://steamcommunity.com/market/myhistory?norender=1&count=500`
 > `page`|`uint`|Page number, defined as `floor(data[start] / 500) + 1`
 > `data`|`JObject`|The data taken directly from `source` with empty string values converted to `null`
@@ -203,9 +260,66 @@ You will need to design your API to accept requests and return responses per the
 > `success`|`bool`|Yes|Whether your operations succeeded or failed.  If there's more pages to fetch, the plugin will only continue when `success` is `true`
 > `message`|`string`|No|A custom message that will be displayed in place of the default succeed/fail message
 > `show_message`|`bool`|No|Whether or not to show any message
-> `get_next_page`|`bool`|No|Whether or not to fetch the next page (for when `data` is paginated).  If the plugin was already going to fetch the next page anyway, this does nothing.
+> `get_next_page`|`bool`|No|Whether or not to fetch the next page.  If the plugin was already going to fetch the next page anyway, this does nothing.
 > `next_page`|`uint`|No|If `get_next_page` is set to `true`, the next page will be fetched using this page number
-> `next_cursor`|`JObject`|No|If `get_next_page` is set to `true`, the next page will be fetched using this cursor object (only used for Inventory History)
+
+---
+
+### InventoryHistoryAPI
+
+```
+"InventoryHistoryAPI": "<Url>",
+```
+
+Example: 
+```
+"InventoryHistoryAPI": "http://localhost/api/inventoryhistory", 
+```
+
+This `string` type configuration settings can be added to your `ASF.json` config file.  When the `loginventoryhistory` command is used, inventory history data will be gathered and sent to the API located at `Url`.
+
+You will need to design your API to accept requests and return responses per the following specifications:
+
+#### Request
+
+> **Method**: `POST`
+>
+> **Content-Type**: `application/json`
+>
+> **Note**: Important documentation of Steam's Inventory History API can be found [here](https://github.com/Citrinate/BoosterManager/blob/master/BoosterManager/Docs/InventoryHistory.md)
+>
+> **Note**: Multiple pages of `data` will be sent sequentially, and not in parallel.
+>
+> Name | Type | Description
+> --- | --- | ---
+> `steamid`|`ulong`|SteamID of the bot that `data` belongs to
+> `source`|`string`|`https://steamcommunity.com/my/inventoryhistory/?ajax=1`
+> `page`|`uint`|The value of the `start_time` query parameter used to request `source`.  If a cursor object was used to request `source` instead, this will be equal to `cursor[time]`
+> `cursor`|`JObject`|The value of the `cursor` object query parameter used to request `source`
+> `data`|`JObject`|The data taken directly from `source` with empty string values converted to `null`
+
+#### Response
+
+> **Content-Type**: `application/json`
+>
+> Name | Type | Required | Description
+> --- | --- | --- | ---
+> `success`|`bool`|Yes|Whether your operations succeeded or failed.  If there's more pages to fetch, the plugin will only continue when `success` is `true`
+> `message`|`string`|No|A custom message that will be displayed in place of the default succeed/fail message
+> `show_message`|`bool`|No|Whether or not to show any message
+> `get_next_page`|`bool`|No|Whether or not to fetch the next page.  If the plugin was already going to fetch the next page anyway, this does nothing.
+> `next_page`|`uint`|No|If `get_next_page` is set to `true`, the next page will be fetched using this page number
+> `next_cursor`|`JObject`|No|If `get_next_page` is set to `true`, the next page will be fetched using this cursor object
+
+---
+
+### InventoryHistoryAppFilter
+
+`"InventoryHistoryAppFilter": [<AppIDs>],`
+
+Example: `"InventoryHistoryAppFilter": [730, 570],`
+
+This `HashSet<uint>` type configuration setting can be added to your `ASF.json` config file.  When using the `loginventoryhistory` command, the results will be filtered to only show inventory history events from these `AppIDs`
 
 ---
 
@@ -218,13 +332,3 @@ Example: `"LogDataPageDelay": 15,`
 This `uint` type configuration setting can be added to your `ASF.json` config file.  When using the `loginventoryhistory` or `logmarkethistory` commands to fetch multiple pages, it will add a `Seconds` delay between each page fetch.
 
 By default, this is set to `15`
-
----
-
-### InventoryHistoryAppFilter
-
-`"InventoryHistoryAppFilter": [<AppIDs>],`
-
-Example: `"InventoryHistoryAppFilter": [730, 570],`
-
-This `HashSet<uint>` type configuration setting can be added to your `ASF.json` config file.  When using the `loginventoryhistory` command, the results will be filtered to only show inventory history events from these `AppIDs`
