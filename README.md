@@ -89,6 +89,12 @@ Command | Alias |
 `keys ASF`|`ka`
 `listings ASF`|`lia`
 `logdata ASF`|`lda`, `loga`
+`lootboosters ASF`|`lba`
+`lootcards ASF`|`lca`
+`lootfoils ASF`|`lfa`
+`lootgems ASF`|`lga`
+`lootkeys ASF`|`lka`
+`lootsacks ASF`|`lsa`
 `transferboosters ASF <TargetBot>`|`tba <TargetBot>`
 `transfercards ASF <TargetBot>`|`tca <TargetBot>`
 `transferfoils ASF <TargetBot>`|`tfa <TargetBot>`
@@ -143,7 +149,7 @@ Example:
 "BoosterDataAPI": "http://localhost/api/boosters", 
 ```
 
-This `string` type configuration settings can be added to your `ASF.json` config file.  When the `logboosterdata` command is used, booster data will be gathered and sent to the API located at `Url`.
+This `string` type configuration setting can be added to your `ASF.json` config file.  When the `logboosterdata` command is used, booster data will be gathered and sent to the API located at `Url`.
 
 You will need to design your API to accept requests and return responses per the following specifications:
 
@@ -188,7 +194,7 @@ Example:
 "MarketListingsAPI": "http://localhost/api/listings", 
 ```
 
-This `string` type configuration settings can be added to your `ASF.json` config file.  When the `logmarketlistings` command is used, market listing data will be gathered and sent to the API located at `Url`.
+This `string` type configuration setting can be added to your `ASF.json` config file.  When the `logmarketlistings` command is used, market listing data will be gathered and sent to the API located at `Url`.
 
 You will need to design your API to accept requests and return responses per the following specifications:
 
@@ -229,7 +235,7 @@ Example:
 "MarketHistoryAPI": "http://localhost/api/markethistory",
 ```
 
-This `string` type configuration settings can be added to your `ASF.json` config file.  When the `logmarkethistory` command is used, market history data will be gathered and sent to the API located at `Url`.
+This `string` type configuration setting can be added to your `ASF.json` config file.  When the `logmarkethistory` command is used, market history data will be gathered and sent to the API located at `Url`.
 
 You will need to design your API to accept requests and return responses per the following specifications:
 
@@ -273,7 +279,7 @@ Example:
 "InventoryHistoryAPI": "http://localhost/api/inventoryhistory", 
 ```
 
-This `string` type configuration settings can be added to your `ASF.json` config file.  When the `loginventoryhistory` command is used, inventory history data will be gathered and sent to the API located at `Url`.
+This `string` type configuration setting can be added to your `ASF.json` config file.  When the `loginventoryhistory` command is used, inventory history data will be gathered and sent to the API located at `Url`.
 
 You will need to design your API to accept requests and return responses per the following specifications:
 
