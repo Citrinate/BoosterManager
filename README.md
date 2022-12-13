@@ -63,7 +63,7 @@ Command | Access | Description
 --- | --- | ---
 `logdata [Bots]`|`Master`|A combination of the `logboosterdata`, `loginventoryhistory`, `logmarketlistings` and `logmarkethistory` commands.
 `logboosterdata [Bots]`|`Master`|Collects booster data from the given bot and sends it to [`BoosterDataAPI`](#boosterdataapi)
-`loginventoryhistory [Bots] [Count] [Time] [TimeFrac] [S]`|`Master`|Collects inventory history data from the given bot and sends it to [`InventoryHistoryAPI`](#inventoryhistoryapi).  The number of pages of inventory history may be specified using `Count`, and may begin on the page specified by `Time`, `TimeFrac`, and `S`
+`loginventoryhistory [Bots] [Count] [StartTime] [TimeFrac] [S]`|`Master`|Collects inventory history data from the given bot and sends it to [`InventoryHistoryAPI`](#inventoryhistoryapi).  The number of pages of inventory history may be specified using `Count`, and may begin on the page specified by either `StartTime` alone or by the combination of `StartTime`, `TimeFrac`, and `S`
 `logmarketlistings [Bots]`|`Master`|Collects market listings data from the given bot and sends it to [`MarketListingsAPI`](#marketlistingsapi)
 `logmarkethistory [Bots] [Count] [Start]`|`Master`|Collects market history data from the given bot and sends it to [`MarketHistoryAPI`](#markethistoryapi).  The number of pages of market history may be specified using `Count`, and may begin on the page specified by `Start`
 `logstop [Bots]`|`Master`|Stops any actively running `loginventoryhistory` or `logmarkethistory` commands.
@@ -322,7 +322,7 @@ You will need to design your API to accept requests and return responses per the
 
 Example: `"InventoryHistoryAppFilter": [730, 570],`
 
-This `HashSet<uint>` type configuration setting can be added to your `ASF.json` config file.  When using the `loginventoryhistory` command, the results will be filtered to only show inventory history events from these `AppIDs`
+This `HashSet<uint>` type configuration setting can be added to your `ASF.json` config file.  When using the `loginventoryhistory` command or `InventoryHistory` IPC interface API endpoint, the results will be filtered to only show inventory history events from these `AppIDs`
 
 ---
 
@@ -335,3 +335,14 @@ Example: `"LogDataPageDelay": 15,`
 This `uint` type configuration setting can be added to your `ASF.json` config file.  When using the `loginventoryhistory` or `logmarkethistory` commands to fetch multiple pages, it will add a `Seconds` delay between each page fetch.
 
 By default, this is set to `15`
+
+---
+
+### IPC Interface
+
+API | Method | Parameters | Description
+--- | --- | --- | ---
+`/API/BoosterManager/{botName}/BoosterData`|`GET`||Retrieves booster data for given bot.
+`/API/BoosterManager/{botName}/MarketListings`|`GET`||Retrieves market listings data for given bot.
+`/API/BoosterManager/{botName}/MarketHistory`|`GET`|`page`|Retrieves market history data for given bot.
+`/API/BoosterManager/{botName}/InventoryHistory`|`GET`|`startTime`, `timeFrac`, `s`|Retrieves inventory history data for given bot.
