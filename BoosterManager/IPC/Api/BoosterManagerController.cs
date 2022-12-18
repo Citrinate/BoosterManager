@@ -10,8 +10,11 @@ using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace BoosterManager {
-	[Route("Api/BoosterManager")]
+	[Route("Api/BoosterManager", Name = nameof(BoosterManager))]
 	public sealed class BoosterManagerController : ArchiController {
+		/// <summary>
+		///     Retrieves booster data for given bot.
+		/// </summary>
 		[HttpGet("{botName:required}/BoosterData")]
 		[SwaggerOperation (Summary = "Retrieves booster data for given bot.")]
 		[ProducesResponseType(typeof(GenericResponse<SteamData<IEnumerable<Steam.BoosterInfo>>>), (int) HttpStatusCode.OK)]
@@ -26,6 +29,10 @@ namespace BoosterManager {
 				return BadRequest(new GenericResponse(false, string.Format(Strings.BotNotFound, botName)));
 			}
 
+			if (!bot.IsConnectedAndLoggedOn) {
+				return BadRequest(new GenericResponse(false, Strings.BotNotConnected));
+			}
+
 			(BoosterPageResponse? boosterPage, Uri source) = await WebRequest.GetBoosterPage(bot).ConfigureAwait(false);
 			if (boosterPage == null) {
 				return BadRequest(new GenericResponse(false, "Failed to fetch Booster Data"));
@@ -34,6 +41,9 @@ namespace BoosterManager {
 			return Ok(new GenericResponse<SteamData<IEnumerable<Steam.BoosterInfo>>>(true, new SteamData<IEnumerable<Steam.BoosterInfo>>(bot, boosterPage.BoosterInfos, source, null, null)));
 		}
 
+		/// <summary>
+		///     Retrieves market listings data for given bot.
+		/// </summary>
 		[HttpGet("{botName:required}/MarketListings")]
 		[SwaggerOperation (Summary = "Retrieves market listings data for given bot.")]
 		[ProducesResponseType(typeof(GenericResponse<SteamData<Steam.MarketListingsResponse>>), (int) HttpStatusCode.OK)]
@@ -48,6 +58,10 @@ namespace BoosterManager {
 				return BadRequest(new GenericResponse(false, string.Format(Strings.BotNotFound, botName)));
 			}
 
+			if (!bot.IsConnectedAndLoggedOn) {
+				return BadRequest(new GenericResponse(false, Strings.BotNotConnected));
+			}
+
 			(Steam.MarketListingsResponse? marketListings, Uri source) = await WebRequest.GetMarketListings(bot).ConfigureAwait(false);
 			if (marketListings == null || !marketListings.Success) {
 				return BadRequest(new GenericResponse(false, "Failed to fetch Market Listings"));
@@ -56,6 +70,9 @@ namespace BoosterManager {
 			return Ok(new GenericResponse<SteamData<Steam.MarketListingsResponse>>(true, new SteamData<Steam.MarketListingsResponse>(bot, marketListings, source, null, null)));
 		}
 
+		/// <summary>
+		///     Retrieves market history data for given bot.
+		/// </summary>
 		[HttpGet("{botName:required}/MarketHistory")]
 		[SwaggerOperation (Summary = "Retrieves market history data for given bot.")]
 		[ProducesResponseType(typeof(GenericResponse<SteamData<Steam.MarketHistoryResponse>>), (int) HttpStatusCode.OK)]
@@ -69,6 +86,10 @@ namespace BoosterManager {
 			if (bot == null) {
 				return BadRequest(new GenericResponse(false, string.Format(Strings.BotNotFound, botName)));
 			}
+			
+			if (!bot.IsConnectedAndLoggedOn) {
+				return BadRequest(new GenericResponse(false, Strings.BotNotConnected));
+			}
 
 			uint count = 500;
 			uint start = (page - 1) * count;
@@ -80,6 +101,9 @@ namespace BoosterManager {
 			return Ok(new GenericResponse<SteamData<Steam.MarketHistoryResponse>>(true, new SteamData<Steam.MarketHistoryResponse>(bot, marketHistory, source, page, null)));
 		}
 
+		/// <summary>
+		///     Retrieves inventory history data for given bot.
+		/// </summary>
 		[HttpGet("{botName:required}/InventoryHistory")]
 		[SwaggerOperation (Summary = "Retrieves inventory history data for given bot.")]
 		[ProducesResponseType(typeof(GenericResponse<SteamData<Steam.InventoryHistoryResponse>>), (int) HttpStatusCode.OK)]
@@ -92,6 +116,10 @@ namespace BoosterManager {
 			Bot? bot = Bot.GetBot(botName);
 			if (bot == null) {
 				return BadRequest(new GenericResponse(false, string.Format(Strings.BotNotFound, botName)));
+			}
+			
+			if (!bot.IsConnectedAndLoggedOn) {
+				return BadRequest(new GenericResponse(false, Strings.BotNotConnected));
 			}
 
 			Steam.InventoryHistoryCursor? cursor = null;
