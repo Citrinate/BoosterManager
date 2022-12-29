@@ -188,7 +188,7 @@ namespace BoosterManager {
 					return await SendBoosterData(bot, tasksStartedTime, LogDataPageDelay * 1000, retryOnFailure).ConfigureAwait(false);
 				}
 
-				return "Failed to fetch Booster Data!";
+				return "Failed to fetch Booster Data :steamthumbsdown:";
 			}
 
 			SteamDataResponse response = await WebRequest.SendSteamData<IEnumerable<Steam.BoosterInfo>>(BoosterDataAPI, bot, boosterPage.BoosterInfos, source).ConfigureAwait(false);
@@ -202,7 +202,7 @@ namespace BoosterManager {
 			}
 
 			if (!response.Success) {
-				return "API failed to accept Booster Data!";
+				return "API failed to accept Booster Data :steamthumbsdown:";
 			}
 
 			return "Successly sent Booster Data";
@@ -257,10 +257,10 @@ namespace BoosterManager {
 				}
 
 				if (inventoryHistory?.Error != null) {
-					return String.Format("Failed to fetch Inventory History for Time < {0} ({1:MMM d, yyyy} @ {1:T}): {2}", pageTime, GetDateTimeFromTimestamp(pageTime), inventoryHistory.Error);
+					return String.Format("Failed to fetch Inventory History for Time < {0} ({1:MMM d, yyyy} @ {1:T}): {2} :steamthumbsdown:", pageTime, GetDateTimeFromTimestamp(pageTime), inventoryHistory.Error);
 				}
 
-				return String.Format("Failed to fetch Inventory History for Time < {0} ({1:MMM d, yyyy} @ {1:T})!", pageTime, GetDateTimeFromTimestamp(pageTime));
+				return String.Format("Failed to fetch Inventory History for Time < {0} ({1:MMM d, yyyy} @ {1:T}) :steamthumbsdown:", pageTime, GetDateTimeFromTimestamp(pageTime));
 			}
 
 			SteamDataResponse response = await WebRequest.SendSteamData<Steam.InventoryHistoryResponse>(InventoryHistoryAPI, bot, inventoryHistory, source!, pageTime, cursor).ConfigureAwait(false);
@@ -283,7 +283,7 @@ namespace BoosterManager {
 						if (response.Message != null) {
 							messages.Add(response.Message);
 						} else if (!response.Success) {
-							messages.Add(String.Format("API failed to accept Inventory History for Time < {0} ({1:MMM d, yyyy} @ {1:T})!", pageTime, GetDateTimeFromTimestamp(pageTime)));
+							messages.Add(String.Format("API failed to accept Inventory History for Time < {0} ({1:MMM d, yyyy} @ {1:T}) :steamthumbsdown:", pageTime, GetDateTimeFromTimestamp(pageTime)));
 						} else {
 							messages.Add(String.Format("Successfully sent Inventory History for Time < {0} ({1:MMM d, yyyy} @ {1:T})", pageTime, GetDateTimeFromTimestamp(pageTime)));
 						}
@@ -305,7 +305,7 @@ namespace BoosterManager {
 			}
 
 			if (!response.Success) {
-				return String.Format("API failed to accept Inventory History for Time < {0} ({1:MMM d, yyyy} @ {1:T})!", pageTime, GetDateTimeFromTimestamp(pageTime));
+				return String.Format("API failed to accept Inventory History for Time < {0} ({1:MMM d, yyyy} @ {1:T}) :steamthumbsdown:", pageTime, GetDateTimeFromTimestamp(pageTime));
 			}
 
 			return String.Format("Successfully sent Inventory History for Time < {0} ({1:MMM d, yyyy} @ {1:T})", pageTime, GetDateTimeFromTimestamp(pageTime));
@@ -325,7 +325,7 @@ namespace BoosterManager {
 			(Steam.MarketListingsResponse? marketListings, Uri source) = await WebRequest.GetMarketListings(bot).ConfigureAwait(false);
 
 			if (marketListings == null || !marketListings.Success) {
-				return "Failed to fetch Market Listings!";
+				return "Failed to fetch Market Listings :steamthumbsdown:";
 			}
 			
 			SteamDataResponse response = await WebRequest.SendSteamData<Steam.MarketListingsResponse>(MarketListingsAPI, bot, marketListings, source).ConfigureAwait(false);
@@ -339,7 +339,7 @@ namespace BoosterManager {
 			}
 
 			if (!response.Success) {
-				return "API failed to accept Market Listings!";
+				return "API failed to accept Market Listings :steamthumbsdown:";
 			}
 
 			return "Successfully sent Market Listings";
@@ -373,7 +373,7 @@ namespace BoosterManager {
 			(Steam.MarketHistoryResponse? marketHistory, Uri source) = await WebRequest.GetMarketHistory(bot, start, count).ConfigureAwait(false);
 
 			if (marketHistory == null || !marketHistory.Success) {
-				return String.Format("Failed to fetch Market History (Page {0})!", page + 1);
+				return String.Format("Failed to fetch Market History (Page {0}) :steamthumbsdown:", page + 1);
 			}
 
 			SteamDataResponse response = await WebRequest.SendSteamData<Steam.MarketHistoryResponse>(MarketHistoryAPI, bot, marketHistory, source, page + 1).ConfigureAwait(false);
@@ -399,7 +399,7 @@ namespace BoosterManager {
 			}
 
 			if (!response.Success) {
-				return String.Format("API failed to accept Market History (Page {0})!", page + 1);
+				return String.Format("API failed to accept Market History (Page {0}) :steamthumbsdown:", page + 1);
 			}
 
 			return String.Format("Successfully sent Market History (Page {0})", page + 1);

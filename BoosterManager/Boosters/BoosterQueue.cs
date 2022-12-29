@@ -185,6 +185,7 @@ namespace BoosterManager {
 			// Sometimes Steam will falsely report that an attempt to craft a booster failed, when it really didn't. It could also happen that the user crafted the booster on their own.
 			// For any error we get, we'll need to refresh the booster page and see if the AvailableAtTime has changed to determine if we really failed to craft
 			void handler() {
+				Bot.ArchiLogger.LogGenericInfo(String.Format("An error was encountered when trying to craft a booster from {0}, trying to resolve it now", booster.GameID));
 				if (BoosterInfos.TryGetValue(booster.GameID, out Steam.BoosterInfo? newBoosterInfo)) {
 					if (newBoosterInfo.Unavailable && newBoosterInfo.AvailableAtTime != null
 						&& newBoosterInfo.AvailableAtTime != booster.Info.AvailableAtTime
@@ -196,6 +197,8 @@ namespace BoosterManager {
 						Bot.ArchiLogger.LogGenericInfo(String.Format("Booster from {0} was recently created either by us or by user", booster.GameID));
 						booster.SetWasCrafted();
 						CheckIfFinished(booster.Type);
+					} else {
+						Bot.ArchiLogger.LogGenericInfo(String.Format("Booster from {0} was not created, retrying", booster.GameID));
 					}
 				} else {
 					// No longer have access to craft boosters for this game (game removed from account, or sometimes due to very rare Steam bugs)
@@ -297,7 +300,7 @@ namespace BoosterManager {
 
 			HashSet<string> responses = new HashSet<string>();
 			if (GetGemsNeeded(BoosterType.Any, wasCrafted: false) > GetAvailableGems()) {
-				responses.Add("Not enough gems!");
+				responses.Add("Not enough gems :steamsad:");
 				if (nextBooster.Info.Price > GetAvailableGems()) {
 					responses.Add(String.Format("Need {0:N0} more gems for the next booster!", nextBooster.Info.Price - GetAvailableGems()));
 				}
@@ -315,7 +318,11 @@ namespace BoosterManager {
 			if (GetNumBoosters(BoosterType.Permanent) > 0) {
 				responses.Add(String.Format("Permanent boosters that will be crafted continually for {0:N0} gems: {1}", GetGemsNeeded(BoosterType.Permanent), String.Join(", ", GetBoosterIDs(BoosterType.Permanent))));
 			}
-			responses.Add(String.Format("Next booster will be crafted at {0:t}: {1} ({2})", nextBooster.GetAvailableAtTime(BoosterDelay), nextBooster.Info.Name, nextBooster.GameID));
+			if (DateTime.Now > nextBooster.GetAvailableAtTime(BoosterDelay)) {
+				responses.Add(String.Format("Next booster will be crafted now: {0} ({1})", nextBooster.Info.Name, nextBooster.GameID));
+			} else {
+				responses.Add(String.Format("Next booster will be crafted at {0:t}: {1} ({2})", nextBooster.GetAvailableAtTime(BoosterDelay), nextBooster.Info.Name, nextBooster.GameID));
+			}
 			responses.Add("");
 
 			return String.Join(Environment.NewLine, responses);
