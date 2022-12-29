@@ -48,7 +48,10 @@ namespace BoosterManager {
 					delayInSeconds = Math.Max(0, delayInSeconds - LastCraft.BoosterDelay);
 				}
 
-				if (LastCraft == null || LastCraft.CraftTime.AddDays(1) > Info.AvailableAtTime.Value.AddMinutes(1)) {
+				if (LastCraft == null 
+					|| LastCraft.CraftTime.AddDays(1) > Info.AvailableAtTime.Value.AddMinutes(1)
+					|| (Info.AvailableAtTime.Value.AddMinutes(1) - LastCraft.CraftTime.AddDays(1)).TotalMinutes > 2 // LastCraft time is too old to be used
+				) {
 					// Unavailable boosters become available exactly 24 hours after being crafted, down to the second, but Steam 
 					// doesn't tell us which second that is.  To get around this, we try to save the exact craft time.  If that 
 					// fails, then we use Steam's time and round up a minute get a time we know the booster will be available at.

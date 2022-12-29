@@ -192,7 +192,6 @@ namespace BoosterManager {
 						&& (
 							booster.Info.AvailableAtTime == null
 							|| (newBoosterInfo.AvailableAtTime.Value - booster.Info.AvailableAtTime.Value).TotalHours > 2 // Make sure the change in time isn't due to daylight savings
-
 						)
 					) {
 						Bot.ArchiLogger.LogGenericInfo(String.Format("Booster from {0} was recently created either by us or by user", booster.GameID));
