@@ -63,7 +63,7 @@ namespace BoosterManager {
 
 		internal BoosterLastCraft? GetLastCraft(uint appID) {
 			if (BoosterLastCrafts.TryGetValue(appID, out BoosterLastCraft? lastCraft)) {
-				if ((DateTime.Now - lastCraft.CraftTime).Duration().Hours >= 24) {
+				if ((DateTime.Now - lastCraft.CraftTime).TotalHours >= 24) {
 					// Stored data is too old, delete it
 					BoosterLastCrafts.TryRemove(appID, out _);
 					Utilities.InBackground(Save);
