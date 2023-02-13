@@ -35,14 +35,14 @@ Command | Access | Description
 `lootcards [Bots]`|`Master`|Sends all marketable non-foil trading cards from the given bot to the `Master` user.
 `lootfoils [Bots]`|`Master`|Sends all marketable foil trading cards from the given bot to the `Master` user.
 `lootgems [Bots]`|`Master`|Sends all gems from the given bot to the `Master` user.
-`lootitems [Bots] <AppID> <ContextID> <ClassID>`|`Master`|Sends all items with the matching `AppID`, `ContextID`, and `ClassID` from the given bot to the `Master` user.
+`lootitems [Bots] <AppID> <ContextID> [ClassID]`|`Master`|Sends all items with the matching `AppID`, `ContextID`, and `ClassID` from the given bot to the `Master` user.
 `lootkeys [Bots]`|`Master`|Sends all Mann Co. Supply Crate Keys from the given bot to the `Master` user.
 `lootsacks [Bots]`|`Master`|Sends all Sacks of Gems from the given bot to the `Master` user.
 `transferboosters [Bots] <TargetBot>`|`Master`|Sends all marketable booster packs from the given bot to the given target bot.
 `transfercards [Bots] <TargetBot>`|`Master`|Sends all marketable non-foil trading cards from the given bot to the given target bot.
 `transferfoils [Bots] <TargetBot>`|`Master`|Sends all marketable foil trading cards from the given bot to the given target bot.
 `transfergems [Bot] <TargetBots> <Amounts>`|`Master`|Sends the provided `Amounts` of gems from the given bot to the given target bots. The `Amounts` specified may be a single amount sent to all target bots, or multiple amounts sent to each target bot respectively.|
-`transferitems [Bots] <TargetBot> <AppID> <ContextID> <ClassID>`|`Master`|Sends all items with the matching `AppID`, `ContextID`, and `ClassID` from the given bot to the given target bot.
+`transferitems [Bots] <TargetBot> <AppID> <ContextID> [ClassID]`|`Master`|Sends all items with the matching `AppID`, `ContextID`, and `ClassID` from the given bot to the given target bot.
 `transferkeys [Bot] <TargetBots> <Amounts>`|`Master`|Sends the provided `Amounts` of Mann Co. Supply Crate Keys from the given bot to the given target bots. The `Amounts` specified may be a single amount sent to all target bots, or multiple amounts sent to each target bot respectively.|
 `transfersacks [Bots] <TargetBot>`|`Master`|Sends all Sacks of Gems from the given bot to the given target bot.
 `unpackgems [Bots]`|`Master`|Unpacks all Sacks of Gems owned by the given bot.
@@ -55,6 +55,8 @@ Command | Access | Description
 `findandremovelistings [Bots] <ItemNames>`|`Master`|Removes any market listings belonging to the given bot with a name matching any of `ItemNames`.  Multiple names may be provided, but must be separated with `&&`
 `listings [Bots]`|`Master`|Displays the total value of all market listings owned by the given bot.
 `removelistings [Bot] <ListingIDs>`|`Master`|Removes market `ListingIDs` belonging to the given bot.
+`market2faok [Bot]`|`Master`|Accepts all pending 2FA market confirmations for given bot instances.
+`trade2faok [Bot]`|`Master`|Accepts all pending 2FA trade confirmations for given bot instances.
 `value [Bots] [BalanceLimit]`|`Master`|Displays the combined wallet balance and total value of all market listings owned by the given bot.  The maximum allowed balance in your region may be provided as `BalanceLimit`, a whole number, and it will instead display how close the given bot is to reaching that limit.
 
 ### Log Commands
@@ -81,6 +83,8 @@ Command | Alias |
 `loginventoryhistory`|`logih`
 `logmarketlistings`|`logml`
 `logmarkethistory`|`logmh`
+`market2faok`|`m2faok`
+`trade2faok`|`t2faok`
 
 Command | Alias |
 --- | --- |
@@ -95,6 +99,8 @@ Command | Alias |
 `lootgems ASF`|`lga`
 `lootkeys ASF`|`lka`
 `lootsacks ASF`|`lsa`
+`market2faok ASF`|`m2faoka`
+`trade2faok ASF`|`t2faoka`
 `transferboosters ASF <TargetBot>`|`tba <TargetBot>`
 `transfercards ASF <TargetBot>`|`tca <TargetBot>`
 `transferfoils ASF <TargetBot>`|`tfa <TargetBot>`

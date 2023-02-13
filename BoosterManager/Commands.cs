@@ -6,10 +6,16 @@ using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Localization;
 using ArchiSteamFarm.Steam.Data;
+using ArchiSteamFarm.Steam.Security;
+using System.ComponentModel;
 
 namespace BoosterManager {
 	internal static class Commands {
 		internal static async Task<string?> Response(Bot bot, EAccess access, ulong steamID, string message, string[] args) {
+			if (!Enum.IsDefined(access)) {
+				throw new InvalidEnumArgumentException(nameof(access), (int) access, typeof(EAccess));
+			}
+
 			if (string.IsNullOrEmpty(message)) {
 				return null;
 			}
@@ -90,7 +96,17 @@ namespace BoosterManager {
 						case "LOOTSACKS" or "LOOTSACK":
 							return await ResponseSendItems(bot, access, Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.SteamGems, GemHandler.SackOfGemsClassID).ConfigureAwait(false);
 						
-						case "UNPACKGEMS":
+						case "M2FAOKA":
+							return await Response2FAOK(access, steamID, "ASF", Confirmation.EType.Market).ConfigureAwait(false);
+						case "MARKET2FAOK" or "M2FAOK":
+							return await Response2FAOK(bot, access, Confirmation.EType.Market).ConfigureAwait(false);
+
+						case "T2FAOKA":
+							return await Response2FAOK(access, steamID, "ASF", Confirmation.EType.Trade).ConfigureAwait(false);
+						case "TRADE2FAOK" or "T2FAOK":
+							return await Response2FAOK(bot, access, Confirmation.EType.Trade).ConfigureAwait(false);
+
+						case "UNPACKGEMS" or "UNPACKGEM":
 							return await ResponseUnpackGems(bot, access).ConfigureAwait(false);
 						
 						case "VA":
@@ -194,6 +210,12 @@ namespace BoosterManager {
 						case "LOOTSACKS" or "LOOTSACK":
 							return await ResponseSendItems(access, steamID, Utilities.GetArgsAsText(args, 1, ","), Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.SteamGems, GemHandler.SackOfGemsClassID).ConfigureAwait(false);
 						
+						case "MARKET2FAOK" or "M2FAOK":
+							return await Response2FAOK(access, steamID, args[1], Confirmation.EType.Market).ConfigureAwait(false);
+						
+						case "TRADE2FAOK" or "T2FAOK":
+							return await Response2FAOK(access, steamID, args[1], Confirmation.EType.Trade).ConfigureAwait(false);
+						
 						case "TBA":
 							return await ResponseSendItems(access, steamID, "ASF", Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.BoosterPack, recieverBotName: args[1]).ConfigureAwait(false);
 						case "TRANSFERBOOSTERS" or "TRANSFERBOOSTER" when args.Length > 2:
@@ -254,6 +276,42 @@ namespace BoosterManager {
 							return null;
 					};
 			}
+		}
+
+		private static async Task<string?> Response2FAOK(Bot bot, EAccess access, Confirmation.EType acceptedType) {
+			if (access < EAccess.Master) {
+				return null;
+			}
+
+			if (!bot.IsConnectedAndLoggedOn) {
+				return FormatBotResponse(bot, Strings.BotNotConnected);
+			}
+
+			if (!bot.HasMobileAuthenticator) {
+				return FormatBotResponse(bot, Strings.BotNoASFAuthenticator);
+			}
+
+			(bool success, _, string message) = await bot.Actions.HandleTwoFactorAuthenticationConfirmations(true, acceptedType).ConfigureAwait(false);
+
+			return FormatBotResponse(bot, success ? message : string.Format(Strings.WarningFailedWithError, message));
+		}
+
+		private static async Task<string?> Response2FAOK(EAccess access, ulong steamID, string botNames, Confirmation.EType acceptedType) {
+			if (String.IsNullOrEmpty(botNames)) {
+				throw new ArgumentNullException(nameof(botNames));
+			}
+
+			HashSet<Bot>? bots = Bot.GetBots(botNames);
+
+			if ((bots == null) || (bots.Count == 0)) {
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
+			}
+
+			IList<string?> results = await Utilities.InParallel(bots.Select(bot => Response2FAOK(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), acceptedType))).ConfigureAwait(false);
+
+			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
+
+			return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
 		}
 
 		private static string? ResponseBooster(Bot bot, EAccess access, ulong steamID, string targetGameIDs, Bot? respondingBot = null) {
@@ -945,7 +1003,7 @@ namespace BoosterManager {
 
 			ulong? classID = null;
 			if (classIDAsText != null) {
-				if (uint.TryParse(classIDAsText, out uint outValue)) {
+				if (ulong.TryParse(classIDAsText, out ulong outValue)) {
 					classID = outValue;
 				} else {
 					return FormatStaticResponse(String.Format(Strings.ErrorIsInvalid, nameof(classIDAsText)));
