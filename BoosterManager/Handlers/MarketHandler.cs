@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Steam;
 using Newtonsoft.Json.Linq;
@@ -53,8 +54,8 @@ namespace BoosterManager {
 			return listingsValue;
 		}
 
-		internal static async Task<string> FindListings(Bot bot, List<string> itemNames) {
-			Dictionary<string, List<ulong>>? filteredListings = await GetListingIDsFromName(bot, itemNames).ConfigureAwait(false);
+		internal static async Task<string> FindListings(Bot bot, List<string> itemIdentifiers) {
+			Dictionary<string, List<ulong>>? filteredListings = await GetListingIDsFromIdentifiers(bot, itemIdentifiers).ConfigureAwait(false);
 
 			if (filteredListings == null) {
 				return Commands.FormatBotResponse(bot, "Failed to load Market Listings");
@@ -66,7 +67,7 @@ namespace BoosterManager {
 
 			List<string> responses = new List<string>();
 			foreach ((string itemName, List<ulong> listingIDs) in filteredListings) {
-				responses.Add(String.Format("{0} listings found for {1}: {2}", listingIDs.Count, itemName, String.Join(", ", listingIDs)));
+				responses.Add(String.Format("{0} listings found for \"{1}\": {2}", listingIDs.Count, itemName, String.Join(", ", listingIDs)));
 			}
 
 			return Commands.FormatBotResponse(bot, String.Join(Environment.NewLine, responses));
@@ -88,8 +89,8 @@ namespace BoosterManager {
 			return Commands.FormatBotResponse(bot, String.Format("Removed {0} listings", listingIDs.Count));
 		}
 
-		internal static async Task<string> FindAndRemoveListings(Bot bot, List<string> itemNames) {
-			Dictionary<string, List<ulong>>? filteredListings = await GetListingIDsFromName(bot, itemNames).ConfigureAwait(false);
+		internal static async Task<string> FindAndRemoveListings(Bot bot, List<string> itemIdentifiers) {
+			Dictionary<string, List<ulong>>? filteredListings = await GetListingIDsFromIdentifiers(bot, itemIdentifiers).ConfigureAwait(false);
 
 			if (filteredListings == null) {
 				return Commands.FormatBotResponse(bot, "Failed to load Market Listings");
@@ -155,11 +156,45 @@ namespace BoosterManager {
 			return listings;
 		}
 
-		private static async Task<Dictionary<string, List<ulong>>?> GetListingIDsFromName(Bot bot, List<string> itemNames) {
+		private static async Task<Dictionary<string, List<ulong>>?> GetListingIDsFromIdentifiers(Bot bot, List<string> itemIdentifiers) {
 			Dictionary<ulong, JObject>? listings = await GetFullMarketListings(bot).ConfigureAwait(false);
 
 			if (listings == null) {
 				return null;
+			}
+
+			// There are three accepted input formats for searching for listings: ItemName, Appid::ContextID, AppID::ContextID::ClassID
+			// If an input doesn't match either of the last two formats, assume it's an ItemName
+			List<string> itemNames = new List<string>();
+			List<(uint, ulong, ulong?, string)> itemIDs = new List<(uint, ulong, ulong?, string)>();
+			foreach (string itemIdentifier in itemIdentifiers) {
+				string[] ids = itemIdentifier.Split("::");
+				if (ids.Length == 1 || ids.Length > 3) {
+					itemNames.Add(itemIdentifier);
+					continue;
+				}
+
+				if (!uint.TryParse(ids[0], out uint appID)) {
+					itemNames.Add(itemIdentifier);
+					continue;
+				}
+
+				if (!ulong.TryParse(ids[1], out ulong contextID)) {
+					itemNames.Add(itemIdentifier);
+					continue;
+				}
+
+				ulong? classID = null;
+				if (ids.Length == 3) {
+					if (ulong.TryParse(ids[2], out ulong outValue)) {
+						classID = outValue;
+					} else {
+						itemNames.Add(itemIdentifier);
+						continue;
+					}
+				}
+
+				itemIDs.Add((appID, contextID, classID, itemIdentifier));
 			}
 
 			Dictionary<string, List<ulong>> filteredListings = new Dictionary<string, List<ulong>>();
@@ -178,13 +213,66 @@ namespace BoosterManager {
 					return null;
 				}
 
+				string? marketHashName = listing["asset"]?["market_hash_name"]?.ToString();
+				if (marketHashName == null) {
+					bot.ArchiLogger.LogNullError(marketHashName);
+
+					return null;
+				}
+
+				string? type = listing["asset"]?["type"]?.ToString();
+				if (type == null) {
+					bot.ArchiLogger.LogNullError(type);
+
+					return null;
+				}
+
 				foreach (string itemName in itemNames) {
-					if (name.Equals(itemName) || marketName.Equals(itemName)) {
+					if (name.Equals(itemName) 
+						|| marketName.Equals(itemName)
+						|| marketHashName.Equals(itemName)
+						|| marketHashName.Equals(WebUtility.UrlDecode(itemName))
+						|| type.Equals(itemName)
+					) {
 						if (!filteredListings.ContainsKey(itemName)) {
 							filteredListings.Add(itemName, new List<ulong>());
 						}
 
 						filteredListings[itemName].Add(listingID);
+					}
+				}
+
+				uint? appID = listing["asset"]?["appid"]?.ToObject<uint>();
+				if (appID == null) {
+					bot.ArchiLogger.LogNullError(appID);
+
+					return null;
+				}
+
+				ulong? contextID = listing["asset"]?["contextid"]?.ToObject<ulong>();
+				if (contextID == null) {
+					bot.ArchiLogger.LogNullError(contextID);
+
+					return null;
+				}
+
+				ulong? classID = listing["asset"]?["classid"]?.ToObject<ulong>();
+				if (classID == null) {
+					bot.ArchiLogger.LogNullError(classID);
+
+					return null;
+				}
+
+				foreach ((uint itemAppID, ulong itemContextID, ulong? itemClassID, string itemID) in itemIDs) {
+					if (appID == itemAppID 
+						&& contextID == itemContextID
+						&& (itemClassID == null || classID == itemClassID)
+					) {
+						if (!filteredListings.ContainsKey(itemID)) {
+							filteredListings.Add(itemID, new List<ulong>());
+						}
+
+						filteredListings[itemID].Add(listingID);
 					}
 				}
 			}

@@ -38,6 +38,7 @@ Command | Access | Description
 `lootitems [Bots] <AppID> <ContextID> [ClassID]`|`Master`|Sends all items with the matching `AppID`, `ContextID`, and `ClassID` from the given bot to the `Master` user.
 `lootkeys [Bots]`|`Master`|Sends all Mann Co. Supply Crate Keys from the given bot to the `Master` user.
 `lootsacks [Bots]`|`Master`|Sends all Sacks of Gems from the given bot to the `Master` user.
+`trade2faok [Bot]`|`Master`|Accepts all pending 2FA trade confirmations for given bot instances.
 `transferboosters [Bots] <TargetBot>`|`Master`|Sends all marketable booster packs from the given bot to the given target bot.
 `transfercards [Bots] <TargetBot>`|`Master`|Sends all marketable non-foil trading cards from the given bot to the given target bot.
 `transferfoils [Bots] <TargetBot>`|`Master`|Sends all marketable foil trading cards from the given bot to the given target bot.
@@ -51,12 +52,11 @@ Command | Access | Description
 
 Command | Access | Description
 --- | --- | ---
-`findlistings [Bots] <ItemNames>`|`Master`|Displays the `ListingID` of any market listings belonging to the given bot with a name matching any of `ItemNames`.  Multiple item names may be provided, but must be separated with `&&`
-`findandremovelistings [Bots] <ItemNames>`|`Master`|Removes any market listings belonging to the given bot with a name matching any of `ItemNames`.  Multiple names may be provided, but must be separated with `&&`
+`findlistings [Bots] <ItemIdentifiers>`|`Master`|Displays the `ListingIDs` of any market listing belonging to the given bot and matching any of the `ItemIdentifiers`.  An item identifier can be any of: `ItemName`, `ItemType`, `HashName`, `AppID::ContextID`, or `AppID::ContextID::ClassID`.  Multiple item identifiers may be provided, but must be separated with `&&`
+`findandremovelistings [Bots] <ItemIdentifiers>`|`Master`|Removes any market listing belonging to the given bot and matching any of the `ItemIdentifiers`.  An item identifier can be any of: `ItemName`, `ItemType`, `HashName`, `AppID::ContextID`, or `AppID::ContextID::ClassID`.  Multiple item identifiers may be provided, but must be separated with `&&`
 `listings [Bots]`|`Master`|Displays the total value of all market listings owned by the given bot.
 `removelistings [Bot] <ListingIDs>`|`Master`|Removes market `ListingIDs` belonging to the given bot.
 `market2faok [Bot]`|`Master`|Accepts all pending 2FA market confirmations for given bot instances.
-`trade2faok [Bot]`|`Master`|Accepts all pending 2FA trade confirmations for given bot instances.
 `value [Bots] [BalanceLimit]`|`Master`|Displays the combined wallet balance and total value of all market listings owned by the given bot.  The maximum allowed balance in your region may be provided as `BalanceLimit`, a whole number, and it will instead display how close the given bot is to reaching that limit.
 
 ### Log Commands
