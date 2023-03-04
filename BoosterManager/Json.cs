@@ -110,10 +110,10 @@ namespace BoosterManager {
 			[JsonProperty(PropertyName = "assets", Required = Required.Always)]
 			internal readonly JToken? Assets;
 
-			[JsonProperty(PropertyName = "events", Required = Required.Always)]
-			internal readonly JArray Events = new();
+			[JsonProperty(PropertyName = "events", Required = Required.Default)]
+			internal readonly JArray? Events = new();
 
-			[JsonProperty(PropertyName = "purchases", Required = Required.Always)]
+			[JsonProperty(PropertyName = "purchases", Required = Required.Default)]
 			internal readonly JToken? Purchases;
 
 			[JsonProperty(PropertyName = "listings", Required = Required.Always)]

@@ -382,7 +382,7 @@ namespace BoosterManager {
 				pagesRemaining = 1;
 			}
 
-			if (response.Success && pagesRemaining > 0 && marketHistory.Events.Count > 0) {
+			if (response.Success && pagesRemaining > 0 && marketHistory.Events?.Count > 0) {
 				if (response.NextPage != null) {
 					tasks.Add(SendMarketHistory(bot, tasks, tasksStartedTime, response.NextPage.Value - 1, pagesRemaining - 1, LogDataPageDelay * 1000));
 				} else {
