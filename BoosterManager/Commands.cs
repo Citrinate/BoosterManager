@@ -262,7 +262,7 @@ namespace BoosterManager {
 						case "REMOVELISTINGS" or "REMOVELISTING" or "CANCELLISTINGS" or "CANCELLISTING" or "RLISTINGS" or "RLISTING" or "REMOVEL":
 							return await ResponseRemoveListings(bot, access, Utilities.GetArgsAsText(args, 1, ",")).ConfigureAwait(false);
 						
-						case "UNPACKGEMS":
+						case "UNPACKGEMS" or "UNPACKGEM":
 							return await ResponseUnpackGems(access, steamID, Utilities.GetArgsAsText(args, 1, ",")).ConfigureAwait(false);
 						
 						case "VA":
