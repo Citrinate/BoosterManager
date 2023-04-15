@@ -82,7 +82,7 @@ namespace BoosterManager {
 			internal readonly JArray? Listings;
 
 			[JsonProperty(PropertyName = "listings_on_hold", Required = Required.Always)]
-			internal readonly JArray ListingsOnHold = new();
+			internal readonly JArray? ListingsOnHold = new();
 
 			[JsonProperty(PropertyName = "listings_to_confirm", Required = Required.Always)]
 			internal readonly JArray ListingsToConfirm = new();

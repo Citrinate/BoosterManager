@@ -332,11 +332,11 @@ namespace BoosterManager {
 		private HashSet<Booster> GetBoosters(BoosterType type, bool? wasCrafted = null) => Boosters.Values.Where(booster => (wasCrafted == null || booster.WasCrafted == wasCrafted) && FilterBoosterByType(booster, type)).ToHashSet<Booster>();
 		private HashSet<uint> GetBoosterIDs(BoosterType type, bool? wasCrafted = null) => GetBoosters(type, wasCrafted).Select(booster => booster.GameID).ToHashSet<uint>();
 		private int GetNumBoosters(BoosterType type, bool? wasCrafted = null) => GetBoosters(type, wasCrafted).Count;
-		private int GetGemsNeeded(BoosterType type, bool? wasCrafted = null) => GetBoosters(type, wasCrafted).Sum(booster => (int) booster.Info.Price);
+		internal int GetGemsNeeded(BoosterType type, bool? wasCrafted = null) => GetBoosters(type, wasCrafted).Sum(booster => (int) booster.Info.Price);
 		private void ForceUpdateBoosterInfos() => OnBoosterInfosUpdated -= ForceUpdateBoosterInfos;
 		private static int GetMillisecondsFromNow(DateTime then) => Math.Max(0, (int) (then - DateTime.Now).TotalMilliseconds);
 		private void UpdateTimer(DateTime then) => Timer.Change(GetMillisecondsFromNow(then), Timeout.Infinite);
-		private uint GetAvailableGems() => BoosterHandler.AllowCraftUntradableBoosters ? GooAmount : TradableGooAmount;
+		internal uint GetAvailableGems() => BoosterHandler.AllowCraftUntradableBoosters ? GooAmount : TradableGooAmount;
 		internal BoosterLastCraft? GetLastCraft(uint appID) => BoosterDatabase?.GetLastCraft(appID);
 		internal void UpdateLastCraft(uint appID, DateTime craftTime) => BoosterDatabase?.SetLastCraft(appID, craftTime, BoosterDelay);
 	}

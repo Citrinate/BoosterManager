@@ -170,5 +170,6 @@ namespace BoosterManager {
 		}
 
 		private static int GetMillisecondsFromNow(DateTime then) => Math.Max(0, (int) (then - DateTime.Now).TotalMilliseconds);
+		internal uint GetGemsNeeded() => (uint) BoosterQueue.GetGemsNeeded(BoosterType.Any, wasCrafted: false) - BoosterQueue.GetAvailableGems();
 	}
 }

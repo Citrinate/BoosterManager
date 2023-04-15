@@ -1069,12 +1069,18 @@ namespace BoosterManager {
 			}
 
 			List<uint> amountNums = new List<uint>();
+			int botIndex = 0;
 			foreach (string amount in amounts) {
 				if (!uint.TryParse(amount, out uint amountNum)) {
-					return FormatBotResponse(bot, String.Format(Strings.ErrorParsingObject, nameof(amountNum)));
+					if (type == Asset.EType.SteamGems && (amount.ToUpperInvariant() == "QUEUE" || amount.ToUpperInvariant() == "Q")) {
+						amountNum = BoosterHandler.BoosterHandlers[bots.ElementAt(botIndex).BotName].GetGemsNeeded();
+					} else {
+						return FormatBotResponse(bot, String.Format(Strings.ErrorParsingObject, nameof(amountNum)));
+					}
 				}
 
 				amountNums.Add(amountNum);
+				botIndex++;
 			}
 
 			List<(Bot reciever, uint amount)> recievers = Zip(bots, amountNums).ToList();

@@ -42,9 +42,9 @@ Command | Access | Description
 `transferboosters [Bots] <TargetBot>`|`Master`|Sends all marketable booster packs from the given bot to the given target bot.
 `transfercards [Bots] <TargetBot>`|`Master`|Sends all marketable non-foil trading cards from the given bot to the given target bot.
 `transferfoils [Bots] <TargetBot>`|`Master`|Sends all marketable foil trading cards from the given bot to the given target bot.
-`transfergems [Bot] <TargetBots> <Amounts>`|`Master`|Sends the provided `Amounts` of gems from the given bot to the given target bots. The `Amounts` specified may be a single amount sent to all target bots, or multiple amounts sent to each target bot respectively.|
-`transferitems [Bots] <TargetBot> <AppID> <ContextID> [ClassID]`|`Master`|Sends all items with the matching `AppID`, `ContextID`, and `ClassID` from the given bot to the given target bot.
-`transferkeys [Bot] <TargetBots> <Amounts>`|`Master`|Sends the provided `Amounts` of Mann Co. Supply Crate Keys from the given bot to the given target bots. The `Amounts` specified may be a single amount sent to all target bots, or multiple amounts sent to each target bot respectively.|
+`transfergems [Bot] <TargetBots> <Amounts>`|`Master`|Sends the provided `Amounts` of gems from the given bot to the given target bots. The `Amounts` specified may be a single amount sent to all target bots, or multiple amounts sent to each target bot respectively.  You may also use `queue` or `q` as an amount to represent the number of gems needed to complete the target bot's booster queue.
+`transferitems <Bots> <TargetBot> <AppID> <ContextID> [ClassID]`|`Master`|Sends all items with the matching `AppID`, `ContextID`, and `ClassID` from the given bot to the given target bot.
+`transferkeys [Bot] <TargetBots> <Amounts>`|`Master`|Sends the provided `Amounts` of Mann Co. Supply Crate Keys from the given bot to the given target bots. The `Amounts` specified may be a single amount sent to all target bots, or multiple amounts sent to each target bot respectively.
 `transfersacks [Bots] <TargetBot>`|`Master`|Sends all Sacks of Gems from the given bot to the given target bot.
 `unpackgems [Bots]`|`Master`|Unpacks all Sacks of Gems owned by the given bot.
 
