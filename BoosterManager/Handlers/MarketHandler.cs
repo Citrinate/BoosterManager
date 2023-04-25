@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Steam;
 using Newtonsoft.Json.Linq;
@@ -54,7 +53,7 @@ namespace BoosterManager {
 			return listingsValue;
 		}
 
-		internal static async Task<string> FindListings(Bot bot, List<string> itemIdentifiers) {
+		internal static async Task<string> FindListings(Bot bot, List<ItemIdentifier> itemIdentifiers) {
 			Dictionary<string, List<ulong>>? filteredListings = await GetListingIDsFromIdentifiers(bot, itemIdentifiers).ConfigureAwait(false);
 
 			if (filteredListings == null) {
@@ -89,7 +88,7 @@ namespace BoosterManager {
 			return Commands.FormatBotResponse(bot, String.Format("Removed {0} listings", listingIDs.Count));
 		}
 
-		internal static async Task<string> FindAndRemoveListings(Bot bot, List<string> itemIdentifiers) {
+		internal static async Task<string> FindAndRemoveListings(Bot bot, List<ItemIdentifier> itemIdentifiers) {
 			Dictionary<string, List<ulong>>? filteredListings = await GetListingIDsFromIdentifiers(bot, itemIdentifiers).ConfigureAwait(false);
 
 			if (filteredListings == null) {
@@ -156,45 +155,11 @@ namespace BoosterManager {
 			return listings;
 		}
 
-		private static async Task<Dictionary<string, List<ulong>>?> GetListingIDsFromIdentifiers(Bot bot, List<string> itemIdentifiers) {
+		private static async Task<Dictionary<string, List<ulong>>?> GetListingIDsFromIdentifiers(Bot bot, List<ItemIdentifier> itemIdentifiers) {
 			Dictionary<ulong, JObject>? listings = await GetFullMarketListings(bot).ConfigureAwait(false);
 
 			if (listings == null) {
 				return null;
-			}
-
-			// There are three accepted input formats for searching for listings: ItemName, Appid::ContextID, AppID::ContextID::ClassID
-			// If an input doesn't match either of the last two formats, assume it's an ItemName
-			List<string> itemNames = new List<string>();
-			List<(uint, ulong, ulong?, string)> itemIDs = new List<(uint, ulong, ulong?, string)>();
-			foreach (string itemIdentifier in itemIdentifiers) {
-				string[] ids = itemIdentifier.Split("::");
-				if (ids.Length == 1 || ids.Length > 3) {
-					itemNames.Add(itemIdentifier);
-					continue;
-				}
-
-				if (!uint.TryParse(ids[0], out uint appID)) {
-					itemNames.Add(itemIdentifier);
-					continue;
-				}
-
-				if (!ulong.TryParse(ids[1], out ulong contextID)) {
-					itemNames.Add(itemIdentifier);
-					continue;
-				}
-
-				ulong? classID = null;
-				if (ids.Length == 3) {
-					if (ulong.TryParse(ids[2], out ulong outValue)) {
-						classID = outValue;
-					} else {
-						itemNames.Add(itemIdentifier);
-						continue;
-					}
-				}
-
-				itemIDs.Add((appID, contextID, classID, itemIdentifier));
 			}
 
 			Dictionary<string, List<ulong>> filteredListings = new Dictionary<string, List<ulong>>();
@@ -227,21 +192,6 @@ namespace BoosterManager {
 					return null;
 				}
 
-				foreach (string itemName in itemNames) {
-					if (name.Equals(itemName) 
-						|| marketName.Equals(itemName)
-						|| marketHashName.Equals(itemName)
-						|| marketHashName.Equals(WebUtility.UrlDecode(itemName))
-						|| type.Equals(itemName)
-					) {
-						if (!filteredListings.ContainsKey(itemName)) {
-							filteredListings.Add(itemName, new List<ulong>());
-						}
-
-						filteredListings[itemName].Add(listingID);
-					}
-				}
-
 				uint? appID = listing["asset"]?["appid"]?.ToObject<uint>();
 				if (appID == null) {
 					bot.ArchiLogger.LogNullError(appID);
@@ -263,16 +213,19 @@ namespace BoosterManager {
 					return null;
 				}
 
-				foreach ((uint itemAppID, ulong itemContextID, ulong? itemClassID, string itemID) in itemIDs) {
-					if (appID == itemAppID 
-						&& contextID == itemContextID
-						&& (itemClassID == null || classID == itemClassID)
+				foreach (ItemIdentifier itemIdentifier in itemIdentifiers) {
+					if (itemIdentifier.isNumericIDMatch(appID.Value, contextID.Value, classID.Value)
+						|| itemIdentifier.isStringMatch(name)
+						|| itemIdentifier.isStringMatch(marketName)
+						|| itemIdentifier.isStringMatch(marketHashName)
+						|| itemIdentifier.isStringMatch(marketHashName, urlDecode: true)
+						|| itemIdentifier.isStringMatch(type)
 					) {
-						if (!filteredListings.ContainsKey(itemID)) {
-							filteredListings.Add(itemID, new List<ulong>());
+						if (!filteredListings.ContainsKey(itemIdentifier.IdentityString)) {
+							filteredListings.Add(itemIdentifier.IdentityString, new List<ulong>());
 						}
 
-						filteredListings[itemID].Add(listingID);
+						filteredListings[itemIdentifier.IdentityString].Add(listingID);
 					}
 				}
 			}

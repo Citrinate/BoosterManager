@@ -142,13 +142,9 @@ namespace BoosterManager {
 						
 						case "FINDLISTINGS" or "FINDLISTING" or "FLISTINGS" or "FLISTING" or "FINDL" when args.Length > 2:
 							return await ResponseFindListings(access, steamID, args[1], Utilities.GetArgsAsText(args, 2, " ")).ConfigureAwait(false);
-						case "FINDLISTINGS" or "FINDLISTING" or "FLISTINGS" or "FLISTING" or "FINDL":
-							return await ResponseFindListings(bot, access, Utilities.GetArgsAsText(args, 1, " ")).ConfigureAwait(false);
 						
 						case "FINDANDREMOVELISTINGS" or "FINDANDREMOVELISTING" or "FINDREMOVELISTINGS" or "FINDREMOVELISTING" or "FINDANDCANCELLISTINGS" or "FINDANDCANCELLISTING" or "FINDCANCELLISTINGS" or "FINDCANCELLISTING" or "FRLISTINGS" or "FRLISTING" or "FINDREMOVEL" when args.Length > 2:
 							return await ResponseFindAndRemoveListings(access, steamID, args[1], Utilities.GetArgsAsText(args, 2, " ")).ConfigureAwait(false);
-						case "FINDANDREMOVELISTINGS" or "FINDANDREMOVELISTING" or "FINDREMOVELISTINGS" or "FINDREMOVELISTING" or "FINDANDCANCELLISTINGS" or "FINDANDCANCELLISTING" or "FINDCANCELLISTINGS" or "FINDCANCELLISTING" or "FRLISTINGS" or "FRLISTING" or "FINDREMOVEL":
-							return await ResponseFindAndRemoveListings(bot, access, Utilities.GetArgsAsText(args, 1, " ")).ConfigureAwait(false);
 						
 						case "GEMS" or "GEM":
 							return await ResponseGems(access, steamID, Utilities.GetArgsAsText(args, 1, ",")).ConfigureAwait(false);
@@ -246,6 +242,9 @@ namespace BoosterManager {
 							return await ResponseSendSpecificItems(access, steamID, args[1], args[3], args[4], args[5], recieverBotName: args[2]).ConfigureAwait(false);
 						case "TRANSFERITEMS" or "TRANSFERITEM" when args.Length > 4:
 							return await ResponseSendSpecificItems(access, steamID, args[1], args[3], args[4], recieverBotName: args[2]).ConfigureAwait(false);
+
+						case "TRANSFERITEMS^" or "TRANSFERITEM^" when args.Length > 4:
+							return await ResponseSendMultipleItems(access, steamID, args[1], args[2], args[3], Utilities.GetArgsAsText(args, 4, " ")).ConfigureAwait(false);
 						
 						case "TRANSFERKEYS" or "TRANSFERKEY" when args.Length > 3:
 							return await ResponseSendItemsWithAmounts(access, steamID, args[1], args[2], args[3], KeyHandler.KeyAppID, KeyHandler.KeyContextID, KeyHandler.KeyType, KeyHandler.KeyClassID).ConfigureAwait(false);
@@ -482,9 +481,9 @@ namespace BoosterManager {
 			return responses.Count > 0 ? String.Join(Environment.NewLine, responses) : null;
 		}
 
-		private static async Task<string?> ResponseFindListings(Bot bot, EAccess access, string itemNamesAsText) {
-			if (String.IsNullOrEmpty(itemNamesAsText)) {
-				throw new ArgumentNullException(nameof(itemNamesAsText));
+		private static async Task<string?> ResponseFindListings(Bot bot, EAccess access, string itemIdentifiersAsText) {
+			if (String.IsNullOrEmpty(itemIdentifiersAsText)) {
+				throw new ArgumentNullException(nameof(itemIdentifiersAsText));
 			}
 
 			if (access < EAccess.Master) {
@@ -495,12 +494,21 @@ namespace BoosterManager {
 				return FormatBotResponse(bot, Strings.BotNotConnected);
 			}
 
-			List<string> itemNames = itemNamesAsText.Split("&&", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+			List<string> itemIdentifierStrings = itemIdentifiersAsText.Split("&&", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+			List<ItemIdentifier> itemIdentifiers = new List<ItemIdentifier>();
+			foreach (string itemIdentifierString in itemIdentifierStrings) {
+				try {
+					ItemIdentifier itemIdentifier = new ItemIdentifier(itemIdentifierString);
+					itemIdentifiers.Add(itemIdentifier);
+				} catch (Exception) {
+					return FormatBotResponse(bot, String.Format("Invalid Item Identifier: {0}", itemIdentifierString));
+				}
+			}
 
-			return await MarketHandler.FindListings(bot, itemNames).ConfigureAwait(false);
+			return await MarketHandler.FindListings(bot, itemIdentifiers).ConfigureAwait(false);
 		}
 
-		private static async Task<string?> ResponseFindListings(EAccess access, ulong steamID, string botNames, string itemNamesAsText) {
+		private static async Task<string?> ResponseFindListings(EAccess access, ulong steamID, string botNames, string itemIdentifiersAsText) {
 			if (String.IsNullOrEmpty(botNames)) {
 				throw new ArgumentNullException(nameof(botNames));
 			}
@@ -511,16 +519,16 @@ namespace BoosterManager {
 				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
 			}
 
-			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseFindListings(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), itemNamesAsText))).ConfigureAwait(false);
+			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseFindListings(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), itemIdentifiersAsText))).ConfigureAwait(false);
 
 			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
 
 			return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
 		}
 
-		private static async Task<string?> ResponseFindAndRemoveListings(Bot bot, EAccess access, string itemNamesAsText) {
-			if (String.IsNullOrEmpty(itemNamesAsText)) {
-				throw new ArgumentNullException(nameof(itemNamesAsText));
+		private static async Task<string?> ResponseFindAndRemoveListings(Bot bot, EAccess access, string itemIdentifiersAsText) {
+			if (String.IsNullOrEmpty(itemIdentifiersAsText)) {
+				throw new ArgumentNullException(nameof(itemIdentifiersAsText));
 			}
 			
 			if (access < EAccess.Master) {
@@ -531,12 +539,21 @@ namespace BoosterManager {
 				return FormatBotResponse(bot, Strings.BotNotConnected);
 			}
 
-			List<string> itemNames = itemNamesAsText.Split("&&", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+			List<string> itemIdentifierStrings = itemIdentifiersAsText.Split("&&", StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+			List<ItemIdentifier> itemIdentifiers = new List<ItemIdentifier>();
+			foreach (string itemIdentifierString in itemIdentifierStrings) {
+				try {
+					ItemIdentifier itemIdentifier = new ItemIdentifier(itemIdentifierString);
+					itemIdentifiers.Add(itemIdentifier);
+				} catch (Exception) {
+					return FormatBotResponse(bot, String.Format("Invalid Item Identifier: {0}", itemIdentifierString));
+				}
+			}
 
-			return await MarketHandler.FindAndRemoveListings(bot, itemNames).ConfigureAwait(false);
+			return await MarketHandler.FindAndRemoveListings(bot, itemIdentifiers).ConfigureAwait(false);
 		}
 
-		private static async Task<string?> ResponseFindAndRemoveListings(EAccess access, ulong steamID, string botNames, string itemNamesAsText) {
+		private static async Task<string?> ResponseFindAndRemoveListings(EAccess access, ulong steamID, string botNames, string itemIdentifiersAsText) {
 			if (String.IsNullOrEmpty(botNames)) {
 				throw new ArgumentNullException(nameof(botNames));
 			}
@@ -547,7 +564,7 @@ namespace BoosterManager {
 				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
 			}
 
-			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseFindAndRemoveListings(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), itemNamesAsText))).ConfigureAwait(false);
+			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseFindAndRemoveListings(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), itemIdentifiersAsText))).ConfigureAwait(false);
 
 			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
 
@@ -1029,6 +1046,86 @@ namespace BoosterManager {
 			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
 
 			return responses.Count > 0 ? String.Join(Environment.NewLine, responses) : null;
+		}
+
+		private static async Task<string?> ResponseSendMultipleItems(Bot bot, EAccess access, string botNames, string amountsString, string itemIdentifiersAsText) {
+			if (String.IsNullOrEmpty(botNames)) {
+				throw new ArgumentNullException(nameof(botNames));
+			}
+
+			if (String.IsNullOrEmpty(itemIdentifiersAsText)) {
+				throw new ArgumentNullException(nameof(itemIdentifiersAsText));
+			}
+
+			if (String.IsNullOrEmpty(amountsString)) {
+				throw new ArgumentNullException(nameof(amountsString));
+			}
+
+			if (access < EAccess.Master) {
+				return null;
+			}
+
+			if (!bot.IsConnectedAndLoggedOn) {
+				return FormatBotResponse(bot, Strings.BotNotConnected);
+			}
+
+			HashSet<Bot>? bots = Bot.GetBots(botNames);
+
+			if ((bots == null) || (bots.Count == 0)) {
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
+			}
+
+			string[] itemIdentifierStrings = itemIdentifiersAsText.Split("&&", StringSplitOptions.RemoveEmptyEntries).Distinct().ToArray();
+			string[] amountStrings = amountsString.Split(",", StringSplitOptions.RemoveEmptyEntries);
+
+			if (amountStrings.Length == 0) {
+				return FormatBotResponse(bot, String.Format(Strings.ErrorIsEmpty, nameof(amountStrings)));
+			}
+
+			if (amountStrings.Length == 1 && itemIdentifierStrings.Length > 1) {
+				amountStrings = Enumerable.Repeat(amountStrings[0], itemIdentifierStrings.Length).ToArray();
+			}
+			
+			if (amountStrings.Length != itemIdentifierStrings.Length) {
+				return FormatBotResponse(bot, String.Format("Number of items ({0}) does not match number of item amounts ({1})", itemIdentifierStrings.Length, amountStrings.Length));
+			}
+
+			List<uint> amounts = new List<uint>();
+			foreach (string amount in amountStrings) {
+				if (!uint.TryParse(amount, out uint amountNum)) {
+					return FormatBotResponse(bot, String.Format(Strings.ErrorParsingObject, nameof(amountNum)));
+				}
+
+				amounts.Add(amountNum);
+			}
+
+			List<ItemIdentifier> itemIdentifiers = new List<ItemIdentifier>();
+			foreach (string itemIdentifierString in itemIdentifierStrings) {
+				try {
+					ItemIdentifier itemIdentifier = new ItemIdentifier(itemIdentifierString, requireNumericIDs: true);
+					itemIdentifiers.Add(itemIdentifier);
+				} catch (Exception) {
+					return FormatBotResponse(bot, String.Format("Invalid Item Identifier: {0}", itemIdentifierString));
+				}
+			}
+
+			List<(ItemIdentifier, uint)> items = Zip(itemIdentifiers, amounts).ToList();
+
+			return await InventoryHandler.BatchSendMultipleItemsWithAmounts(bot, bots, items).ConfigureAwait(false);
+		}
+
+		private static async Task<string?> ResponseSendMultipleItems(EAccess access, ulong steamID, string senderBotName, string botNames, string amountsString, string itemIdentifiersAsText) {
+			if (String.IsNullOrEmpty(senderBotName)) {
+				throw new ArgumentNullException(nameof(senderBotName));
+			}
+
+			Bot? sender = Bot.GetBot(senderBotName);
+
+			if (sender == null) {
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, senderBotName)) : null;
+			}
+
+			return await ResponseSendMultipleItems(sender, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(sender, access, steamID), botNames, amountsString, itemIdentifiersAsText).ConfigureAwait(false);
 		}
 
 		private static async Task<string?> ResponseSendItemsWithAmounts(Bot bot, EAccess access, string botNames, string amountsString, uint appID, ulong contextID, Asset.EType type, ulong classID, bool allowUnmarketable = false) {

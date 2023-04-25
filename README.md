@@ -30,30 +30,31 @@ Command | Access | Description
 Command | Access | Description
 --- | --- | ---
 `gems [Bots]`|`Master`|Displays the number of gems owned by the given bot.
-`keys [Bots]`|`Master`|Displays the number of Mann Co. Supply Crate Keys owned by the given bot.
+`keys [Bots]`|`Master`|Displays the number of "Mann Co. Supply Crate Key" owned by the given bot.
 `lootboosters [Bots]`|`Master`|Sends all marketable booster packs from the given bot to the `Master` user.
 `lootcards [Bots]`|`Master`|Sends all marketable non-foil trading cards from the given bot to the `Master` user.
 `lootfoils [Bots]`|`Master`|Sends all marketable foil trading cards from the given bot to the `Master` user.
 `lootgems [Bots]`|`Master`|Sends all gems from the given bot to the `Master` user.
 `lootitems [Bots] <AppID> <ContextID> [ClassID]`|`Master`|Sends all items with the matching `AppID`, `ContextID`, and `ClassID` from the given bot to the `Master` user.
-`lootkeys [Bots]`|`Master`|Sends all Mann Co. Supply Crate Keys from the given bot to the `Master` user.
-`lootsacks [Bots]`|`Master`|Sends all Sacks of Gems from the given bot to the `Master` user.
+`lootkeys [Bots]`|`Master`|Sends all "Mann Co. Supply Crate Key" from the given bot to the `Master` user.
+`lootsacks [Bots]`|`Master`|Sends all "Sack of Gems" from the given bot to the `Master` user.
 `trade2faok [Bot]`|`Master`|Accepts all pending 2FA trade confirmations for given bot instances.
 `transferboosters [Bots] <TargetBot>`|`Master`|Sends all marketable booster packs from the given bot to the given target bot.
 `transfercards [Bots] <TargetBot>`|`Master`|Sends all marketable non-foil trading cards from the given bot to the given target bot.
 `transferfoils [Bots] <TargetBot>`|`Master`|Sends all marketable foil trading cards from the given bot to the given target bot.
-`transfergems [Bot] <TargetBots> <Amounts>`|`Master`|Sends the provided `Amounts` of gems from the given bot to the given target bots. The `Amounts` specified may be a single amount sent to all target bots, or multiple amounts sent to each target bot respectively.  You may also use `queue` or `q` as an amount to represent the number of gems needed to complete the target bot's booster queue.
+`transfergems [Bot] <TargetBots> <Amounts>`|`Master`|Sends the provided `Amounts` of unpacked gems from the given bot to the given target bot. The `Amounts` specified may be a single amount sent to all target bots, or multiple amounts sent to each target bot respectively.  You may also use `queue` or `q` as an amount to represent the number of gems needed to complete the target bot's booster queue.
 `transferitems <Bots> <TargetBot> <AppID> <ContextID> [ClassID]`|`Master`|Sends all items with the matching `AppID`, `ContextID`, and `ClassID` from the given bot to the given target bot.
-`transferkeys [Bot] <TargetBots> <Amounts>`|`Master`|Sends the provided `Amounts` of Mann Co. Supply Crate Keys from the given bot to the given target bots. The `Amounts` specified may be a single amount sent to all target bots, or multiple amounts sent to each target bot respectively.
-`transfersacks [Bots] <TargetBot>`|`Master`|Sends all Sacks of Gems from the given bot to the given target bot.
-`unpackgems [Bots]`|`Master`|Unpacks all Sacks of Gems owned by the given bot.
+`transferitems^ <Bot> <TargetBots> <Amounts> <ItemIdentifiers>`|`Master`|Sends items matching the [`ItemIdentifiers`](#itemidentifiers) from the given bot to the given target bot. The `Amounts` specified may be a single amount of each item sent, or multiple amounts of each item sent respectively.  The only valid `ItemIdentifiers` for this command are those that begin with `AppID::ContextID`
+`transferkeys [Bot] <TargetBots> <Amounts>`|`Master`|Sends the provided `Amounts` of "Mann Co. Supply Crate Key" from the given bot to the given target bot. The `Amounts` specified may be a single amount sent to all target bots, or multiple amounts sent to each target bot respectively.
+`transfersacks [Bots] <TargetBot>`|`Master`|Sends all "Sack of Gems" from the given bot to the given target bot.
+`unpackgems [Bots]`|`Master`|Unpacks all "Sack of Gems" owned by the given bot.
 
 ### Market Commands
 
 Command | Access | Description
 --- | --- | ---
-`findlistings [Bots] <ItemIdentifiers>`|`Master`|Displays the `ListingIDs` of any market listing belonging to the given bot and matching any of the `ItemIdentifiers`.  An item identifier can be any of: `ItemName`, `ItemType`, `HashName`, `AppID::ContextID`, or `AppID::ContextID::ClassID`.  Multiple item identifiers may be provided, but must be separated with `&&`
-`findandremovelistings [Bots] <ItemIdentifiers>`|`Master`|Removes any market listing belonging to the given bot and matching any of the `ItemIdentifiers`.  An item identifier can be any of: `ItemName`, `ItemType`, `HashName`, `AppID::ContextID`, or `AppID::ContextID::ClassID`.  Multiple item identifiers may be provided, but must be separated with `&&`
+`findlistings <Bots> <ItemIdentifiers>`|`Master`|Displays the `ListingIDs` of any market listing belonging to the given bot and matching any of the [`ItemIdentifiers`](#itemidentifiers).
+`findandremovelistings <Bots> <ItemIdentifiers>`|`Master`|Removes any market listing belonging to the given bot and matching any of the [`ItemIdentifiers`](#itemidentifiers).
 `listings [Bots]`|`Master`|Displays the total value of all market listings owned by the given bot.
 `removelistings [Bot] <ListingIDs>`|`Master`|Removes market `ListingIDs` belonging to the given bot.
 `market2faok [Bot]`|`Master`|Accepts all pending 2FA market confirmations for given bot instances.
@@ -69,6 +70,18 @@ Command | Access | Description
 `logmarketlistings [Bots]`|`Master`|Collects market listings data from the given bot and sends it to [`MarketListingsAPI`](#marketlistingsapi)
 `logmarkethistory [Bots] [Count] [Start]`|`Master`|Collects market history data from the given bot and sends it to [`MarketHistoryAPI`](#markethistoryapi).  The number of pages of market history may be specified using `Count`, and may begin on the page specified by `Start`
 `logstop [Bots]`|`Master`|Stops any actively running `loginventoryhistory` or `logmarkethistory` commands.
+
+### ItemIdentifiers
+
+An item identifier is an input used in certain commands that allows you to operate on only certain items.  Multiple item identifiers may be provided to a command, but must be separated with `&&` instead of a comma.  The valid formats for an item identifier are as follows:
+
+Format | Example |
+--- | --- |
+`AppID::ContextID`|The identifier `753::6` will match with all Steam Community items
+`AppID::ContextID::ClassID`|The identifier `753::6::667933237` will match all "Sack of Gems" items
+`ItemName`|The identifier `Gems` will match the all "Gems" items
+`ItemType`|The identifier `Steam Gems` will match all "Sack of Gems" and "Gems" items
+`HashName`|The identifiers `753-Sack of Gems` or `753-Sack%20of%20Gems` will match all "Sack of Gems" items
 
 ### Command Aliases
 
@@ -114,7 +127,7 @@ Command | Alias |
 
 Example: `"AllowCraftUntradableBoosters": true,`
 
-This `bool` type configuration setting can be added to your `ASF.json` config file.  If set to `false`, untradable gems will not be used to craft boosters, and the `unpackgems` command will not unpack untradable Sacks of Gems.
+This `bool` type configuration setting can be added to your `ASF.json` config file.  If set to `false`, untradable gems will not be used to craft boosters, and the `unpackgems` command will not unpack untradable "Sack of Gems".
 
 By default, this is set to `true`
 
