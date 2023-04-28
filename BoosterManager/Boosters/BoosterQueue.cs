@@ -130,6 +130,7 @@ namespace BoosterManager {
 				if (booster.Type == BoosterType.Permanent) {
 					Bot.ArchiLogger.LogGenericInfo(String.Format("Re-adding permanent {0} to booster queue.", gameID));
 					AddBooster(gameID, BoosterType.Permanent);
+					UpdateTimer(DateTime.Now.AddSeconds(5));
 
 					return false;
 				}
