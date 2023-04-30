@@ -7,10 +7,12 @@ using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Plugins.Interfaces;
 using Newtonsoft.Json.Linq;
+using ArchiSteamFarm.Steam.Exchange;
+using ArchiSteamFarm.Steam.Data;
 
 namespace BoosterManager {
 	[Export(typeof(IPlugin))]
-	public sealed class BoosterManager : IASF, IBotModules, IBotCommand2 {
+	public sealed class BoosterManager : IASF, IBotModules, IBotCommand2, IBotTradeOfferResults {
 		public string Name => nameof(BoosterManager);
 		public Version Version => typeof(BoosterManager).Assembly.GetName().Version ?? new Version("0");
 
@@ -102,6 +104,27 @@ namespace BoosterManager {
 			}
 
 			return Task.FromResult(0);
+		}
+
+		public Task OnBotTradeOfferResults(Bot bot, IReadOnlyCollection<ParseTradeResult> tradeResults) {
+			ArgumentNullException.ThrowIfNull(bot);
+
+			if ((tradeResults == null) || (tradeResults.Count == 0)) {
+				throw new ArgumentNullException(nameof(tradeResults));
+			}
+
+			// Only trigger when recieving gems
+			if (!tradeResults.Any(
+				tradeResult => tradeResult is { Result: ParseTradeResult.EResult.Accepted, Confirmed: true } 
+					&& tradeResult.ItemsToReceive?.Any(item => item.Type == Asset.EType.SteamGems && item.ClassID == GemHandler.GemsClassID) == true
+				)
+			) {
+				return Task.CompletedTask;
+			}
+
+			BoosterHandler.BoosterHandlers[bot.BotName].OnGemsRecieved();
+
+			return Task.CompletedTask;
 		}
 	}
 }

@@ -169,6 +169,16 @@ namespace BoosterManager {
 			}
 		}
 
+		internal void OnGemsRecieved() {
+			if (GetGemsNeeded() == 0) {
+				return;
+			}
+
+			// Refresh gems count
+			BoosterQueue.OnBoosterInfosUpdated += BoosterQueue.ForceUpdateBoosterInfos;
+			BoosterQueue.Start();
+		}
+
 		private static int GetMillisecondsFromNow(DateTime then) => Math.Max(0, (int) (then - DateTime.Now).TotalMilliseconds);
 		internal uint GetGemsNeeded() => (uint) BoosterQueue.GetGemsNeeded(BoosterType.Any, wasCrafted: false) - BoosterQueue.GetAvailableGems();
 	}
