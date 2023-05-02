@@ -8,6 +8,7 @@ using ArchiSteamFarm.Steam.Data;
 using ArchiSteamFarm.Steam.Integration;
 using ArchiSteamFarm.Web;
 using ArchiSteamFarm.Web.Responses;
+using Newtonsoft.Json.Linq;
 
 namespace BoosterManager {
 	internal static class WebRequest {
@@ -118,6 +119,12 @@ namespace BoosterManager {
 			}
 
 			return response.Content;
+		}
+
+		internal static async Task<JToken?> GetBadgeInfo(Bot bot, uint appID, uint border = 0) {
+			Uri request = new(ArchiWebHandler.SteamCommunityURL, String.Format("/profiles/{0}/ajaxgetbadgeinfo/{1}?border={2}", bot.SteamID, appID, border));
+			ObjectResponse<JToken>? badgeInfoResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<JToken>(request).ConfigureAwait(false);
+			return badgeInfoResponse?.Content;
 		}
 	}
 }

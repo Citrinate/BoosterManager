@@ -7,6 +7,7 @@ using ArchiSteamFarm.IPC.Responses;
 using ArchiSteamFarm.Localization;
 using ArchiSteamFarm.Steam;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json.Linq;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace BoosterManager {
@@ -141,6 +142,35 @@ namespace BoosterManager {
 			}
 
 			return Ok(new GenericResponse<SteamData<Steam.InventoryHistoryResponse>>(true, new SteamData<Steam.InventoryHistoryResponse>(bot, inventoryHistory, source!, startTime, cursor)));
+		}
+
+		/// <summary>
+		///     Retrieves badge info for given bot.
+		/// </summary>
+		[HttpGet("{botName:required}/GetBadgeInfo/{appID:required}")]
+		[SwaggerOperation (Summary = "Retrieves badge info for given bot.")]
+		[ProducesResponseType(typeof(GenericResponse<JToken>), (int) HttpStatusCode.OK)]
+		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.BadRequest)]
+		public async Task<ActionResult<GenericResponse>> GetBadgeInfo(string botName, uint appID, uint border = 0) {
+			if (string.IsNullOrEmpty(botName)) {
+				throw new ArgumentNullException(nameof(botName));
+			}
+
+			Bot? bot = Bot.GetBot(botName);
+			if (bot == null) {
+				return BadRequest(new GenericResponse(false, string.Format(Strings.BotNotFound, botName)));
+			}
+			
+			if (!bot.IsConnectedAndLoggedOn) {
+				return BadRequest(new GenericResponse(false, Strings.BotNotConnected));
+			}
+
+			JToken? badgeInfo = await WebRequest.GetBadgeInfo(bot, appID, border).ConfigureAwait(false);
+			if (badgeInfo == null) {
+				return BadRequest(new GenericResponse(false, "Failed to fetch badge info"));
+			}
+
+			return Ok(new GenericResponse<JToken>(true, badgeInfo));
 		}
 	}
 }

@@ -365,3 +365,4 @@ API | Method | Parameters | Description
 `/API/BoosterManager/{botName}/MarketListings`|`GET`||Retrieves market listings data for given bot.
 `/API/BoosterManager/{botName}/MarketHistory`|`GET`|`page`|Retrieves market history data for given bot.
 `/API/BoosterManager/{botName}/InventoryHistory`|`GET`|`startTime`, `timeFrac`, `s`|Retrieves inventory history data for given bot.
+`/API/BoosterManager/{botName}/GetBadgeInfo/{appID}`|`GET`|`border`|Retrieves badge info for given bot.
