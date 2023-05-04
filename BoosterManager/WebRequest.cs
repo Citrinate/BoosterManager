@@ -126,5 +126,11 @@ namespace BoosterManager {
 			ObjectResponse<JToken>? badgeInfoResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<JToken>(request).ConfigureAwait(false);
 			return badgeInfoResponse?.Content;
 		}
+
+		internal static async Task<JToken?> GetPriceHistory(Bot bot, uint appID, string hashName) {
+			Uri request = new(ArchiWebHandler.SteamCommunityURL, String.Format("/market/pricehistory/?appid={0}&market_hash_name={1}", appID, hashName));
+			ObjectResponse<JToken>? priceHistoryResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<JToken>(request).ConfigureAwait(false);
+			return priceHistoryResponse?.Content;
+		}
 	}
 }

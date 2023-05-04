@@ -172,5 +172,34 @@ namespace BoosterManager {
 
 			return Ok(new GenericResponse<JToken>(true, badgeInfo));
 		}
+
+		/// <summary>
+		///     Retrieves price history for market items.
+		/// </summary>
+		[HttpGet("{botName:required}/GetPriceHistory/{appID:required}/{hashName:required}")]
+		[SwaggerOperation (Summary = "Retrieves price history for market items.")]
+		[ProducesResponseType(typeof(GenericResponse<JToken>), (int) HttpStatusCode.OK)]
+		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.BadRequest)]
+		public async Task<ActionResult<GenericResponse>> GetPriceHistory(string botName, uint appID, string hashName) {
+			if (string.IsNullOrEmpty(botName)) {
+				throw new ArgumentNullException(nameof(botName));
+			}
+
+			Bot? bot = Bot.GetBot(botName);
+			if (bot == null) {
+				return BadRequest(new GenericResponse(false, string.Format(Strings.BotNotFound, botName)));
+			}
+			
+			if (!bot.IsConnectedAndLoggedOn) {
+				return BadRequest(new GenericResponse(false, Strings.BotNotConnected));
+			}
+
+			JToken? priceHistory = await WebRequest.GetPriceHistory(bot, appID, hashName).ConfigureAwait(false);
+			if (priceHistory == null) {
+				return BadRequest(new GenericResponse(false, "Failed to fetch market listings"));
+			}
+
+			return Ok(new GenericResponse<JToken>(true, priceHistory));
+		}
 	}
 }
