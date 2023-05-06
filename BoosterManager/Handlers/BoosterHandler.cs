@@ -168,6 +168,14 @@ namespace BoosterManager {
 				await respondingBot.SendMessage(recipientSteamID, message).ConfigureAwait(false);
 			}
 		}
+		
+		internal uint GetGemsNeeded() {
+			if (BoosterQueue.GetAvailableGems() > BoosterQueue.GetGemsNeeded(BoosterType.Any, wasCrafted: false)) {
+				return 0;
+			}
+
+			return (uint) (BoosterQueue.GetGemsNeeded(BoosterType.Any, wasCrafted: false) - BoosterQueue.GetAvailableGems());
+		}
 
 		internal void OnGemsRecieved() {
 			if (GetGemsNeeded() == 0) {
@@ -180,6 +188,5 @@ namespace BoosterManager {
 		}
 
 		private static int GetMillisecondsFromNow(DateTime then) => Math.Max(0, (int) (then - DateTime.Now).TotalMilliseconds);
-		internal uint GetGemsNeeded() => (uint) BoosterQueue.GetGemsNeeded(BoosterType.Any, wasCrafted: false) - BoosterQueue.GetAvailableGems();
 	}
 }
