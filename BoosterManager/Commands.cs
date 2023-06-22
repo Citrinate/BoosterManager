@@ -87,9 +87,9 @@ namespace BoosterManager {
 							return await ResponseSendItems(bot, access, Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.SteamGems, GemHandler.GemsClassID, allowUnmarketable: true).ConfigureAwait(false);
 						
 						case "LKA":
-							return await ResponseSendItems(access, steamID, "ASF", KeyHandler.KeyAppID, KeyHandler.KeyContextID, KeyHandler.KeyType, KeyHandler.KeyClassID).ConfigureAwait(false);
+							return await ResponseSendItems(access, steamID, "ASF", KeyHandler.KeyAppID, KeyHandler.KeyContextID, KeyHandler.KeyType, marketHash: KeyHandler.MarketHash).ConfigureAwait(false);
 						case "LOOTKEYS" or "LOOTKEY":
-							return await ResponseSendItems(bot, access, KeyHandler.KeyAppID, KeyHandler.KeyContextID, KeyHandler.KeyType, KeyHandler.KeyClassID).ConfigureAwait(false);
+							return await ResponseSendItems(bot, access, KeyHandler.KeyAppID, KeyHandler.KeyContextID, KeyHandler.KeyType, marketHash: KeyHandler.MarketHash).ConfigureAwait(false);
 						
 						case "LSA":
 							return await ResponseSendItems(access, steamID, "ASF", Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.SteamGems, GemHandler.SackOfGemsClassID).ConfigureAwait(false);
@@ -201,7 +201,7 @@ namespace BoosterManager {
 							return await ResponseSendSpecificItems(access, steamID, args[1], args[2], args[3]).ConfigureAwait(false);
 						
 						case "LOOTKEYS" or "LOOTKEY":
-							return await ResponseSendItems(access, steamID, Utilities.GetArgsAsText(args, 1, ","), KeyHandler.KeyAppID, KeyHandler.KeyContextID, KeyHandler.KeyType, KeyHandler.KeyClassID).ConfigureAwait(false);
+							return await ResponseSendItems(access, steamID, Utilities.GetArgsAsText(args, 1, ","), KeyHandler.KeyAppID, KeyHandler.KeyContextID, KeyHandler.KeyType, marketHash: KeyHandler.MarketHash).ConfigureAwait(false);
 						
 						case "LOOTSACKS" or "LOOTSACK":
 							return await ResponseSendItems(access, steamID, Utilities.GetArgsAsText(args, 1, ","), Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.SteamGems, GemHandler.SackOfGemsClassID).ConfigureAwait(false);
@@ -247,9 +247,9 @@ namespace BoosterManager {
 							return await ResponseSendMultipleItems(access, steamID, args[1], args[2], args[3], Utilities.GetArgsAsText(args, 4, " ")).ConfigureAwait(false);
 						
 						case "TRANSFERKEYS" or "TRANSFERKEY" when args.Length > 3:
-							return await ResponseSendItemsWithAmounts(access, steamID, args[1], args[2], args[3], KeyHandler.KeyAppID, KeyHandler.KeyContextID, KeyHandler.KeyType, KeyHandler.KeyClassID).ConfigureAwait(false);
+							return await ResponseSendItemsWithAmounts(access, steamID, args[1], args[2], args[3], KeyHandler.KeyAppID, KeyHandler.KeyContextID, KeyHandler.KeyType, marketHash: KeyHandler.MarketHash).ConfigureAwait(false);
 						case "TRANSFERKEYS" or "TRANSFERKEY" when args.Length > 2:
-							return await ResponseSendItemsWithAmounts(bot, access, args[1], args[2], KeyHandler.KeyAppID, KeyHandler.KeyContextID, KeyHandler.KeyType, KeyHandler.KeyClassID).ConfigureAwait(false);
+							return await ResponseSendItemsWithAmounts(bot, access, args[1], args[2], KeyHandler.KeyAppID, KeyHandler.KeyContextID, KeyHandler.KeyType, marketHash: KeyHandler.MarketHash).ConfigureAwait(false);
 						
 						case "TRANSFERSACKS" or "TRANSFERSACK" when args.Length > 2:
 							return await ResponseSendItems(access, steamID, args[1], Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.SteamGems, GemHandler.SackOfGemsClassID, recieverBotName: args[2]).ConfigureAwait(false);
@@ -941,7 +941,7 @@ namespace BoosterManager {
 			return await ResponseRemoveListings(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), listingIDs).ConfigureAwait(false);
 		}
 
-		private static async Task<string?> ResponseSendItems(Bot bot, EAccess access, uint appID, ulong contextID, Asset.EType? type, ulong? classID = null, bool allowUnmarketable = false, string? recieverBotName = null) {
+		private static async Task<string?> ResponseSendItems(Bot bot, EAccess access, uint appID, ulong contextID, Asset.EType? type, ulong? classID = null, string? marketHash = null, bool allowUnmarketable = false, string? recieverBotName = null) {
 			if (access < EAccess.Master) {
 				return null;
 			}
@@ -970,12 +970,18 @@ namespace BoosterManager {
 				}
 			}
 
-			(bool success, string message) = await bot.Actions.SendInventory(appID: appID, contextID: contextID, targetSteamID: targetSteamID, filterFunction: item => (type == null || item.Type == type) && (classID == null || item.ClassID == classID) && (allowUnmarketable || item.Marketable)).ConfigureAwait(false);
+			(bool success, string message) = await bot.Actions.SendInventory(appID: appID, contextID: contextID, targetSteamID: targetSteamID, 
+				filterFunction: item => 
+					(type == null || item.Type == type) 
+					&& (classID == null || item.ClassID == classID) 
+					&& (marketHash == null || ((item.AdditionalPropertiesReadOnly?.ContainsKey("market_hash_name") ?? false) && item.AdditionalPropertiesReadOnly?["market_hash_name"].ToObject<string>() == marketHash)) 
+					&& (allowUnmarketable || item.Marketable)
+			).ConfigureAwait(false);
 
 			return FormatBotResponse(bot, success ? message : String.Format(Strings.WarningFailedWithError, message));
 		}
 
-		private static async Task<string?> ResponseSendItems(EAccess access, ulong steamID, string senderBotNames, uint appID, ulong contextID, Asset.EType type, ulong? classID = null, bool allowUnmarketable = false, string? recieverBotName = null) {
+		private static async Task<string?> ResponseSendItems(EAccess access, ulong steamID, string senderBotNames, uint appID, ulong contextID, Asset.EType type, ulong? classID = null, string? marketHash = null, bool allowUnmarketable = false, string? recieverBotName = null) {
 			if (String.IsNullOrEmpty(senderBotNames)) {
 				throw new ArgumentNullException(nameof(senderBotNames));
 			}
@@ -986,7 +992,7 @@ namespace BoosterManager {
 				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, senderBotNames)) : null;
 			}
 
-			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseSendItems(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), appID, contextID, type, classID, allowUnmarketable, recieverBotName))).ConfigureAwait(false);
+			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseSendItems(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), appID, contextID, type, classID, marketHash, allowUnmarketable, recieverBotName))).ConfigureAwait(false);
 
 			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
 
@@ -1128,7 +1134,7 @@ namespace BoosterManager {
 			return await ResponseSendMultipleItems(sender, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(sender, access, steamID), botNames, amountsString, itemIdentifiersAsText).ConfigureAwait(false);
 		}
 
-		private static async Task<string?> ResponseSendItemsWithAmounts(Bot bot, EAccess access, string botNames, string amountsString, uint appID, ulong contextID, Asset.EType type, ulong classID, bool allowUnmarketable = false) {
+		private static async Task<string?> ResponseSendItemsWithAmounts(Bot bot, EAccess access, string botNames, string amountsString, uint appID, ulong contextID, Asset.EType type, ulong? classID = null, string? marketHash = null, bool allowUnmarketable = false) {
 			if (String.IsNullOrEmpty(botNames)) {
 				throw new ArgumentNullException(nameof(botNames));
 			}
@@ -1182,10 +1188,10 @@ namespace BoosterManager {
 
 			List<(Bot reciever, uint amount)> recievers = Zip(bots, amountNums).ToList();
 
-			return await InventoryHandler.BatchSendItemsWithAmounts(bot, recievers, appID, contextID, type, classID, allowUnmarketable).ConfigureAwait(false);
+			return await InventoryHandler.BatchSendItemsWithAmounts(bot, recievers, appID, contextID, type, classID, marketHash, allowUnmarketable).ConfigureAwait(false);
 		}
 
-		private static async Task<string?> ResponseSendItemsWithAmounts(EAccess access, ulong steamID, string senderBotName, string botNames, string amountsString, uint appID, ulong contextID, Asset.EType type, ulong classID, bool allowUnmarketable = false) {
+		private static async Task<string?> ResponseSendItemsWithAmounts(EAccess access, ulong steamID, string senderBotName, string botNames, string amountsString, uint appID, ulong contextID, Asset.EType type, ulong? classID = null, string? marketHash = null, bool allowUnmarketable = false) {
 			if (String.IsNullOrEmpty(senderBotName)) {
 				throw new ArgumentNullException(nameof(senderBotName));
 			}
@@ -1196,7 +1202,7 @@ namespace BoosterManager {
 				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, senderBotName)) : null;
 			}
 
-			return await ResponseSendItemsWithAmounts(sender, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(sender, access, steamID), botNames, amountsString, appID, contextID, type, classID, allowUnmarketable).ConfigureAwait(false);
+			return await ResponseSendItemsWithAmounts(sender, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(sender, access, steamID), botNames, amountsString, appID, contextID, type, classID, marketHash, allowUnmarketable).ConfigureAwait(false);
 		}
 
 		private static async Task<string?> ResponseUnpackGems(Bot bot, EAccess access) {

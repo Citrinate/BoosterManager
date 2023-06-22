@@ -35,7 +35,7 @@ namespace BoosterManager {
 		internal static void AddHandler(Bot bot) {
 			if (BoosterHandlers.ContainsKey(bot.BotName)) {
 				BoosterHandlers[bot.BotName].Dispose();
-				BoosterHandlers.TryRemove(bot.BotName, out BoosterHandler _);
+				BoosterHandlers.TryRemove(bot.BotName, out BoosterHandler? _);
 			}
 
 			if (BoosterHandlers.TryAdd(bot.BotName, new BoosterHandler(bot))) {

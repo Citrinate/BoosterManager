@@ -196,7 +196,7 @@ namespace BoosterManager {
 
 			JToken? priceHistory = await WebRequest.GetPriceHistory(bot, appID, hashName).ConfigureAwait(false);
 			if (priceHistory == null) {
-				return BadRequest(new GenericResponse(false, "Failed to fetch market listings"));
+				return BadRequest(new GenericResponse(false, "Failed to fetch price history"));
 			}
 
 			return Ok(new GenericResponse<JToken>(true, priceHistory));

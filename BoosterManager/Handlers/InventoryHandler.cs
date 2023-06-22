@@ -9,10 +9,16 @@ using ArchiSteamFarm.Steam.Security;
 
 namespace BoosterManager {
 	internal static class InventoryHandler {
-		internal static async Task<string> BatchSendItemsWithAmounts(Bot sender, List<(Bot reciever, uint amount)> recievers, uint appID, ulong contextID, Asset.EType type, ulong classID, bool allowUnmarketable = false) {
+		internal static async Task<string> BatchSendItemsWithAmounts(Bot sender, List<(Bot reciever, uint amount)> recievers, uint appID, ulong contextID, Asset.EType type, ulong? classID = null, string? marketHash = null, bool allowUnmarketable = false) {
 			HashSet<Asset> itemStacks;
 			try {
-				itemStacks = await sender.ArchiWebHandler.GetInventoryAsync(appID: appID, contextID: contextID).Where(item => item.Tradable && item.Type == type && item.ClassID == classID && (allowUnmarketable || item.Marketable)).ToHashSetAsync().ConfigureAwait(false);
+				itemStacks = await sender.ArchiWebHandler.GetInventoryAsync(appID: appID, contextID: contextID).Where(item => 
+					item.Tradable 
+					&& item.Type == type 
+					&& (classID == null || item.ClassID == classID) 
+					&& (marketHash == null || ((item.AdditionalPropertiesReadOnly?.ContainsKey("market_hash_name") ?? false) && item.AdditionalPropertiesReadOnly?["market_hash_name"].ToObject<string>() == marketHash)) 
+					&& (allowUnmarketable || item.Marketable)
+				).ToHashSetAsync().ConfigureAwait(false);
 			} catch (Exception e) {
 				sender.ArchiLogger.LogGenericException(e);
 				return Commands.FormatBotResponse(sender, Strings.WarningFailed);
