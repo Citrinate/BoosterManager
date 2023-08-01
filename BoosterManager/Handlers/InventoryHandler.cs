@@ -63,7 +63,7 @@ namespace BoosterManager {
 
 			(bool success, _, HashSet<ulong>? mobileTradeOfferIDs) = await sender.ArchiWebHandler.SendTradeOffer(reciever.SteamID, itemsToGive).ConfigureAwait(false);
 			if ((mobileTradeOfferIDs?.Count > 0) && sender.HasMobileAuthenticator) {
-				(bool twoFactorSuccess, _, string message) = await sender.Actions.HandleTwoFactorAuthenticationConfirmations(true, Confirmation.EType.Trade, mobileTradeOfferIDs, true).ConfigureAwait(false);
+				(bool twoFactorSuccess, _, string message) = await sender.Actions.HandleTwoFactorAuthenticationConfirmations(true, Confirmation.EConfirmationType.Trade, mobileTradeOfferIDs, true).ConfigureAwait(false);
 
 				if (!twoFactorSuccess) {
 					sender.ArchiLogger.LogGenericError(message);
@@ -162,7 +162,7 @@ namespace BoosterManager {
 
 			(bool success, _, HashSet<ulong>? mobileTradeOfferIDs) = await sender.ArchiWebHandler.SendTradeOffer(reciever.SteamID, totalItemsToGive).ConfigureAwait(false);
 			if ((mobileTradeOfferIDs?.Count > 0) && sender.HasMobileAuthenticator) {
-				(bool twoFactorSuccess, _, string message) = await sender.Actions.HandleTwoFactorAuthenticationConfirmations(true, Confirmation.EType.Trade, mobileTradeOfferIDs, true).ConfigureAwait(false);
+				(bool twoFactorSuccess, _, string message) = await sender.Actions.HandleTwoFactorAuthenticationConfirmations(true, Confirmation.EConfirmationType.Trade, mobileTradeOfferIDs, true).ConfigureAwait(false);
 
 				if (!twoFactorSuccess) {
 					sender.ArchiLogger.LogGenericError(message);

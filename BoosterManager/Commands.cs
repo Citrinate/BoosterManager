@@ -97,14 +97,14 @@ namespace BoosterManager {
 							return await ResponseSendItems(bot, access, Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.SteamGems, GemHandler.SackOfGemsClassID).ConfigureAwait(false);
 						
 						case "M2FAOKA":
-							return await Response2FAOK(access, steamID, "ASF", Confirmation.EType.Market).ConfigureAwait(false);
+							return await Response2FAOK(access, steamID, "ASF", Confirmation.EConfirmationType.Market).ConfigureAwait(false);
 						case "MARKET2FAOK" or "M2FAOK":
-							return await Response2FAOK(bot, access, Confirmation.EType.Market).ConfigureAwait(false);
+							return await Response2FAOK(bot, access, Confirmation.EConfirmationType.Market).ConfigureAwait(false);
 
 						case "T2FAOKA":
-							return await Response2FAOK(access, steamID, "ASF", Confirmation.EType.Trade).ConfigureAwait(false);
+							return await Response2FAOK(access, steamID, "ASF", Confirmation.EConfirmationType.Trade).ConfigureAwait(false);
 						case "TRADE2FAOK" or "T2FAOK":
-							return await Response2FAOK(bot, access, Confirmation.EType.Trade).ConfigureAwait(false);
+							return await Response2FAOK(bot, access, Confirmation.EConfirmationType.Trade).ConfigureAwait(false);
 
 						case "UNPACKGEMS" or "UNPACKGEM":
 							return await ResponseUnpackGems(bot, access).ConfigureAwait(false);
@@ -207,10 +207,10 @@ namespace BoosterManager {
 							return await ResponseSendItems(access, steamID, Utilities.GetArgsAsText(args, 1, ","), Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.SteamGems, GemHandler.SackOfGemsClassID).ConfigureAwait(false);
 						
 						case "MARKET2FAOK" or "M2FAOK":
-							return await Response2FAOK(access, steamID, args[1], Confirmation.EType.Market).ConfigureAwait(false);
+							return await Response2FAOK(access, steamID, args[1], Confirmation.EConfirmationType.Market).ConfigureAwait(false);
 						
 						case "TRADE2FAOK" or "T2FAOK":
-							return await Response2FAOK(access, steamID, args[1], Confirmation.EType.Trade).ConfigureAwait(false);
+							return await Response2FAOK(access, steamID, args[1], Confirmation.EConfirmationType.Trade).ConfigureAwait(false);
 						
 						case "TBA":
 							return await ResponseSendItems(access, steamID, "ASF", Asset.SteamAppID, Asset.SteamCommunityContextID, Asset.EType.BoosterPack, recieverBotName: args[1]).ConfigureAwait(false);
@@ -277,7 +277,7 @@ namespace BoosterManager {
 			}
 		}
 
-		private static async Task<string?> Response2FAOK(Bot bot, EAccess access, Confirmation.EType acceptedType) {
+		private static async Task<string?> Response2FAOK(Bot bot, EAccess access, Confirmation.EConfirmationType acceptedType) {
 			if (access < EAccess.Master) {
 				return null;
 			}
@@ -295,7 +295,7 @@ namespace BoosterManager {
 			return FormatBotResponse(bot, success ? message : string.Format(Strings.WarningFailedWithError, message));
 		}
 
-		private static async Task<string?> Response2FAOK(EAccess access, ulong steamID, string botNames, Confirmation.EType acceptedType) {
+		private static async Task<string?> Response2FAOK(EAccess access, ulong steamID, string botNames, Confirmation.EConfirmationType acceptedType) {
 			if (String.IsNullOrEmpty(botNames)) {
 				throw new ArgumentNullException(nameof(botNames));
 			}
