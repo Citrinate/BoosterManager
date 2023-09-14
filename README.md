@@ -1,13 +1,15 @@
 # Booster Manager Plugin for ArchiSteamFarm
 
 ## Introduction
-This plugin is based off of the [Booster Creator Plugin](https://github.com/Ryzhehvost/BoosterCreator) by [Outzzz](https://github.com/Outzzz) and [Ryzhehvost](https://github.com/Ryzhehvost).  At its core it serves the same purpose: to provide an easy-to-use interface for turning gems into booster packs.  The major difference being: this plugin is more tailored for users wanting to craft **a lot** of booster packs.  To that end, the scope of this project is a bit wider, intending to encompass all manner of features that could, even indirectly, facilitate crafting boosters.  Although this plugin is designed for power users, casual booster crafters should find it just as useful.
+This plugin provides an easy-to-use interface for turning gems into booster packs as well as various features for managing inventories and market listings.   
+
+This project is based off of the [Booster Creator Plugin](https://github.com/Ryzhehvost/BoosterCreator) by [Outzzz](https://github.com/Outzzz) and [Ryzhehvost](https://github.com/Ryzhehvost)
 
 ## Installation
 
 - Download the .zip file from the [latest release](https://github.com/Citrinate/BoosterManager/releases/latest)
 - Unpack the downloaded .zip file to the `plugins` folder inside your ASF folder.
-- (Re)start ASF, you should get a message indicating that the plugin loaded successfully. 
+- (Re)start ASF, you should get a message indicating that the plugin loaded successfully.
 
 > Please note, this plugin is only tested to work with ASF-generic.  It may or may not work with other ASF variants.
 
