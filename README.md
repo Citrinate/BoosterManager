@@ -161,14 +161,9 @@ By default this delay is set to `0`, and is not recommended to be used except in
 
 ### BoosterDataAPI
 
-```
-"BoosterDataAPI": "<Url>",
-```
+`"BoosterDataAPI": "<Url>",`
 
-Example: 
-```
-"BoosterDataAPI": "http://localhost/api/boosters", 
-```
+Example: `"BoosterDataAPI": "http://localhost/api/boosters",`
 
 This `string` type configuration setting can be added to your `ASF.json` config file.  When the `logboosterdata` command is used, booster data will be gathered and sent to the API located at `Url`.
 
@@ -206,14 +201,9 @@ You will need to design your API to accept requests and return responses per the
 
 ### MarketListingsAPI
 
-```
-"MarketListingsAPI": "<Url>",
-```
+`"MarketListingsAPI": "<Url>",`
 
-Example: 
-```
-"MarketListingsAPI": "http://localhost/api/listings", 
-```
+Example: `"MarketListingsAPI": "http://localhost/api/listings",`
 
 This `string` type configuration setting can be added to your `ASF.json` config file.  When the `logmarketlistings` command is used, market listing data will be gathered and sent to the API located at `Url`.
 
@@ -247,14 +237,9 @@ You will need to design your API to accept requests and return responses per the
 
 ### MarketHistoryAPI
 
-```
-"MarketHistoryAPI": "<Url>",
-```
+`"MarketHistoryAPI": "<Url>",`
 
-Example: 
-```
-"MarketHistoryAPI": "http://localhost/api/markethistory",
-```
+Example: `"MarketHistoryAPI": "http://localhost/api/markethistory",`
 
 This `string` type configuration setting can be added to your `ASF.json` config file.  When the `logmarkethistory` command is used, market history data will be gathered and sent to the API located at `Url`.
 
@@ -291,14 +276,9 @@ You will need to design your API to accept requests and return responses per the
 
 ### InventoryHistoryAPI
 
-```
-"InventoryHistoryAPI": "<Url>",
-```
+`"InventoryHistoryAPI": "<Url>",`
 
-Example: 
-```
-"InventoryHistoryAPI": "http://localhost/api/inventoryhistory", 
-```
+Example: `"InventoryHistoryAPI": "http://localhost/api/inventoryhistory",`
 
 This `string` type configuration setting can be added to your `ASF.json` config file.  When the `loginventoryhistory` command is used, inventory history data will be gathered and sent to the API located at `Url`.
 
