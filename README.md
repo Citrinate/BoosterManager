@@ -11,11 +11,12 @@ This project is based off of the [Booster Creator Plugin](https://github.com/Ryz
 - Unpack the downloaded .zip file to the `plugins` folder inside your ASF folder.
 - (Re)start ASF, you should get a message indicating that the plugin loaded successfully.
 
-> Please note, this plugin is only tested to work with ASF-generic.  It may or may not work with other ASF variants.
+> **Note**
+> This plugin is only tested to work with ASF-generic.  It may or may not work with other ASF variants, but feel free to report any issues you may encounter.
 
 ## Usage
 
-> Parameters in square brackets are sometimes `[Optional]`, parameters in angle brackets are always `<Required>`. Plural parameters such as `[Bots]` can accept multiple values separated by `,` such as `A,B,C`
+Parameters in square brackets are sometimes `[Optional]`, parameters in angle brackets are always `<Required>`. Plural parameters such as `[Bots]` can accept multiple values separated by `,` such as `A,B,C`
 
 ### Booster Commands
 
@@ -125,217 +126,235 @@ Command | Alias |
 
 ### AllowCraftUntradableBoosters
 
-`"AllowCraftUntradableBoosters": <true/false>,`
+`bool` type with default value of `true`.  This configuration setting can be added to your `ASF.json` config file.  If set to `false`, untradable gems will not be used to craft boosters, and the `unpackgems` command will not unpack untradable "Sack of Gems".
 
-Example: `"AllowCraftUntradableBoosters": true,`
-
-This `bool` type configuration setting can be added to your `ASF.json` config file.  If set to `false`, untradable gems will not be used to craft boosters, and the `unpackgems` command will not unpack untradable "Sack of Gems".
-
-By default, this is set to `true`
+```json
+"AllowCraftUntradableBoosters": false,
+```
 
 ---
 
 ### GamesToBooster
 
-`"GamesToBooster": [<AppIDs>],`
+`HashSet<uint>` type with default value of `[]`.  This configuration setting can be added to your individual bot config files.  It will automatically add all of the `AppIDs` to that bot's booster queue, and will automatically re-queue them after they've been crafted.
 
-Example: `"GamesToBooster": [730, 570],`
+```json
+"GamesToBooster": [730, 570],
+```
 
-This `HashSet<uint>` type configuration setting can be added to your individual bot config files.  It will automatically add all of the `AppIDs` to that bot's booster queue, and will automatically re-queue them after they've been crafted.
-
-> Note: It's not possible to remove any of these `AppIDs` from the booster queue using any commands.  Any changes you want to make will need to be made in the configuration file.
+> **Note**
+> It's not possible to remove any of these `AppIDs` from the booster queue using any commands.  Any changes you want to make will need to be made in the configuration file.
 
 ---
 
 ### BoosterDelayBetweenBots
 
-`"BoosterDelayBetweenBots": <Seconds>,`
+`uint` type with default value of `0`.  This configuration setting can be added to your `ASF.json` config file.  It will add a `Seconds` delay between each of your bot's booster crafts.  For example: when crafting a booster at 12:00 using a 60 second delay; Bot 1 will craft at 12:00, Bot 2 will  craft at 12:01, Bot 3 will craft at 12:02, and so on.
 
-Example: `"BoosterDelayBetweenBots": 60,`
+```json
+"BoosterDelayBetweenBots": 60,
+```
 
-This `uint` type configuration setting can be added to your `ASF.json` config file.  It will add a `Seconds` delay between each of your bot's booster crafts.  For example: when crafting a booster at 12:00 using a 60 second delay; Bot 1 will craft at 12:00, Bot 2 will  craft at 12:01, Bot 3 will craft at 12:02, and so on.
-
-By default this delay is set to `0`, and is not recommended to be used except in the most extreme cases.
+> **Note**
+> This is not recommended to be used except in the most extreme cases.
 
 ---
 
 ### BoosterDataAPI
 
-`"BoosterDataAPI": "<Url>",`
+`string` type with no default value.  This configuration setting can be added to your `ASF.json` config file.  When the `logboosterdata` command is used, booster data will be gathered and sent to the API located at the specified url.
 
-Example: `"BoosterDataAPI": "http://localhost/api/boosters",`
-
-This `string` type configuration setting can be added to your `ASF.json` config file.  When the `logboosterdata` command is used, booster data will be gathered and sent to the API located at `Url`.
+```json
+"BoosterDataAPI": "http://localhost/api/boosters",
+```
 
 You will need to design your API to accept requests and return responses per the following specifications:
 
-#### Request
+<details>
+  <summary>Request</summary>
+  
+  **Method**: `POST`
+  
+  **Content-Type**: `application/json`
+  
+  Name | Type | Description
+  --- | --- | ---
+  `steamid`|`ulong`|SteamID of the bot that `data` belongs to
+  `source`|`string`|`https://steamcommunity.com/tradingcards/boostercreator/`
+  `data`|`JArray`|The data parsed from `source` and sent as an array of objects.  Detailed below.
+  `data[][appid]`|`uint`|Booster game AppID
+  `data[][name]`|`string`|Booster game name
+  `data[][series]`|`uint`|Booster series number
+  `data[][price]`|`uint`|Price of booster in gems
+  `data[][unavailable]`|`bool`|Set to `true` when the booster is on a 24 hour cooldown
+  `data[][available_at_time]`|`string?`|A date and time string in ISO 8601 format, if `unavailable` is `false` then this will be `null`|
+</details>
 
-> **Method**: `POST`
->
-> **Content-Type**: `application/json`
->
-> Name | Type | Description
-> --- | --- | ---
-> `steamid`|`ulong`|SteamID of the bot that `data` belongs to
-> `source`|`string`|`https://steamcommunity.com/tradingcards/boostercreator/`
-> `data`|`JArray`|The data parsed from `source` and sent as an array of objects.  Detailed below.
-> `data[][appid]`|`uint`|Booster game AppID
-> `data[][name]`|`string`|Booster game name
-> `data[][series]`|`uint`|Booster series number
-> `data[][price]`|`uint`|Price of booster in gems
-> `data[][unavailable]`|`bool`|Set to `true` when the booster is on a 24 hour cooldown
-> `data[][available_at_time]`|`string?`|A date and time string in ISO 8601 format, if `unavailable` is `false` then this will be `null`|
-
-#### Response
-
-> **Content-Type**: `application/json`
->
-> Name | Type | Required | Description
-> --- | --- | --- | ---
-> `success`|`bool`|Yes|Whether your operations succeeded or failed.
-> `message`|`string`|No|A custom message that will be displayed in place of the default succeed/fail message
-> `show_message`|`bool`|No|Whether or not to show any message
+<details>
+  <summary>Response</summary>
+  
+  **Content-Type**: `application/json`
+  
+  Name | Type | Required | Description
+  --- | --- | --- | ---
+  `success`|`bool`|Yes|Whether your operations succeeded or failed.
+  `message`|`string`|No|A custom message that will be displayed in place of the default succeed/fail message
+  `show_message`|`bool`|No|Whether or not to show any message
+</details>
 
 ---
 
 ### MarketListingsAPI
 
-`"MarketListingsAPI": "<Url>",`
+`string` type with no default value.  This configuration setting can be added to your `ASF.json` config file.  When the `logmarketlistings` command is used, market listing data will be gathered and sent to the API located at the specified url.
 
-Example: `"MarketListingsAPI": "http://localhost/api/listings",`
-
-This `string` type configuration setting can be added to your `ASF.json` config file.  When the `logmarketlistings` command is used, market listing data will be gathered and sent to the API located at `Url`.
+```json
+"MarketListingsAPI": "http://localhost/api/listings",
+```
 
 You will need to design your API to accept requests and return responses per the following specifications:
 
-#### Request
+<details>
+  <summary>Request</summary>
 
-> **Method**: `POST`
->
-> **Content-Type**: `application/json`
->
-> **Note**: Pagination here is not supported.  While `source` does support pagination for `data[listings]`, that information can be recreated using the Market History API.
->
-> Name | Type | Description
-> --- | --- | ---
-> `steamid`|`ulong`|SteamID of the bot that `data` belongs to
-> `source`|`string`|`https://steamcommunity.com/market/mylistings?norender=1`
-> `data`|`JObject`|The data taken directly from `source` with empty string values converted to `null`
+  **Method**: `POST`
+  
+  **Content-Type**: `application/json`
+  
+  Name | Type | Description
+  --- | --- | ---
+  `steamid`|`ulong`|SteamID of the bot that `data` belongs to
+  `source`|`string`|`https://steamcommunity.com/market/mylistings?norender=1`
+  `data`|`JObject`|The data taken directly from `source` with empty string values converted to `null`
 
-#### Response
+  > **Note**
+  > Pagination here is not supported.  While `source` does support pagination for `data[listings]`, that information can be recreated using the Market History API.
+</details>
 
-> **Content-Type**: `application/json`
->
-> Name | Type | Required | Description
-> --- | --- | --- | ---
-> `success`|`bool`|Yes|Whether your operations succeeded or failed.
-> `message`|`string`|No|A custom message that will be displayed in place of the default succeed/fail message
-> `show_message`|`bool`|No|Whether or not to show any message
+<details>
+  <summary>Response</summary>
+  
+  **Content-Type**: `application/json`
+   
+  Name | Type | Required | Description
+  --- | --- | --- | ---
+  `success`|`bool`|Yes|Whether your operations succeeded or failed.
+  `message`|`string`|No|A custom message that will be displayed in place of the default succeed/fail message
+  `show_message`|`bool`|No|Whether or not to show any message
+</details>
 
 ---
 
 ### MarketHistoryAPI
 
-`"MarketHistoryAPI": "<Url>",`
+`string` type with no default value.  This configuration setting can be added to your `ASF.json` config file.  When the `logmarkethistory` command is used, market history data will be gathered and sent to the API located at the specified url.
 
-Example: `"MarketHistoryAPI": "http://localhost/api/markethistory",`
-
-This `string` type configuration setting can be added to your `ASF.json` config file.  When the `logmarkethistory` command is used, market history data will be gathered and sent to the API located at `Url`.
+```json
+"MarketHistoryAPI": "http://localhost/api/markethistory",
+```
 
 You will need to design your API to accept requests and return responses per the following specifications:
 
-#### Request
+<details>
+  <summary>Request</summary>
+  
+  **Method**: `POST`
+  
+  **Content-Type**: `application/json`
+  
+  Name | Type | Description
+  --- | --- | ---
+  `steamid`|`ulong`|SteamID of the bot that `data` belongs to
+  `source`|`string`|`https://steamcommunity.com/market/myhistory?norender=1&count=500`
+  `page`|`uint`|Page number, defined as `floor(data[start] / 500) + 1`
+  `data`|`JObject`|The data taken directly from `source` with empty string values converted to `null`
 
-> **Method**: `POST`
->
-> **Content-Type**: `application/json`
->
-> **Note**: Multiple pages of `data` will be requested sequentially, and not in parallel.
->
-> Name | Type | Description
-> --- | --- | ---
-> `steamid`|`ulong`|SteamID of the bot that `data` belongs to
-> `source`|`string`|`https://steamcommunity.com/market/myhistory?norender=1&count=500`
-> `page`|`uint`|Page number, defined as `floor(data[start] / 500) + 1`
-> `data`|`JObject`|The data taken directly from `source` with empty string values converted to `null`
+  > **Note**
+  > Multiple pages of `data` will be requested sequentially, and not in parallel.
+</details>
 
-#### Response
-
-> **Content-Type**: `application/json`
->
-> Name | Type | Required | Description
-> --- | --- | --- | ---
-> `success`|`bool`|Yes|Whether your operations succeeded or failed.  If there's more pages to fetch, the plugin will only continue when `success` is `true`
-> `message`|`string`|No|A custom message that will be displayed in place of the default succeed/fail message
-> `show_message`|`bool`|No|Whether or not to show any message
-> `get_next_page`|`bool`|No|Whether or not to fetch the next page.  If the plugin was already going to fetch the next page anyway, this does nothing.
-> `next_page`|`uint`|No|If `get_next_page` is set to `true`, the next page will be fetched using this page number
+<details>
+  <summary>Response</summary>
+  
+  **Content-Type**: `application/json`
+  
+  Name | Type | Required | Description
+  --- | --- | --- | ---
+  `success`|`bool`|Yes|Whether your operations succeeded or failed.  If there's more pages to fetch, the plugin will only continue when `success` is `true`
+  `message`|`string`|No|A custom message that will be displayed in place of the default succeed/fail message
+  `show_message`|`bool`|No|Whether or not to show any message
+  `get_next_page`|`bool`|No|Whether or not to fetch the next page.  If the plugin was already going to fetch the next page anyway, this does nothing.
+  `next_page`|`uint`|No|If `get_next_page` is set to `true`, the next page will be fetched using this page number
+</details>
 
 ---
 
 ### InventoryHistoryAPI
 
-`"InventoryHistoryAPI": "<Url>",`
+`string` type with no default value.  This configuration setting can be added to your `ASF.json` config file.  When the `loginventoryhistory` command is used, inventory history data will be gathered and sent to the API located at the specified url.
 
-Example: `"InventoryHistoryAPI": "http://localhost/api/inventoryhistory",`
-
-This `string` type configuration setting can be added to your `ASF.json` config file.  When the `loginventoryhistory` command is used, inventory history data will be gathered and sent to the API located at `Url`.
+```json
+"InventoryHistoryAPI": "http://localhost/api/inventoryhistory",
+```
 
 You will need to design your API to accept requests and return responses per the following specifications:
 
-#### Request
+<details>
+  <summary>Request</summary>
+  
+  **Method**: `POST`
+  
+  **Content-Type**: `application/json`
+  
+  Name | Type | Description
+  --- | --- | ---
+  `steamid`|`ulong`|SteamID of the bot that `data` belongs to
+  `source`|`string`|`https://steamcommunity.com/my/inventoryhistory/?ajax=1`
+  `page`|`uint`|The value of the `start_time` query parameter used to request `source`.  If a cursor object was used to request `source` instead, this will be equal to `cursor[time]`
+  `cursor`|`JObject`|The value of the `cursor` object query parameter used to request `source`
+  `data`|`JObject`|The data taken directly from `source` with empty string values converted to `null`
+  
+  > **Note**
+  > Documentation of Steam's Inventory History API can be found [here](https://github.com/Citrinate/BoosterManager/blob/master/BoosterManager/Docs/InventoryHistory.md)
+  
+  > **Note**
+  > Multiple pages of `data` will be requested sequentially, and not in parallel.
+</details>
 
-> **Method**: `POST`
->
-> **Content-Type**: `application/json`
->
-> **Note**: Important documentation of Steam's Inventory History API can be found [here](https://github.com/Citrinate/BoosterManager/blob/master/BoosterManager/Docs/InventoryHistory.md)
->
-> **Note**: Multiple pages of `data` will be requested sequentially, and not in parallel.
->
-> Name | Type | Description
-> --- | --- | ---
-> `steamid`|`ulong`|SteamID of the bot that `data` belongs to
-> `source`|`string`|`https://steamcommunity.com/my/inventoryhistory/?ajax=1`
-> `page`|`uint`|The value of the `start_time` query parameter used to request `source`.  If a cursor object was used to request `source` instead, this will be equal to `cursor[time]`
-> `cursor`|`JObject`|The value of the `cursor` object query parameter used to request `source`
-> `data`|`JObject`|The data taken directly from `source` with empty string values converted to `null`
-
-#### Response
-
-> **Content-Type**: `application/json`
->
-> Name | Type | Required | Description
-> --- | --- | --- | ---
-> `success`|`bool`|Yes|Whether your operations succeeded or failed.  If there's more pages to fetch, the plugin will only continue when `success` is `true`
-> `message`|`string`|No|A custom message that will be displayed in place of the default succeed/fail message
-> `show_message`|`bool`|No|Whether or not to show any message
-> `get_next_page`|`bool`|No|Whether or not to fetch the next page.  If the plugin was already going to fetch the next page anyway, this does nothing.
-> `next_page`|`uint`|No|If `get_next_page` is set to `true`, the next page will be fetched using this page number
-> `next_cursor`|`JObject`|No|If `get_next_page` is set to `true`, the next page will be fetched using this cursor object
+<details>
+  <summary>Response</summary>
+  
+  **Content-Type**: `application/json`
+  
+  Name | Type | Required | Description
+  --- | --- | --- | ---
+  `success`|`bool`|Yes|Whether your operations succeeded or failed.  If there's more pages to fetch, the plugin will only continue when `success` is `true`
+  `message`|`string`|No|A custom message that will be displayed in place of the default succeed/fail message
+  `show_message`|`bool`|No|Whether or not to show any message
+  `get_next_page`|`bool`|No|Whether or not to fetch the next page.  If the plugin was already going to fetch the next page anyway, this does nothing.
+  `next_page`|`uint`|No|If `get_next_page` is set to `true`, the next page will be fetched using this page number
+  `next_cursor`|`JObject`|No|If `get_next_page` is set to `true`, the next page will be fetched using this cursor object
+</details>
 
 ---
 
 ### InventoryHistoryAppFilter
 
-`"InventoryHistoryAppFilter": [<AppIDs>],`
+`HashSet<uint>` type with defalt value of `[]`.  This configuration setting can be added to your `ASF.json` config file.  When using the `loginventoryhistory` command or `InventoryHistory` IPC interface API endpoint, the results will be filtered to only show inventory history events from these `AppIDs`
 
-Example: `"InventoryHistoryAppFilter": [730, 570],`
-
-This `HashSet<uint>` type configuration setting can be added to your `ASF.json` config file.  When using the `loginventoryhistory` command or `InventoryHistory` IPC interface API endpoint, the results will be filtered to only show inventory history events from these `AppIDs`
+```json
+"InventoryHistoryAppFilter": [730, 570],
+```
 
 ---
 
 ### LogDataPageDelay
 
-`"LogDataPageDelay": <Seconds>,`
+`uint` type with default value of `15`.  This configuration setting can be added to your `ASF.json` config file.  When using the `loginventoryhistory` or `logmarkethistory` commands to fetch multiple pages, it will add a `Seconds` delay between each page fetch.
 
-Example: `"LogDataPageDelay": 15,`
-
-This `uint` type configuration setting can be added to your `ASF.json` config file.  When using the `loginventoryhistory` or `logmarkethistory` commands to fetch multiple pages, it will add a `Seconds` delay between each page fetch.
-
-By default, this is set to `15`
+```json
+"LogDataPageDelay": 15,
+```
 
 ---
 
