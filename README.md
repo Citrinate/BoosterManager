@@ -138,6 +138,8 @@ Command | Alias |
 
 `HashSet<uint>` type with default value of `[]`.  This configuration setting can be added to your individual bot config files.  It will automatically add all of the `AppIDs` to that bot's booster queue, and will automatically re-queue them after they've been crafted.
 
+Example:
+
 ```json
 "GamesToBooster": [730, 570],
 ```
@@ -151,6 +153,8 @@ Command | Alias |
 
 `uint` type with default value of `0`.  This configuration setting can be added to your `ASF.json` config file.  It will add a `Seconds` delay between each of your bot's booster crafts.  For example: when crafting a booster at 12:00 using a 60 second delay; Bot 1 will craft at 12:00, Bot 2 will  craft at 12:01, Bot 3 will craft at 12:02, and so on.
 
+Example:
+
 ```json
 "BoosterDelayBetweenBots": 60,
 ```
@@ -163,6 +167,8 @@ Command | Alias |
 ### BoosterDataAPI
 
 `string` type with no default value.  This configuration setting can be added to your `ASF.json` config file.  When the `logboosterdata` command is used, booster data will be gathered and sent to the API located at the specified url.
+
+Example:
 
 ```json
 "BoosterDataAPI": "http://localhost/api/boosters",
@@ -208,6 +214,8 @@ You will need to design your API to accept requests and return responses per the
 
 `string` type with no default value.  This configuration setting can be added to your `ASF.json` config file.  When the `logmarketlistings` command is used, market listing data will be gathered and sent to the API located at the specified url.
 
+Example:
+
 ```json
 "MarketListingsAPI": "http://localhost/api/listings",
 ```
@@ -248,6 +256,8 @@ You will need to design your API to accept requests and return responses per the
 ### MarketHistoryAPI
 
 `string` type with no default value.  This configuration setting can be added to your `ASF.json` config file.  When the `logmarkethistory` command is used, market history data will be gathered and sent to the API located at the specified url.
+
+Example:
 
 ```json
 "MarketHistoryAPI": "http://localhost/api/markethistory",
@@ -292,6 +302,8 @@ You will need to design your API to accept requests and return responses per the
 ### InventoryHistoryAPI
 
 `string` type with no default value.  This configuration setting can be added to your `ASF.json` config file.  When the `loginventoryhistory` command is used, inventory history data will be gathered and sent to the API located at the specified url.
+
+Example:
 
 ```json
 "InventoryHistoryAPI": "http://localhost/api/inventoryhistory",
@@ -342,6 +354,8 @@ You will need to design your API to accept requests and return responses per the
 
 `HashSet<uint>` type with defalt value of `[]`.  This configuration setting can be added to your `ASF.json` config file.  When using the `loginventoryhistory` command or `InventoryHistory` IPC interface API endpoint, the results will be filtered to only show inventory history events from these `AppIDs`
 
+Example:
+
 ```json
 "InventoryHistoryAppFilter": [730, 570],
 ```
@@ -351,6 +365,8 @@ You will need to design your API to accept requests and return responses per the
 ### LogDataPageDelay
 
 `uint` type with default value of `15`.  This configuration setting can be added to your `ASF.json` config file.  When using the `loginventoryhistory` or `logmarkethistory` commands to fetch multiple pages, it will add a `Seconds` delay between each page fetch.
+
+Example:
 
 ```json
 "LogDataPageDelay": 15,
