@@ -5,6 +5,8 @@ This plugin provides an easy-to-use interface for turning gems into booster pack
 
 This project is based off of the [Booster Creator Plugin](https://github.com/Ryzhehvost/BoosterCreator) by [Outzzz](https://github.com/Outzzz) and [Ryzhehvost](https://github.com/Ryzhehvost)
 
+:blue_heart: [Check out my other ArchiSteamFarm plugins](https://github.com/stars/Citrinate/lists/archisteamfarm-plugins)
+
 ## Installation
 
 - Download the .zip file from the [latest release](https://github.com/Citrinate/BoosterManager/releases/latest)
