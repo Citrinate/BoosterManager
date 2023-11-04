@@ -27,6 +27,11 @@ namespace BoosterManager {
 							return ResponseBoosterStatus(access, steamID, "ASF");
 						case "BSTATUS" or "BOOSTERSTATUS":
 							return ResponseBoosterStatus(bot, access);
+
+						case "BSA^":
+							return ResponseBoosterStatus(access, steamID, "ASF", true);
+						case "BSTATUS^" or "BOOSTERSTATUS^":
+							return ResponseBoosterStatus(bot, access, true);
 						
 						case "BSTOPALL" or "BOOSTERSTOPALL":
 							return ResponseBoosterStopTime(bot, access, "0");
@@ -363,7 +368,7 @@ namespace BoosterManager {
 			return responses.Count > 0 ? String.Join(Environment.NewLine, responses) : null;
 		}
 
-		private static string? ResponseBoosterStatus(Bot bot, EAccess access) {
+		private static string? ResponseBoosterStatus(Bot bot, EAccess access, bool shortStatus = false) {
 			if (access < EAccess.Master) {
 				return null;
 			}
@@ -372,10 +377,10 @@ namespace BoosterManager {
 				return FormatBotResponse(bot, Strings.BotNotConnected);
 			}
 
-			return BoosterHandler.BoosterHandlers[bot.BotName].GetStatus();
+			return BoosterHandler.BoosterHandlers[bot.BotName].GetStatus(shortStatus);
 		}
 
-		private static string? ResponseBoosterStatus(EAccess access, ulong steamID, string botNames) {
+		private static string? ResponseBoosterStatus(EAccess access, ulong steamID, string botNames, bool shortStatus = false) {
 			if (String.IsNullOrEmpty(botNames)) {
 				throw new ArgumentNullException(nameof(botNames));
 			}
@@ -386,7 +391,7 @@ namespace BoosterManager {
 				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
 			}
 
-			IEnumerable<string?> results = bots.Select(bot => ResponseBoosterStatus(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)));
+			IEnumerable<string?> results = bots.Select(bot => ResponseBoosterStatus(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), shortStatus));
 
 			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
 

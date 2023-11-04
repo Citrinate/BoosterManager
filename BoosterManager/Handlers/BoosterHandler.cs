@@ -111,7 +111,11 @@ namespace BoosterManager {
 			return Commands.FormatBotResponse(Bot, String.Format("Will no longer craft these {0} boosters: {1}", removedGameIDs.Count, String.Join(", ", removedGameIDs)));
 		}
 
-		internal string GetStatus() {
+		internal string GetStatus(bool shortStatus = false) {
+			if (shortStatus) {
+				return Commands.FormatBotResponse(Bot, BoosterQueue.GetShortStatus() ?? BoosterQueue.GetStatus());
+			}
+
 			return Commands.FormatBotResponse(Bot, BoosterQueue.GetStatus());
 		}
 
