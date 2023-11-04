@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using ArchiSteamFarm.IPC.Controllers.Api;
@@ -176,18 +177,23 @@ namespace BoosterManager {
 		/// <summary>
 		///     Retrieves price history for market items.
 		/// </summary>
-		[HttpGet("{botName:required}/GetPriceHistory/{appID:required}/{hashName:required}")]
+		[HttpGet("{botNames:required}/GetPriceHistory/{appID:required}/{hashName:required}")]
 		[SwaggerOperation (Summary = "Retrieves price history for market items.")]
 		[ProducesResponseType(typeof(GenericResponse<JToken>), (int) HttpStatusCode.OK)]
 		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.BadRequest)]
-		public async Task<ActionResult<GenericResponse>> GetPriceHistory(string botName, uint appID, string hashName) {
-			if (string.IsNullOrEmpty(botName)) {
-				throw new ArgumentNullException(nameof(botName));
+		public async Task<ActionResult<GenericResponse>> GetPriceHistory(string botNames, uint appID, string hashName) {
+			if (string.IsNullOrEmpty(botNames)) {
+				throw new ArgumentNullException(nameof(botNames));
 			}
 
-			Bot? bot = Bot.GetBot(botName);
+			HashSet<Bot>? bots = Bot.GetBots(botNames);
+			if ((bots == null) || (bots.Count == 0)) {
+				return BadRequest(new GenericResponse(false, string.Format(Strings.BotNotFound, botNames)));
+			}
+
+			Bot? bot = bots.FirstOrDefault(static bot => bot.IsConnectedAndLoggedOn);
 			if (bot == null) {
-				return BadRequest(new GenericResponse(false, string.Format(Strings.BotNotFound, botName)));
+				return BadRequest(new GenericResponse(false, Strings.BotNotConnected));
 			}
 			
 			if (!bot.IsConnectedAndLoggedOn) {
