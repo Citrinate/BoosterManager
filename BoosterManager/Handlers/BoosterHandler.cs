@@ -20,6 +20,7 @@ namespace BoosterManager {
 		internal static ConcurrentDictionary<string, BoosterHandler> BoosterHandlers = new();
 		private static int DelayBetweenBots = 0; // Delay, in minutes, between when bots will craft boosters
 		internal static bool AllowCraftUntradableBoosters = true;
+		internal static bool AllowCraftUnmarketableBoosters = true;
 
 		private BoosterHandler(Bot bot) {
 			Bot = bot;

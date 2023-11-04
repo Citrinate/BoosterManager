@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Localization;
 using ArchiSteamFarm.Steam;
 
@@ -21,6 +22,10 @@ namespace BoosterManager {
 		internal int BoosterDelay = 0; // Delay, in seconds, added to all booster crafts
 		private readonly BoosterDatabase? BoosterDatabase;
 		internal event Action? OnBoosterInfosUpdated;
+		private static HashSet<uint> MarketableAppIDs = new();
+		private static DateTime? MarketableAppIDsUpdatedAt;
+		private const int MarketableAppIDsUpdateRateMinutes = 5;
+		private static SemaphoreSlim UpdateMarketableAppIDsSemaphore = new SemaphoreSlim(1, 1);
 
 		internal BoosterQueue(Bot bot, BoosterHandler boosterHandler) {
 			Bot = bot;
@@ -105,22 +110,35 @@ namespace BoosterManager {
 
 		internal void AddBooster(uint gameID, BoosterType type) {
 			void handler() {
-				if (BoosterInfos.TryGetValue(gameID, out Steam.BoosterInfo? boosterInfo)) {
+				try {
+					if (!BoosterInfos.TryGetValue(gameID, out Steam.BoosterInfo? boosterInfo)) {
+						Bot.ArchiLogger.LogGenericError(String.Format("Can't craft boosters for {0}", gameID));
+
+						return;
+					}
+
 					if (Boosters.TryGetValue(gameID, out Booster? existingBooster)) {
 						// Re-add a booster that was successfully crafted and is waiting to be cleared out of the queue
 						if (existingBooster.Type == BoosterType.OneTime && existingBooster.WasCrafted) {
 							RemoveBooster(gameID);
 						}
 					}
+
+					if (!BoosterHandler.AllowCraftUnmarketableBoosters && !MarketableAppIDs.Contains(gameID)) {
+						Bot.ArchiLogger.LogGenericError(String.Format("Won't craft boosters for unmarketable {0}", gameID));
+
+						return;
+					}
+
 					Booster newBooster = new Booster(Bot, gameID, type, boosterInfo, this, GetLastCraft(gameID));
 					if (Boosters.TryAdd(gameID, newBooster)) {
 						Bot.ArchiLogger.LogGenericInfo(String.Format("Added {0} to booster queue.", gameID));
 					}
-				} else {
-					Bot.ArchiLogger.LogGenericError(String.Format("Can't craft boosters for {0}", gameID));
+				} finally {
+					OnBoosterInfosUpdated -= handler;
 				}
-				OnBoosterInfosUpdated -= handler;
 			}
+
 			OnBoosterInfosUpdated += handler;
 		}
 
@@ -146,6 +164,10 @@ namespace BoosterManager {
 				return true;
 			}
 
+			if (!await UpdateMarketableAppIDs()) {
+				return false;
+			}
+
 			(BoosterPageResponse? boosterPage, _) = await WebRequest.GetBoosterPage(Bot).ConfigureAwait(false);
 			if (boosterPage == null) {
 				Bot.ArchiLogger.LogNullError(boosterPage);
@@ -162,6 +184,37 @@ namespace BoosterManager {
 			OnBoosterInfosUpdated?.Invoke();
 
 			return true;
+		}
+
+		private static async Task<bool> UpdateMarketableAppIDs() {
+			await UpdateMarketableAppIDsSemaphore.WaitAsync().ConfigureAwait(false);
+			try {
+				if (MarketableAppIDsUpdatedAt != null && MarketableAppIDsUpdatedAt.Value.AddMinutes(MarketableAppIDsUpdateRateMinutes) > DateTime.Now) {
+					return true;
+				}
+
+				var bot = Bot.BotsReadOnly?.Values.FirstOrDefault(x => x.IsConnectedAndLoggedOn);
+				if (bot == null) {
+					ASF.ArchiLogger.LogNullError(bot);
+					
+					return false;
+				}
+
+				var appList = await WebRequest.GetAppList(bot).ConfigureAwait(false);
+				if (appList == null) {
+					ASF.ArchiLogger.LogNullError(appList);
+
+					return false;
+				}
+
+				MarketableAppIDs = appList.Keys.ToHashSet();
+				MarketableAppIDsUpdatedAt = DateTime.Now;
+				ASF.ArchiLogger.LogGenericDebug("Marketable IDs updated");
+
+				return true;
+			} finally {
+				UpdateMarketableAppIDsSemaphore.Release();
+			}
 		}
 
 		private async Task<Boolean> CraftBooster(Booster booster) {

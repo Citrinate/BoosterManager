@@ -9,6 +9,7 @@ using ArchiSteamFarm.Steam.Integration;
 using ArchiSteamFarm.Web;
 using ArchiSteamFarm.Web.Responses;
 using Newtonsoft.Json.Linq;
+using SteamKit2;
 
 namespace BoosterManager {
 	internal static class WebRequest {
@@ -131,6 +132,21 @@ namespace BoosterManager {
 			Uri request = new(ArchiWebHandler.SteamCommunityURL, String.Format("/market/pricehistory/?appid={0}&market_hash_name={1}", appID, hashName));
 			ObjectResponse<JToken>? priceHistoryResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<JToken>(request).ConfigureAwait(false);
 			return priceHistoryResponse?.Content;
+		}
+
+		internal static async Task<Dictionary<uint, string>?> GetAppList(Bot bot) {
+			WebAPI.AsyncInterface steamAppsService = bot.SteamConfiguration.GetAsyncWebAPIInterface("ISteamApps");
+			KeyValue? response = await steamAppsService.CallAsync(HttpMethod.Get, "GetAppList", 2).ConfigureAwait(false);
+			if (response == null) {
+				return null;
+			}
+
+			Dictionary<uint, string> appList = new();
+			foreach (var app in response["apps"].Children) {
+				appList.TryAdd(app["appid"].AsUnsignedInteger(), app["name"].AsString()!);
+			}
+
+			return appList;
 		}
 	}
 }
