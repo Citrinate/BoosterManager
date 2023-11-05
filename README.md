@@ -1,11 +1,11 @@
 # Booster Manager Plugin for ArchiSteamFarm
 
+[![Check out my other ArchiSteamFarm plugins](https://img.shields.io/badge/Check%20out%20my%20other%20ArchiSteamFarm%20plugins-blue?style=social&logo=github)](https://github.com/stars/Citrinate/lists/archisteamfarm-plugins)
+
 ## Introduction
 This plugin provides an easy-to-use interface for turning gems into booster packs as well as various features for managing inventories and market listings.   
 
 This project is based off of the [Booster Creator Plugin](https://github.com/Rudokhvist/BoosterCreator) by [Outzzz](https://github.com/Outzzz) and [Rudokhvist](https://github.com/Rudokhvist)
-
-:blue_heart: [Check out my other ArchiSteamFarm plugins](https://github.com/stars/Citrinate/lists/archisteamfarm-plugins)
 
 ## Installation
 
