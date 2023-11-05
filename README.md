@@ -3,7 +3,7 @@
 ## Introduction
 This plugin provides an easy-to-use interface for turning gems into booster packs as well as various features for managing inventories and market listings.   
 
-This project is based off of the [Booster Creator Plugin](https://github.com/Ryzhehvost/BoosterCreator) by [Outzzz](https://github.com/Outzzz) and [Ryzhehvost](https://github.com/Ryzhehvost)
+This project is based off of the [Booster Creator Plugin](https://github.com/Rudokhvist/BoosterCreator) by [Outzzz](https://github.com/Outzzz) and [Rudokhvist](https://github.com/Rudokhvist)
 
 :blue_heart: [Check out my other ArchiSteamFarm plugins](https://github.com/stars/Citrinate/lists/archisteamfarm-plugins)
 
@@ -26,9 +26,11 @@ Command | Access | Description
 --- | --- | ---
 `booster [Bots] <AppIDs>`|`Master`|Adds `AppIDs` to the given bot's booster queue.  `AppIDs` added to the booster queue this way will be crafted one time as soon as they become available.
 `bstatus [Bots]`|`Master`|Prints the status of the given bot's booster queue.
+`bstatus^ [Bots]`|`Master`|Prints the condensed status of the given bot's booster queue.
 `bstop [Bots] <AppIDs>`|`Master`|Removes `AppIDs` from the given bot's booster queue.
 `bstoptime [Bots] <Hours>`|`Master`|Removes everything from the given bot's booster queue that will take more than the given `Hours` to craft.
 `bstopall [Bots]`|`Master`|Removes everything from the given bot's booster queue.
+`brate [Level]`|`Master`|Prints the optimal booster drop rate for an account at `Level`
 
 ### Inventory Commands
 
@@ -107,6 +109,7 @@ Command | Alias |
 Command | Alias |
 --- | --- |
 `bstatus ASF`|`bsa`
+`bstatus^ ASF`|`bsa^`
 `gems ASF`|`ga`
 `keys ASF`|`ka`
 `listings ASF`|`lia`
@@ -132,6 +135,16 @@ Command | Alias |
 
 ```json
 "AllowCraftUntradableBoosters": false,
+```
+
+---
+
+### AllowCraftUnmarketableBoosters
+
+`bool` type with default value of `true`.  This configuration setting can be added to your `ASF.json` config file.  If set to `false`, the plugin will not craft unmarketable boosters.
+
+```json
+"AllowCraftUnmarketableBoosters": false,
 ```
 
 ---
@@ -385,4 +398,6 @@ API | Method | Parameters | Description
 `/API/BoosterManager/{botName}/MarketHistory`|`GET`|`page`|Retrieves market history data for given bot
 `/API/BoosterManager/{botName}/InventoryHistory`|`GET`|`startTime`, `timeFrac`, `s`|Retrieves inventory history data for given bot
 `/API/BoosterManager/{botName}/GetBadgeInfo/{appID}`|`GET`|`border`|Retrieves badge info for given bot
-`/API/BoosterManager/{botName}/GetPriceHistory/{appID}/{hashName}`|`GET`||Retrieves price history for market items
+`/API/BoosterManager/{botNames}/GetPriceHistory/{appID}/{hashName}`|`GET`||Retrieves price history for market items [^1]
+
+[^1]: Responses are not dependent on the account used to make these requests.  You may provide multiple `botNames`, and the first available bot will be used to make the request.
