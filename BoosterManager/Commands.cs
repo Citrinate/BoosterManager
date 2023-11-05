@@ -128,6 +128,9 @@ namespace BoosterManager {
 							return ResponseBooster(access, steamID, args[1], Utilities.GetArgsAsText(args, 2, ","), bot);
 						case "BOOSTER" or "BOOSTERS":
 							return ResponseBooster(bot, access, steamID, args[1]);
+
+						case "BRATE" or "BOOSTERRATE":
+							return ResponseBoosterRate(access, args[1]);
 						
 						case "BSTATUS" or "BOOSTERSTATUS":
 							return ResponseBoosterStatus(access, steamID, args[1]);
@@ -366,6 +369,27 @@ namespace BoosterManager {
 			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
 
 			return responses.Count > 0 ? String.Join(Environment.NewLine, responses) : null;
+		}
+
+		private static string? ResponseBoosterRate(EAccess access, string levelString) {
+			if (access < EAccess.Master) {
+				return null;
+			}
+
+			if (!uint.TryParse(levelString, out uint level)) {
+				return String.Format(Strings.ErrorParsingObject, nameof(levelString));
+			}
+
+			// https://steamcommunity.com/groups/BadgesCollectors/discussions/0/630800444048297919/?ctp=19#c2686880925148364340
+			// If you're getting boosters less often than than this: your booster drop rate is capped by the number of booster eligible games
+			// If you're getting boosters around as often as this: your booster drop rate is capped by your level
+			double hoursPerBooster = (14*24) / (1 + (level / 50.0));
+
+			if (hoursPerBooster < 24) {
+				return String.Format("A level {0} account can get a booster drop every {1:0.##} hours", level, hoursPerBooster);
+			} else {
+				return String.Format("A level {0} account can get a booster drop every {1:0.##} days", level, hoursPerBooster / 24);
+			}
 		}
 
 		private static string? ResponseBoosterStatus(Bot bot, EAccess access, bool shortStatus = false) {
