@@ -35,11 +35,6 @@ namespace BoosterManager {
 						BoosterHandler.AllowCraftUntradableBoosters = configProperty.Value.ToObject<bool>();
 						break;
 					}
-					case "AllowCraftUnmarketableBoosters" when configProperty.Value.Type == JTokenType.Boolean: {
-						ASF.ArchiLogger.LogGenericInfo("Allow Craft Unmarketable Boosters : " + configProperty.Value);
-						BoosterHandler.AllowCraftUnmarketableBoosters = configProperty.Value.ToObject<bool>();
-						break;
-					}
 					case "BoosterDelayBetweenBots" when configProperty.Value.Type == JTokenType.Integer: {
 						ASF.ArchiLogger.LogGenericInfo("Booster Delay Between Bots : " + configProperty.Value);
 						BoosterHandler.UpdateBotDelays((int)configProperty.Value.ToObject<uint>());
