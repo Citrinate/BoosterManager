@@ -139,16 +139,6 @@ Command | Alias |
 
 ---
 
-### AllowCraftUnmarketableBoosters
-
-`bool` type with default value of `true`.  This configuration setting can be added to your `ASF.json` config file.  If set to `false`, the plugin will not craft unmarketable boosters.
-
-```json
-"AllowCraftUnmarketableBoosters": false,
-```
-
----
-
 ### GamesToBooster
 
 `HashSet<uint>` type with default value of `[]`.  This configuration setting can be added to your individual bot config files.  It will automatically add all of the `AppIDs` to that bot's booster queue, and will automatically re-queue them after they've been crafted.
