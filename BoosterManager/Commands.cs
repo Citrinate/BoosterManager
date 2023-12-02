@@ -8,6 +8,7 @@ using ArchiSteamFarm.Localization;
 using ArchiSteamFarm.Steam.Data;
 using ArchiSteamFarm.Steam.Security;
 using System.ComponentModel;
+using System.Collections.Immutable;
 
 namespace BoosterManager {
 	internal static class Commands {
@@ -23,6 +24,9 @@ namespace BoosterManager {
 			switch (args.Length) {
 				case 1:
 					switch (args[0].ToUpperInvariant()) {
+						case "BDROP" or "BDROPS":
+							return await ResponseBoosterDrops(bot, access).ConfigureAwait(false);
+
 						case "BSA":
 							return ResponseBoosterStatus(access, steamID, "ASF");
 						case "BSTATUS" or "BOOSTERSTATUS":
@@ -128,6 +132,9 @@ namespace BoosterManager {
 							return ResponseBooster(access, steamID, args[1], Utilities.GetArgsAsText(args, 2, ","), bot);
 						case "BOOSTER" or "BOOSTERS":
 							return ResponseBooster(bot, access, steamID, args[1]);
+
+						case "BDROP" or "BDROPS":
+							return await ResponseBoosterDrops(access, steamID, args[1]).ConfigureAwait(false);
 
 						case "BRATE" or "BOOSTERRATE":
 							return ResponseBoosterRate(access, args[1]);
@@ -365,6 +372,41 @@ namespace BoosterManager {
 			}
 
 			IEnumerable<string?> results = bots.Select(bot => ResponseBooster(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), steamID, targetGameIDs, respondingBot));
+
+			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
+
+			return responses.Count > 0 ? String.Join(Environment.NewLine, responses) : null;
+		}
+
+		private static async Task<string?> ResponseBoosterDrops(Bot bot, EAccess access) {
+			if (access < EAccess.Master) {
+				return null;
+			}
+
+			if (!bot.IsConnectedAndLoggedOn) {
+				return FormatBotResponse(bot, Strings.BotNotConnected);
+			}
+
+			ImmutableHashSet<uint>? eligibleBoosters = await bot.ArchiWebHandler.GetBoosterEligibility().ConfigureAwait(false);
+			if (eligibleBoosters == null) {
+				return FormatBotResponse(bot, "Failed to get eligible boosters");
+			}
+
+			return FormatBotResponse(bot, String.Format("Bot has {0} booster eligible games", eligibleBoosters.Count));
+		}
+
+		private static async Task<string?> ResponseBoosterDrops(EAccess access, ulong steamID, string botNames) {
+			if (String.IsNullOrEmpty(botNames)) {
+				throw new ArgumentNullException(nameof(botNames));
+			}
+
+			HashSet<Bot>? bots = Bot.GetBots(botNames);
+
+			if ((bots == null) || (bots.Count == 0)) {
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
+			}
+
+			IEnumerable<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseBoosterDrops(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)))).ConfigureAwait(false);
 
 			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
 
