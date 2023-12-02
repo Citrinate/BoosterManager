@@ -31,6 +31,7 @@ Command | Access | Description
 `bstoptime [Bots] <Hours>`|`Master`|Removes everything from the given bot's booster queue that will take more than the given `Hours` to craft.
 `bstopall [Bots]`|`Master`|Removes everything from the given bot's booster queue.
 `brate [Level]`|`Master`|Prints the optimal booster drop rate for an account at `Level`
+`bdrops [Bots]`|`Master`|Prints the number of booster eligible games for the given bots
 
 ### Inventory Commands
 
