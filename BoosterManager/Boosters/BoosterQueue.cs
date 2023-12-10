@@ -85,9 +85,7 @@ namespace BoosterManager {
 				}
 
 				Bot.ArchiLogger.LogGenericInfo(String.Format("Successfuly created booster from {0}", booster.GameID));
-				if (CheckIfFinished(booster.Type)) {
-					return;
-				}
+				CheckIfFinished(booster.Type);
 
 				booster = GetNextCraftableBooster(BoosterType.Any);
 				if (booster == null) {
