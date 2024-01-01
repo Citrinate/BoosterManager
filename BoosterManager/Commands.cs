@@ -246,11 +246,11 @@ namespace BoosterManager {
 							return await ResponseSendItemToBot(access, steamID, Utilities.GetArgsAsText(args, 1, ","), Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.GemIdentifier.ToString()).ConfigureAwait(false);
 						
 						case "LOOTITEMS" or "LOOTITEM" or "ALOOTITEMS" or "ALOOTITEM" when args.Length > 4:
-							return await ResponseSendItemToBot(access, steamID, args[2], args[2], args[3], Utilities.GetArgsAsText(args, 4, " ")).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, args[1], args[2], args[3], Utilities.GetArgsAsText(args, 4, " ")).ConfigureAwait(false);
 						case "ULOOTITEMS" or "ULOOTITEM" when args.Length > 4:
-							return await ResponseSendItemToBot(access, steamID, args[2], args[2], args[3], Utilities.GetArgsAsText(args, 4, " "), marketable: false).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, args[1], args[2], args[3], Utilities.GetArgsAsText(args, 4, " "), marketable: false).ConfigureAwait(false);
 						case "MLOOTITEMS" or "MLOOTITEM" when args.Length > 4:
-							return await ResponseSendItemToBot(access, steamID, args[2], args[2], args[3], Utilities.GetArgsAsText(args, 4, " "), marketable: true).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, args[1], args[2], args[3], Utilities.GetArgsAsText(args, 4, " "), marketable: true).ConfigureAwait(false);
 						
 						case "LOOTKEYS" or "LOOTKEY":
 							return await ResponseSendItemToBot(access, steamID, Utilities.GetArgsAsText(args, 1, ","), KeyHandler.KeyAppID.ToString(), KeyHandler.KeyContextID.ToString(), ItemIdentifier.KeyIdentifier.ToString()).ConfigureAwait(false);
