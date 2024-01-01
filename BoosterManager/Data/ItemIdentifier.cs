@@ -1,5 +1,6 @@
 using System;
 using System.Net;
+using ArchiSteamFarm.Steam.Data;
 
 namespace BoosterManager {
 	internal sealed class ItemIdentifier {
@@ -7,54 +8,138 @@ namespace BoosterManager {
 		internal ulong? ContextID = null;
 		internal ulong? ClassID = null;
 		internal string? TextID = null;
-		internal string IdentityString;
-		
-		internal ItemIdentifier(string identityString, bool requireNumericIDs = false, bool requireClassID = false) {
-			this.IdentityString = identityString;
+		internal Asset.EType? Type = null;
+		internal bool? Marketable = null;
 
-			string[] ids = identityString.Split("::");
+		internal const string Delimiter = "&&";
+		internal const string Separator = "::";
+
+		internal static readonly ItemIdentifier GemIdentifier = new ItemIdentifier() { AppID = Asset.SteamAppID, ContextID = Asset.SteamCommunityContextID, ClassID = GemHandler.GemsClassID };
+		internal static readonly ItemIdentifier SackIdentifier = new ItemIdentifier() { AppID = Asset.SteamAppID, ContextID = Asset.SteamCommunityContextID, ClassID = GemHandler.SackOfGemsClassID };
+		internal static readonly ItemIdentifier GemAndSackIdentifier = new ItemIdentifier() { Type = Asset.EType.SteamGems };
+		internal static readonly ItemIdentifier CardIdentifier = new ItemIdentifier() { Type = Asset.EType.TradingCard };
+		internal static readonly ItemIdentifier FoilIdentifier = new ItemIdentifier() { Type = Asset.EType.FoilTradingCard };
+		internal static readonly ItemIdentifier BoosterIdentifier = new ItemIdentifier() { Type = Asset.EType.BoosterPack };
+		internal static readonly ItemIdentifier KeyIdentifier = new ItemIdentifier() { TextID = KeyHandler.MarketHash };
+
+		internal ItemIdentifier() {}
+		
+		internal ItemIdentifier(string identityString) {
+			string[] ids = identityString.Split(Separator);
 			uint appID;
 			ulong contextID;
-			ulong classID;
-			if (ids.Length == 2
-				&& uint.TryParse(ids[0], out appID)
-				&& ulong.TryParse(ids[1], out contextID)
-				&& !requireClassID
-			) {
+			if (ids.Length == 2 && uint.TryParse(ids[0], out appID) && ulong.TryParse(ids[1], out contextID)) {
 				// Format: AppID::ContextID
-				this.AppID = appID;
-				this.ContextID = contextID;
-			} else if (ids.Length == 3
-				&& uint.TryParse(ids[0], out appID)
-				&& ulong.TryParse(ids[1], out contextID)
-				&& ulong.TryParse(ids[2], out classID)
-			) {
+				AppID = appID;
+				ContextID = contextID;
+			} else if (ids.Length == 3 && uint.TryParse(ids[0], out appID) && ulong.TryParse(ids[1], out contextID) && ulong.TryParse(ids[2], out ulong classID)) {
 				// Format: AppID::ContextID::ClassID
-				this.AppID = appID;
-				this.ContextID = contextID;
-				this.ClassID = classID;
-			} else if (!requireNumericIDs) {
-				// Assumed format: ItemName, ItemType, or HashName
-				this.TextID = identityString;
+				AppID = appID;
+				ContextID = contextID;
+				ClassID = classID;
+			} else if (ids.Length == 2 && ids[0] == "Type" && Enum.TryParse<Asset.EType>(ids[1], out Asset.EType type)) {
+				// Format: Type::TypeEnum
+				// Note: This format is useful internally, but not publicly documented
+				// This is because it only works with inventory items and not items listed on the marketplace
+				Type = type;
 			} else {
-				throw new FormatException();
+				// Assumed format: ItemName, ItemType, or HashName
+				TextID = identityString;
 			}
 		}
 
-		internal bool isStringMatch(string text, bool urlDecode = false) {
-			if (urlDecode) {
-				return text.Equals(WebUtility.UrlDecode(TextID));
+		public override string ToString() {
+			if (AppID != null && ContextID != null) {
+				if (ClassID != null) {
+					return String.Format("{1}{0}{2}{0}{3}", Separator, AppID, ContextID, ClassID);
+				} else {
+					return String.Format("{1}{0}{2}", Separator, AppID, ContextID);
+				}
 			}
 
-			return text.Equals(TextID);
+			if (Type != null) {
+				return String.Format("Type{0}{1}", Separator, Type.ToString());
+			}
+
+			if (TextID != null) {
+				return TextID;
+			}
+
+			return "Invalid";
 		}
 
-		internal bool isNumericIDMatch(uint appID, ulong contextID, ulong classID) {
-			return (
-				(this.ClassID == null || classID == this.ClassID)
-				&& contextID == this.ContextID
-				&& appID == this.AppID
-			);
+		internal bool IsItemMatch(Asset item) {
+			if (AppID == null && ContextID == null && ClassID == null && Type == null && TextID == null) {
+				return false;
+			}
+
+			if (AppID != null && item.AppID != AppID) {
+				return false;
+			}
+
+			if (ContextID != null && item.ContextID != ContextID) {
+				return false;
+			}
+
+			if (ClassID != null && item.ClassID != ClassID) {
+				return false;
+			}
+
+			if (Type != null && item.Type != Type) {
+				return false;
+			}
+
+			if (TextID != null) {
+				string? name = item.AdditionalPropertiesReadOnly?["name"].ToObject<string>();
+				string? marketName = item.AdditionalPropertiesReadOnly?["market_name"].ToObject<string>();
+				string? marketHashName = item.AdditionalPropertiesReadOnly?["market_hash_name"].ToObject<string>();
+				string? type = item.AdditionalPropertiesReadOnly?["type"].ToObject<string>();
+				
+				if ((name == null || !name.Contains(TextID))
+					&& (marketName == null || !marketName.Contains(TextID))
+					&& (marketHashName == null || (!marketHashName.Contains(TextID) && !marketHashName.Contains(WebUtility.UrlDecode(TextID))))
+					&& (type == null || !type.Contains(TextID))
+				) {
+					return false;
+				}
+			}
+
+			if (Marketable != null && item.Marketable != Marketable) {
+				return false;
+			}
+
+			return true;
+		}
+
+		internal bool IsItemListingMatch(ItemListing item) {
+			if (AppID == null && ContextID == null && ClassID == null && TextID == null) {
+				return false;
+			}
+
+			if (AppID != null && item.AppID != AppID) {
+				return false;
+			}
+
+			if (ContextID != null && item.ContextID != ContextID) {
+				return false;
+			}
+
+			if (ClassID != null && item.ClassID != ClassID) {
+				return false;
+			}
+
+			if (TextID != null) {
+				if (!item.Name.Equals(TextID)
+					&& !item.MarketName.Equals(TextID)
+					&& !item.MarketHashName.Equals(TextID)
+					&& !item.MarketHashName.Equals(WebUtility.UrlDecode(TextID))
+					&& !item.Type.Equals(TextID)
+				) {
+					return false;
+				}
+			}
+			
+			return true;
 		}
 	}
 }

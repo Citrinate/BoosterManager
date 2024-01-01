@@ -9,12 +9,12 @@ using ArchiSteamFarm.Steam.Data;
 namespace BoosterManager {
 	internal static class GemHandler {
 		internal const ulong GemsClassID = 667924416;
-		internal const ulong SackOfGemsClassID = 667933237; 
+		internal const ulong SackOfGemsClassID = 667933237;
 
 		internal static async Task<string> GetGemCount(Bot bot) {
 			HashSet<Asset> inventory;
 			try {
-				inventory = await bot.ArchiWebHandler.GetInventoryAsync().Where(item => item.Type == Asset.EType.SteamGems).ToHashSetAsync().ConfigureAwait(false);
+				inventory = await bot.ArchiWebHandler.GetInventoryAsync().Where(item => ItemIdentifier.GemAndSackIdentifier.IsItemMatch(item)).ToHashSetAsync().ConfigureAwait(false);
 			} catch (Exception e) {
 				bot.ArchiLogger.LogGenericException(e);
 				return Commands.FormatBotResponse(bot, Strings.WarningFailed);
@@ -41,7 +41,7 @@ namespace BoosterManager {
 		internal static async Task<string> UnpackGems(Bot bot) {
 			HashSet<Asset> sacks;
 			try {
-				sacks = await bot.ArchiWebHandler.GetInventoryAsync().Where(item => item.ClassID == SackOfGemsClassID && (BoosterHandler.AllowCraftUntradableBoosters || item.Tradable)).ToHashSetAsync().ConfigureAwait(false);
+				sacks = await bot.ArchiWebHandler.GetInventoryAsync().Where(item => ItemIdentifier.SackIdentifier.IsItemMatch(item) && (BoosterHandler.AllowCraftUntradableBoosters || item.Tradable)).ToHashSetAsync().ConfigureAwait(false);
 			} catch (Exception e) {
 				bot.ArchiLogger.LogGenericException(e);
 				return Commands.FormatBotResponse(bot, Strings.WarningFailed);

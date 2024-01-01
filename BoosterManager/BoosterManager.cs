@@ -8,7 +8,6 @@ using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Plugins.Interfaces;
 using Newtonsoft.Json.Linq;
 using ArchiSteamFarm.Steam.Exchange;
-using ArchiSteamFarm.Steam.Data;
 
 namespace BoosterManager {
 	[Export(typeof(IPlugin))]
@@ -116,7 +115,7 @@ namespace BoosterManager {
 			// Only trigger when recieving gems
 			if (!tradeResults.Any(
 				tradeResult => tradeResult is { Result: ParseTradeResult.EResult.Accepted, Confirmed: true } 
-					&& tradeResult.ItemsToReceive?.Any(item => item.Type == Asset.EType.SteamGems && item.ClassID == GemHandler.GemsClassID) == true
+					&& tradeResult.ItemsToReceive?.Any(item => ItemIdentifier.GemIdentifier.IsItemMatch(item)) == true
 				)
 			) {
 				return Task.CompletedTask;

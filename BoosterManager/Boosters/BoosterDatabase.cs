@@ -56,7 +56,6 @@ namespace BoosterManager {
 			}
 
 			boosterDatabase.FilePath = filePath;
-			ASF.ArchiLogger.LogGenericInfo(String.Format("Booster Database Loaded: {0}, {1} boosters loaded", filePath, boosterDatabase.BoosterLastCrafts.Count));
 
 			return boosterDatabase;
 		}

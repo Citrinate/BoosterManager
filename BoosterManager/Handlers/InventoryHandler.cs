@@ -5,45 +5,42 @@ using System.Threading.Tasks;
 using ArchiSteamFarm.Localization;
 using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Steam.Data;
-using ArchiSteamFarm.Steam.Security;
 
 namespace BoosterManager {
 	internal static class InventoryHandler {
-		internal static async Task<string> BatchSendItemsWithAmounts(Bot sender, List<(Bot reciever, uint amount)> recievers, uint appID, ulong contextID, Asset.EType type, ulong? classID = null, string? marketHash = null, bool allowUnmarketable = false) {
+		internal static async Task<string> SendItemToMultipleBots(Bot sender, List<(Bot reciever, uint amount)> recievers, uint appID, ulong contextID, ItemIdentifier itemIdentifier) {
+			// Send Amounts A,B,... of Item X to Bots C,D,... from Bot E  
+			// 	Amount A of Item X to Bot C from Bot E
+			// 	Amount B of Item X to Bot D from Bot E
+
 			HashSet<Asset> itemStacks;
 			try {
-				itemStacks = await sender.ArchiWebHandler.GetInventoryAsync(appID: appID, contextID: contextID).Where(item => 
-					item.Tradable 
-					&& item.Type == type 
-					&& (classID == null || item.ClassID == classID) 
-					&& (marketHash == null || ((item.AdditionalPropertiesReadOnly?.ContainsKey("market_hash_name") ?? false) && item.AdditionalPropertiesReadOnly?["market_hash_name"].ToObject<string>() == marketHash)) 
-					&& (allowUnmarketable || item.Marketable)
-				).ToHashSetAsync().ConfigureAwait(false);
+				itemStacks = await sender.ArchiWebHandler.GetInventoryAsync(appID: appID, contextID: contextID).Where(item => itemIdentifier.IsItemMatch(item)).ToHashSetAsync().ConfigureAwait(false);
 			} catch (Exception e) {
 				sender.ArchiLogger.LogGenericException(e);
 				return Commands.FormatBotResponse(sender, Strings.WarningFailed);
 			}
 
 			HashSet<string> responses = new HashSet<string>();
-			uint amountTransfered = 0;
+			uint totalAmountSent = 0;
 
 			foreach ((Bot reciever, uint amount) in recievers) {
-				sender.ArchiLogger.LogGenericInfo(String.Format("Sending {0} items to {1}", amount, reciever.BotName));
-				(bool success, string response) = await SendItemsWithAmounts(sender, itemStacks, reciever, amount, amountTransfered).ConfigureAwait(false);
+				sender.ArchiLogger.LogGenericInfo(String.Format("Sending {0} of {1} to {2}", amount, itemIdentifier.ToString(), reciever.BotName));
+				(bool success, string response) = await SendItem(sender, itemStacks, reciever, amount, totalAmountSent).ConfigureAwait(false);
 				responses.Add(Commands.FormatBotResponse(reciever, response));
 
 				if (success) {
-					sender.ArchiLogger.LogGenericInfo(String.Format("Sent {0} items to {1}", amount, reciever.BotName));
-					amountTransfered += amount;
+					sender.ArchiLogger.LogGenericInfo(String.Format("Sent {0} of {1} to {2}", amount, itemIdentifier.ToString(), reciever.BotName));
+					totalAmountSent += amount;
 				} else {
-					sender.ArchiLogger.LogGenericError(String.Format("Failed to send {0} items to {1}", amount, reciever.BotName));
+					sender.ArchiLogger.LogGenericError(String.Format("Failed to send {0} of {1} to {2}", amount, itemIdentifier.ToString(), reciever.BotName));
 				}
 			}
 
 			return String.Join(Environment.NewLine, responses);
 		}
 
-		private static async Task<(bool, String)> SendItemsWithAmounts(Bot sender, HashSet<Asset> itemStacks, Bot reciever, uint amountToSend, uint amountToSkip = 0) {
+		private static async Task<(bool, String)> SendItem(Bot sender, HashSet<Asset> itemStacks, Bot reciever, uint amountToSend, uint amountToSkip = 0) {
 			if (!reciever.IsConnectedAndLoggedOn) {
 				return (false, Strings.BotNotConnected);
 			}
@@ -74,37 +71,28 @@ namespace BoosterManager {
 			return (success, success ? Strings.BotLootingSuccess : Strings.BotLootingFailed);
 		}
 
-		internal static async Task<string> BatchSendMultipleItemsWithAmounts(Bot sender, HashSet<Bot> recievers, List<(ItemIdentifier itemIdentifier, uint amount)> items) {
-			// Fetch all of the inventories we'll need
-			HashSet<Asset> inventory = new HashSet<Asset>();
-			Dictionary<uint, List<ulong>> fetchedInventories = new Dictionary<uint, List<ulong>>();
-			foreach ((ItemIdentifier itemIdentifier, uint amount) in items) {
-				uint appID = itemIdentifier.AppID!.Value;
-				ulong contextID = itemIdentifier.ContextID!.Value;
-				if (fetchedInventories.ContainsKey(appID) && fetchedInventories[appID].Contains(contextID)) {
-					continue;
-				}
+		internal static async Task<string> SendMultipleItemsToMultipleBots(Bot sender, HashSet<Bot> recievers, uint appID, ulong contextID, List<(ItemIdentifier itemIdentifier, uint amount)> items) {
+			// Send Amounts A,B,... of Items X,Y,... to Bots C,D,... from Bot E
+			// 	Amount A of Item X to Bot C from Bot E
+			// 	Amount B of Item Y to Bot C from Bot E
+			// 	Amount A of Item X to Bot D from Bot E
+			// 	Amount B of Item Y to Bot D from Bot E
 
-				HashSet<Asset> partialInventory;
-				try {
-					partialInventory = await sender.ArchiWebHandler.GetInventoryAsync(appID: appID, contextID: contextID).ToHashSetAsync().ConfigureAwait(false);
-				} catch (Exception e) {
-					sender.ArchiLogger.LogGenericException(e);
-					return Commands.FormatBotResponse(sender, Strings.WarningFailed);
-				}
-
-				inventory.UnionWith(partialInventory);
-				fetchedInventories.TryAdd(appID, new List<ulong>());
-				fetchedInventories[appID].Add(contextID);
+			HashSet<Asset> inventory;
+			try {
+				inventory = await sender.ArchiWebHandler.GetInventoryAsync(appID: appID, contextID: contextID).ToHashSetAsync().ConfigureAwait(false);
+			} catch (Exception e) {
+				sender.ArchiLogger.LogGenericException(e);
+				return Commands.FormatBotResponse(sender, Strings.WarningFailed);
 			}
 
 			// Link each inventory Asset to a matching ItemIdentifier
-			//    Note: It's possible that, depending on what ItemIdentifiers are used, some Assets can match with more than one ItemIdentifier.
-			//    If allowed to happen, we might end up trying to trade the same item multiple times.
+			//	Note: It's possible that, depending on what ItemIdentifiers are used, some Assets can match with more than one ItemIdentifier.
+			//	If allowed to happen, we might end up trying to trade the same item multiple times.
 			List<(HashSet<Asset> itemStacks, ItemIdentifier itemIdentifier, uint amount)> itemStacksWithAmounts = new List<(HashSet<Asset>, ItemIdentifier, uint)>();
 			HashSet<ulong> allAssetIDs = new HashSet<ulong>(); // Used to ensure that no Asset exists in more than one itemStack.  Assets will only be linked to the first matching ItemIdentifier.
 			foreach ((ItemIdentifier itemIdentifier, uint amount) in items) {
-				HashSet<Asset> itemStacks = inventory.Where(item => item.Tradable && itemIdentifier.isNumericIDMatch(item.AppID, item.ContextID, item.ClassID) && !allAssetIDs.Contains(item.AssetID)).ToHashSet();
+				HashSet<Asset> itemStacks = inventory.Where(item => item.Tradable && itemIdentifier.IsItemMatch(item) && !allAssetIDs.Contains(item.AssetID)).ToHashSet();
 				allAssetIDs.UnionWith(itemStacks.Select(x => x.AssetID));
 				itemStacksWithAmounts.Add((itemStacks, itemIdentifier, amount));
 			}
@@ -114,7 +102,7 @@ namespace BoosterManager {
 			uint numRecieversProcessed = 0;
 
 			foreach (Bot reciever in recievers) {
-				(bool success, string response) = await SendMultipleItemsWithAmounts(sender, reciever, itemStacksWithAmounts, numRecieversProcessed).ConfigureAwait(false);
+				(bool success, string response) = await SendMultipleItems(sender, reciever, itemStacksWithAmounts, numRecieversProcessed).ConfigureAwait(false);
 				responses.Add(Commands.FormatBotResponse(reciever, response));
 
 				if (success) {
@@ -128,7 +116,7 @@ namespace BoosterManager {
 			return String.Join(Environment.NewLine, responses);
 		}
 
-		private static async Task<(bool, String)> SendMultipleItemsWithAmounts(Bot sender, Bot reciever, List<(HashSet<Asset> itemStacks, ItemIdentifier itemIdentifier, uint amount)> itemStacksWithAmounts, uint numRecieversProcessed = 0) {
+		private static async Task<(bool, String)> SendMultipleItems(Bot sender, Bot reciever, List<(HashSet<Asset> itemStacks, ItemIdentifier itemIdentifier, uint amount)> itemStacksWithAmounts, uint numRecieversProcessed = 0) {
 			if (!reciever.IsConnectedAndLoggedOn) {
 				return (false, Strings.BotNotConnected);
 			}
@@ -146,13 +134,13 @@ namespace BoosterManager {
 			foreach ((HashSet<Asset> itemStacks, ItemIdentifier itemIdentifier, uint amount) in itemStacksWithAmounts) {
 				HashSet<Asset>? itemsToGive = GetItemsFromStacks(sender, itemStacks, amount, amount * numRecieversProcessed);
 				if (itemsToGive == null) {
-					sender.ArchiLogger.LogGenericInfo(String.Format("Not enough of {0} to send!", itemIdentifier.IdentityString));
-					responses.Add(String.Format("Not enough of {0} to send :steamthumbsdown:", itemIdentifier.IdentityString));
+					sender.ArchiLogger.LogGenericInfo(String.Format("Not enough of {0} to send!", itemIdentifier.ToString()));
+					responses.Add(String.Format("Not enough of {0} to send :steamthumbsdown:", itemIdentifier.ToString()));
 					completeSuccess = false;
 					continue;
 				}
 
-				responses.Add(String.Format("Successfully sent {0} of {1} :steamthumbsup:", amount, itemIdentifier.IdentityString));
+				responses.Add(String.Format("Successfully sent {0} of {1} :steamthumbsup:", amount, itemIdentifier.ToString()));
 				totalItemsToGive.UnionWith(itemsToGive);
 			}
 

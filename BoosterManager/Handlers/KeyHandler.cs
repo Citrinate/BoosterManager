@@ -9,14 +9,13 @@ using ArchiSteamFarm.Steam.Data;
 namespace BoosterManager {
 	internal static class KeyHandler {
 		internal const uint KeyAppID = 440;
-		internal const string MarketHash = "Mann Co. Supply Crate Key";
 		internal const ulong KeyContextID = 2;
-		internal const Asset.EType KeyType = Asset.EType.Unknown;
+		internal const string MarketHash = "Mann Co. Supply Crate Key";
 
 		internal static async Task<string> GetKeyCount(Bot bot) {
 			HashSet<Asset> inventory;
 			try {
-				inventory = await bot.ArchiWebHandler.GetInventoryAsync(appID: KeyAppID, contextID: KeyContextID).Where(item => (item.AdditionalPropertiesReadOnly?.ContainsKey("market_hash_name") ?? false) && item.AdditionalPropertiesReadOnly?["market_hash_name"].ToObject<string>() == MarketHash).ToHashSetAsync().ConfigureAwait(false);
+				inventory = await bot.ArchiWebHandler.GetInventoryAsync(appID: KeyAppID, contextID: KeyContextID).Where(item => ItemIdentifier.KeyIdentifier.IsItemMatch(item)).ToHashSetAsync().ConfigureAwait(false);
 			} catch (Exception e) {
 				bot.ArchiLogger.LogGenericException(e);
 				return Commands.FormatBotResponse(bot, Strings.WarningFailed);

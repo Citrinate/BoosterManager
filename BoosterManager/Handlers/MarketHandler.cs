@@ -164,68 +164,22 @@ namespace BoosterManager {
 
 			Dictionary<string, List<ulong>> filteredListings = new Dictionary<string, List<ulong>>();
 			foreach ((ulong listingID, JObject listing) in listings) {
-				string? name = listing["asset"]?["name"]?.ToString();
-				if (name == null) {
-					bot.ArchiLogger.LogNullError(name);
-
-					return null;
-				}
-
-				string? marketName = listing["asset"]?["market_name"]?.ToString();
-				if (marketName == null) {
-					bot.ArchiLogger.LogNullError(marketName);
-
-					return null;
-				}
-
-				string? marketHashName = listing["asset"]?["market_hash_name"]?.ToString();
-				if (marketHashName == null) {
-					bot.ArchiLogger.LogNullError(marketHashName);
-
-					return null;
-				}
-
-				string? type = listing["asset"]?["type"]?.ToString();
-				if (type == null) {
-					bot.ArchiLogger.LogNullError(type);
-
-					return null;
-				}
-
-				uint? appID = listing["asset"]?["appid"]?.ToObject<uint>();
-				if (appID == null) {
-					bot.ArchiLogger.LogNullError(appID);
-
-					return null;
-				}
-
-				ulong? contextID = listing["asset"]?["contextid"]?.ToObject<ulong>();
-				if (contextID == null) {
-					bot.ArchiLogger.LogNullError(contextID);
-
-					return null;
-				}
-
-				ulong? classID = listing["asset"]?["classid"]?.ToObject<ulong>();
-				if (classID == null) {
-					bot.ArchiLogger.LogNullError(classID);
+				ItemListing item;
+				try {
+					item = new ItemListing(listing);
+				} catch (Exception e) {
+					bot.ArchiLogger.LogGenericException(e);
 
 					return null;
 				}
 
 				foreach (ItemIdentifier itemIdentifier in itemIdentifiers) {
-					if (itemIdentifier.isNumericIDMatch(appID.Value, contextID.Value, classID.Value)
-						|| itemIdentifier.isStringMatch(name)
-						|| itemIdentifier.isStringMatch(marketName)
-						|| itemIdentifier.isStringMatch(marketHashName)
-						|| itemIdentifier.isStringMatch(marketHashName, urlDecode: true)
-						|| itemIdentifier.isStringMatch(type)
-					) {
-						if (!filteredListings.ContainsKey(itemIdentifier.IdentityString)) {
-							filteredListings.Add(itemIdentifier.IdentityString, new List<ulong>());
+					if (itemIdentifier.IsItemListingMatch(item)) {
+						if (!filteredListings.ContainsKey(itemIdentifier.ToString())) {
+							filteredListings.Add(itemIdentifier.ToString(), new List<ulong>());
 						}
 
-						filteredListings[itemIdentifier.IdentityString].Add(listingID);
+						filteredListings[itemIdentifier.ToString()].Add(listingID);
 					}
 				}
 			}
