@@ -35,27 +35,63 @@ Command | Access | Description
 
 ### Inventory Commands
 
+#### Gems
+
 Command | Access | Description
 --- | --- | ---
 `gems [Bots]`|`Master`|Displays the number of gems owned by the given bot.
-`keys [Bots]`|`Master`|Displays the number of "Mann Co. Supply Crate Key" owned by the given bot.
-`lootboosters [Bots]`|`Master`|Sends all marketable booster packs from the given bot to the `Master` user.
-`lootcards [Bots]`|`Master`|Sends all marketable non-foil trading cards from the given bot to the `Master` user.
-`lootfoils [Bots]`|`Master`|Sends all marketable foil trading cards from the given bot to the `Master` user.
 `lootgems [Bots]`|`Master`|Sends all gems from the given bot to the `Master` user.
-`lootitems [Bots] <AppID> <ContextID> [ClassID]`|`Master`|Sends all items with the matching `AppID`, `ContextID`, and `ClassID` from the given bot to the `Master` user.
-`lootkeys [Bots]`|`Master`|Sends all "Mann Co. Supply Crate Key" from the given bot to the `Master` user.
 `lootsacks [Bots]`|`Master`|Sends all "Sack of Gems" from the given bot to the `Master` user.
-`trade2faok [Bot]`|`Master`|Accepts all pending 2FA trade confirmations for given bot instances.
-`transferboosters [Bots] <TargetBot>`|`Master`|Sends all marketable booster packs from the given bot to the given target bot.
-`transfercards [Bots] <TargetBot>`|`Master`|Sends all marketable non-foil trading cards from the given bot to the given target bot.
-`transferfoils [Bots] <TargetBot>`|`Master`|Sends all marketable foil trading cards from the given bot to the given target bot.
 `transfergems [Bot] <TargetBots> <Amounts>`|`Master`|Sends the provided `Amounts` of unpacked gems from the given bot to the given target bot. The `Amounts` specified may be a single amount sent to all target bots, or multiple amounts sent to each target bot respectively.  You may also use `queue` or `q` as an amount to represent the number of gems needed to complete the target bot's booster queue.
-`transferitems <Bots> <TargetBot> <AppID> <ContextID> [ClassID]`|`Master`|Sends all items with the matching `AppID`, `ContextID`, and `ClassID` from the given bot to the given target bot.
-`transferitems^ <Bot> <TargetBots> <Amounts> <ItemIdentifiers>`|`Master`|Sends items matching the [`ItemIdentifiers`](#itemidentifiers) from the given bot to the given target bot. The `Amounts` specified may be a single amount of each item sent, or multiple amounts of each item sent respectively.  The only valid `ItemIdentifiers` for this command are those that begin with `AppID::ContextID`
-`transferkeys [Bot] <TargetBots> <Amounts>`|`Master`|Sends the provided `Amounts` of "Mann Co. Supply Crate Key" from the given bot to the given target bot. The `Amounts` specified may be a single amount sent to all target bots, or multiple amounts sent to each target bot respectively.
+`transfergems^ [Bots] <TargetBot>`|`Master`|Sends all gems from the given bot to the given target bot.
 `transfersacks [Bots] <TargetBot>`|`Master`|Sends all "Sack of Gems" from the given bot to the given target bot.
 `unpackgems [Bots]`|`Master`|Unpacks all "Sack of Gems" owned by the given bot.
+
+#### Boosters
+
+These commands only operate on marketable boosters.  To loot or transfer only unmarketable boosters, add `u` to the start of the command, ex: `ulootboosters`.  To loot or transfer all boosters, add `a` to the start of the command, ex: `alootboosters`
+
+Command | Access | Description
+--- | --- | ---
+`lootboosters [Bots]`|`Master`|Sends all marketable booster packs from the given bot to the `Master` user.
+`transferboosters [Bots] <TargetBot>`|`Master`|Sends all marketable booster packs from the given bot to the given target bot.
+
+#### Cards
+
+These commands only operate on marketable cards.  To loot or transfer only unmarketable cards, add `u` to the start of the command, ex: `ulootcards`.  To loot or transfer all cards, add `a` to the start of the command, ex: `alootcards`
+
+Command | Access | Description
+--- | --- | ---
+`lootcards [Bots]`|`Master`|Sends all marketable non-foil trading cards from the given bot to the `Master` user.
+`lootfoils [Bots]`|`Master`|Sends all marketable foil trading cards from the given bot to the `Master` user.
+`transfercards [Bots] <TargetBot>`|`Master`|Sends all marketable non-foil trading cards from the given bot to the given target bot.
+`transferfoils [Bots] <TargetBot>`|`Master`|Sends all marketable foil trading cards from the given bot to the given target bot.
+
+#### TF2 Keys
+
+Command | Access | Description
+--- | --- | ---
+`keys [Bots]`|`Master`|Displays the number of "Mann Co. Supply Crate Key" owned by the given bot.
+`lootkeys [Bots]`|`Master`|Sends all "Mann Co. Supply Crate Key" from the given bot to the `Master` user.
+`transferkeys [Bot] <TargetBots> <Amounts>`|`Master`|Sends the provided `Amounts` of "Mann Co. Supply Crate Key" from the given bot to the given target bot. The `Amounts` specified may be a single amount sent to all target bots, or multiple amounts sent to each target bot respectively.
+`transferkeys^ [Bots] <TargetBot>`|`Master`|Sends all "Mann Co. Supply Crate Key" from the given bot to the given target bot.
+
+#### Other Items
+
+These commands ignore marketability.  To loot or transfer only marketable items, add `m` to the start of the command, ex: `mlootitems`.  To loot or transfer only unmarketable items, add `u` to the start of the command, ex: `ulootitems`.
+
+Command | Access | Description
+--- | --- | ---
+`lootitems <Bots> <AppID> <ContextID> <ItemIdentifiers>`|`Master`|Sends all items with the matching `AppID`, `ContextID`, and [`ItemIdentifiers`](#itemidentifiers) from the given bot to the `Master` user.
+`transferitems <Bots> <TargetBot> <AppID> <ContextID> <ItemIdentifiers>`|`Master`|Sends all items with the matching `AppID`, `ContextID`, and [`ItemIdentifiers`](#itemidentifiers) from the given bot to the given target bot.
+`transferitems^ <Bot> <TargetBots> <Amounts> <AppID> <ContextID> <ItemIdentifiers>`|`Master`|Sends an amount of items with the matching `AppID`, `ContextID`, and [`ItemIdentifiers`](#itemidentifiers) from the given bot to the given target bot. The `Amounts` specified may be a single amount of each item sent to all target bots, or differing amounts of each item, respectively, sent to all target bots.
+`transferitems% <Bot> <TargetBots> <Amounts> <AppID> <ContextID> <ItemIdentifier>`|`Master`|Sends an amount of an item with the matching `AppID`, `ContextID`, and [`ItemIdentifier`](#itemidentifiers) from the given bot to the given target bot. The `Amounts` specified may be a single amount sent to all target bots, or differing amounts sent to each target bot respectively.
+
+#### Miscellaneous
+
+Command | Access | Description
+--- | --- | ---
+`trade2faok [Bot]`|`Master`|Accepts all pending 2FA trade confirmations for given bot instances.
 
 ### Market Commands
 
@@ -79,17 +115,21 @@ Command | Access | Description
 `logmarkethistory [Bots] [Count] [Start]`|`Master`|Collects market history data from the given bot and sends it to [`MarketHistoryAPI`](#markethistoryapi).  The number of pages of market history may be specified using `Count`, and may begin on the page specified by `Start`
 `logstop [Bots]`|`Master`|Stops any actively running `loginventoryhistory` or `logmarkethistory` commands.
 
+---
+
 ### ItemIdentifiers
 
 An item identifier is an input used in certain commands that allows you to operate on only certain items.  Multiple item identifiers may be provided to a command, but must be separated with `&&` instead of a comma.  The valid formats for an item identifier are as follows:
 
 Format | Example |
 --- | --- |
-`AppID::ContextID`|The identifier `753::6` will match with all Steam Community items
-`AppID::ContextID::ClassID`|The identifier `753::6::667933237` will match all "Sack of Gems" items
 `ItemName`|The identifier `Gems` will match the all "Gems" items
 `ItemType`|The identifier `Steam Gems` will match all "Sack of Gems" and "Gems" items
 `HashName`|The identifiers `753-Sack of Gems` or `753-Sack%20of%20Gems` will match all "Sack of Gems" items
+`AppID::ContextID`|The identifier `753::6` will match with all Steam Community items
+`AppID::ContextID::ClassID`|The identifier `753::6::667933237` will match all "Sack of Gems" items
+
+---
 
 ### Command Aliases
 
