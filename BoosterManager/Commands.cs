@@ -325,6 +325,11 @@ namespace BoosterManager {
 							return await ResponseSendItemToMultipleBots(access, steamID, args[1], args[2], args[3], Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.GemIdentifier.ToString()).ConfigureAwait(false);
 						case "TRANSFERGEMS" or "TRANSFERGEM" when args.Length > 2:
 							return await ResponseSendItemToMultipleBots(bot, access, args[1], args[2], Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.GemIdentifier.ToString()).ConfigureAwait(false);
+
+						case "TRANSFERGEMS^" or "TRANSFERGEM^" when args.Length > 2:
+							return await ResponseSendItemToBot(access, steamID, args[1], Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.GemIdentifier.ToString(), recieverBotName: args[2]).ConfigureAwait(false);
+						case "TRANSFERGEMS^" or "TRANSFERGEM^":
+							return await ResponseSendItemToBot(bot, access, Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.GemIdentifier.ToString(), recieverBotName: args[1]).ConfigureAwait(false);
 						
 						case "TRANSFERITEMS" or "TRANSFERITEM" or "ATRANSFERITEMS" or "ATRANSFERITEM" when args.Length > 5:
 							return await ResponseSendItemToBot(access, steamID, args[1], args[3], args[4], Utilities.GetArgsAsText(args, 5, " "), recieverBotName: args[2]).ConfigureAwait(false);
@@ -351,6 +356,11 @@ namespace BoosterManager {
 							return await ResponseSendItemToMultipleBots(access, steamID, args[1], args[2], args[3], KeyHandler.KeyAppID.ToString(), KeyHandler.KeyContextID.ToString(), ItemIdentifier.KeyIdentifier.ToString()).ConfigureAwait(false);
 						case "TRANSFERKEYS" or "TRANSFERKEY" when args.Length > 2:
 							return await ResponseSendItemToMultipleBots(bot, access, args[1], args[2], KeyHandler.KeyAppID.ToString(), KeyHandler.KeyContextID.ToString(), ItemIdentifier.KeyIdentifier.ToString()).ConfigureAwait(false);
+
+						case "TRANSFERKEYS^" or "TRANSFERKEY^" when args.Length > 2:
+							return await ResponseSendItemToBot(access, steamID, args[1], KeyHandler.KeyAppID.ToString(), KeyHandler.KeyContextID.ToString(), ItemIdentifier.KeyIdentifier.ToString(), recieverBotName: args[2]).ConfigureAwait(false);
+						case "TRANSFERKEYS^" or "TRANSFERKEY^":
+							return await ResponseSendItemToBot(bot, access, KeyHandler.KeyAppID.ToString(), KeyHandler.KeyContextID.ToString(), ItemIdentifier.KeyIdentifier.ToString(), recieverBotName: args[1]).ConfigureAwait(false);
 						
 						case "TRANSFERSACKS" or "TRANSFERSACK" when args.Length > 2:
 							return await ResponseSendItemToBot(access, steamID, args[1], Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.SackIdentifier.ToString(), recieverBotName: args[2]).ConfigureAwait(false);
