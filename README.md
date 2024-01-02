@@ -119,7 +119,7 @@ Command | Access | Description
 
 ### ItemIdentifiers
 
-An item identifier is an input used in certain commands that allows you to operate on only certain items.  Multiple item identifiers may be provided to a command, but must be separated with `&&` instead of a comma.  The valid formats for an item identifier are as follows:
+An item identifier is an input used in certain commands which allows you target specific items or groups of items.  If a command allows for multiple item identifiers, each identifier must be separated with `&&` instead of a comma.  The valid formats for an item identifier are as follows:
 
 Format | Example |
 --- | --- |
