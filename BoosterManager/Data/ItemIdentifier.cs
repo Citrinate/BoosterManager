@@ -24,7 +24,9 @@ namespace BoosterManager {
 
 		internal ItemIdentifier() {}
 		
-		internal ItemIdentifier(string identityString) {
+		internal ItemIdentifier(string identityString, bool? marketable = null) {
+			Marketable = marketable;
+
 			string[] ids = identityString.Split(Separator);
 			uint appID;
 			ulong contextID;

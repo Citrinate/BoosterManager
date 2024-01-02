@@ -1139,10 +1139,7 @@ namespace BoosterManager {
 
 			ItemIdentifier itemIdentifier;
 			try {
-				itemIdentifier = new ItemIdentifier(itemIdentifierAsText);
-				if (marketable != null) {
-					itemIdentifier.Marketable = marketable;
-				}
+				itemIdentifier = new ItemIdentifier(itemIdentifierAsText, marketable);
 			} catch (Exception) {
 				return FormatBotResponse(bot, String.Format("Invalid Item Identifier: {0}", itemIdentifierAsText));
 			}
@@ -1231,10 +1228,7 @@ namespace BoosterManager {
 
 			ItemIdentifier itemIdentifier;
 			try {
-				itemIdentifier = new ItemIdentifier(itemIdentifierAsText);
-				if (marketable != null) {
-					itemIdentifier.Marketable = marketable;
-				}
+				itemIdentifier = new ItemIdentifier(itemIdentifierAsText, marketable);
 			} catch (Exception) {
 				return FormatBotResponse(bot, String.Format("Invalid Item Identifier: {0}", itemIdentifierAsText));
 			}
@@ -1362,10 +1356,7 @@ namespace BoosterManager {
 			List<ItemIdentifier> itemIdentifiers = new List<ItemIdentifier>();
 			foreach (string itemIdentifierString in itemIdentifierStrings) {
 				try {
-					ItemIdentifier itemIdentifier = new ItemIdentifier(itemIdentifierString);
-					if (marketable != null) {
-						itemIdentifier.Marketable = marketable;
-					}
+					ItemIdentifier itemIdentifier = new ItemIdentifier(itemIdentifierString, marketable);
 					itemIdentifiers.Add(itemIdentifier);
 				} catch (Exception) {
 					return FormatBotResponse(bot, String.Format("Invalid Item Identifier: {0}", itemIdentifierString));
