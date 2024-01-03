@@ -665,8 +665,7 @@ namespace BoosterManager {
 			List<ItemIdentifier> itemIdentifiers = new List<ItemIdentifier>();
 			foreach (string itemIdentifierString in itemIdentifierStrings) {
 				try {
-					ItemIdentifier itemIdentifier = new ItemIdentifier(itemIdentifierString);
-					itemIdentifiers.Add(itemIdentifier);
+					itemIdentifiers.Add(new ItemIdentifier(itemIdentifierString));
 				} catch (Exception) {
 					return FormatBotResponse(bot, String.Format("Invalid Item Identifier: {0}", itemIdentifierString));
 				}
@@ -710,8 +709,7 @@ namespace BoosterManager {
 			List<ItemIdentifier> itemIdentifiers = new List<ItemIdentifier>();
 			foreach (string itemIdentifierString in itemIdentifierStrings) {
 				try {
-					ItemIdentifier itemIdentifier = new ItemIdentifier(itemIdentifierString);
-					itemIdentifiers.Add(itemIdentifier);
+					itemIdentifiers.Add(new ItemIdentifier(itemIdentifierString));
 				} catch (Exception) {
 					return FormatBotResponse(bot, String.Format("Invalid Item Identifier: {0}", itemIdentifierString));
 				}
@@ -1108,7 +1106,7 @@ namespace BoosterManager {
 			return await ResponseRemoveListings(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), listingIDs).ConfigureAwait(false);
 		}
 
-		private static async Task<string?> ResponseSendItemToBot(Bot bot, EAccess access, string appIDAsText, string contextIDAsText, string itemIdentifierAsText, bool? marketable = null, string? recieverBotName = null) {
+		private static async Task<string?> ResponseSendItemToBot(Bot bot, EAccess access, string appIDAsText, string contextIDAsText, string itemIdentifiersAsText, bool? marketable = null, string? recieverBotName = null) {
 			if (String.IsNullOrEmpty(appIDAsText)) {
 				throw new ArgumentNullException(nameof(appIDAsText));
 			}
@@ -1133,15 +1131,18 @@ namespace BoosterManager {
 				return FormatBotResponse(bot, String.Format(Strings.ErrorIsInvalid, nameof(contextIDAsText)));
 			}
 
-			if (String.IsNullOrEmpty(itemIdentifierAsText)) {
-				throw new ArgumentNullException(nameof(itemIdentifierAsText));
+			if (String.IsNullOrEmpty(itemIdentifiersAsText)) {
+				throw new ArgumentNullException(nameof(itemIdentifiersAsText));
 			}
 
-			ItemIdentifier itemIdentifier;
-			try {
-				itemIdentifier = new ItemIdentifier(itemIdentifierAsText, marketable);
-			} catch (Exception) {
-				return FormatBotResponse(bot, String.Format("Invalid Item Identifier: {0}", itemIdentifierAsText));
+			List<string> itemIdentifierStrings = itemIdentifiersAsText.Split(ItemIdentifier.Delimiter, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+			List<ItemIdentifier> itemIdentifiers = new List<ItemIdentifier>();
+			foreach (string itemIdentifierString in itemIdentifierStrings) {
+				try {
+					itemIdentifiers.Add(new ItemIdentifier(itemIdentifierString, marketable));
+				} catch (Exception) {
+					return FormatBotResponse(bot, String.Format("Invalid Item Identifier: {0}", itemIdentifierString));
+				}
 			}
 
 			ulong targetSteamID = 0;
@@ -1163,12 +1164,12 @@ namespace BoosterManager {
 				}
 			}
 
-			(bool success, string message) = await bot.Actions.SendInventory(appID: appID, contextID: contextID, targetSteamID: targetSteamID, filterFunction: item => itemIdentifier.IsItemMatch(item)).ConfigureAwait(false);
+			(bool success, string message) = await bot.Actions.SendInventory(appID: appID, contextID: contextID, targetSteamID: targetSteamID, filterFunction: item => itemIdentifiers.Any(itemIdentifier => itemIdentifier.IsItemMatch(item))).ConfigureAwait(false);
 
 			return FormatBotResponse(bot, success ? message : String.Format(Strings.WarningFailedWithError, message));
 		}
 
-		private static async Task<string?> ResponseSendItemToBot(EAccess access, ulong steamID, string senderBotNames, string appIDAsText, string contextIDAsText, string itemIdentifierAsText, bool? marketable = null, string? recieverBotName = null) {
+		private static async Task<string?> ResponseSendItemToBot(EAccess access, ulong steamID, string senderBotNames, string appIDAsText, string contextIDAsText, string itemIdentifiersAsText, bool? marketable = null, string? recieverBotName = null) {
 			if (String.IsNullOrEmpty(senderBotNames)) {
 				throw new ArgumentNullException(nameof(senderBotNames));
 			}
@@ -1182,7 +1183,7 @@ namespace BoosterManager {
 			// Send All of Item X to Bot C from Bots E,F,...
 			// 	All of Item X to Bot C from Bot E
 			// 	All of Item X to Bot C from Bot F
-			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseSendItemToBot(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), appIDAsText, contextIDAsText, itemIdentifierAsText, marketable, recieverBotName))).ConfigureAwait(false);
+			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseSendItemToBot(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), appIDAsText, contextIDAsText, itemIdentifiersAsText, marketable, recieverBotName))).ConfigureAwait(false);
 
 			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
 
@@ -1329,19 +1330,28 @@ namespace BoosterManager {
 				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, recieverBotNames)) : null;
 			}
 
-			string[] itemIdentifierStrings = itemIdentifiersAsText.Split(ItemIdentifier.Delimiter, StringSplitOptions.RemoveEmptyEntries).Distinct().ToArray();
+			List<string> itemIdentifierStrings = itemIdentifiersAsText.Split(ItemIdentifier.Delimiter, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
+			List<ItemIdentifier> itemIdentifiers = new List<ItemIdentifier>();
+			foreach (string itemIdentifierString in itemIdentifierStrings) {
+				try {
+					itemIdentifiers.Add(new ItemIdentifier(itemIdentifierString, marketable));
+				} catch (Exception) {
+					return FormatBotResponse(bot, String.Format("Invalid Item Identifier: {0}", itemIdentifierString));
+				}
+			}
+			
 			string[] amountStrings = amountsAsText.Split(",", StringSplitOptions.RemoveEmptyEntries);
 
 			if (amountStrings.Length == 0) {
 				return FormatBotResponse(bot, String.Format(Strings.ErrorIsEmpty, nameof(amountStrings)));
 			}
 
-			if (amountStrings.Length == 1 && itemIdentifierStrings.Length > 1) {
-				amountStrings = Enumerable.Repeat(amountStrings[0], itemIdentifierStrings.Length).ToArray();
+			if (amountStrings.Length == 1 && itemIdentifierStrings.Count > 1) {
+				amountStrings = Enumerable.Repeat(amountStrings[0], itemIdentifierStrings.Count).ToArray();
 			}
 				
-			if (amountStrings.Length != itemIdentifierStrings.Length) {
-				return FormatBotResponse(bot, String.Format("Number of items ({0}) does not match number of item amounts ({1})", itemIdentifierStrings.Length, amountStrings.Length));
+			if (amountStrings.Length != itemIdentifierStrings.Count) {
+				return FormatBotResponse(bot, String.Format("Number of items ({0}) does not match number of item amounts ({1})", itemIdentifierStrings.Count, amountStrings.Length));
 			}
 
 			List<uint> amounts = new List<uint>();
@@ -1351,16 +1361,6 @@ namespace BoosterManager {
 				}
 
 				amounts.Add(amountNum);
-			}
-
-			List<ItemIdentifier> itemIdentifiers = new List<ItemIdentifier>();
-			foreach (string itemIdentifierString in itemIdentifierStrings) {
-				try {
-					ItemIdentifier itemIdentifier = new ItemIdentifier(itemIdentifierString, marketable);
-					itemIdentifiers.Add(itemIdentifier);
-				} catch (Exception) {
-					return FormatBotResponse(bot, String.Format("Invalid Item Identifier: {0}", itemIdentifierString));
-				}
 			}
 
 			List<(ItemIdentifier, uint)> items = Zip(itemIdentifiers, amounts).ToList();
