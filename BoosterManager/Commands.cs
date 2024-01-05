@@ -1257,7 +1257,7 @@ namespace BoosterManager {
 			int botIndex = 0;
 			foreach (string amount in amountStrings) {
 				if (!uint.TryParse(amount, out uint amountNum)) {
-					if (itemIdentifier.Type == Asset.EType.SteamGems && (amount.ToUpperInvariant() == "QUEUE" || amount.ToUpperInvariant() == "Q")) {
+					if (itemIdentifier.ClassID == GemHandler.GemsClassID && (amount.ToUpperInvariant() == "QUEUE" || amount.ToUpperInvariant() == "Q")) {
 						amountNum = BoosterHandler.BoosterHandlers[recieverBots.ElementAt(botIndex).BotName].GetGemsNeeded();
 					} else {
 						return FormatBotResponse(bot, String.Format(Strings.ErrorParsingObject, nameof(amountNum)));
