@@ -82,8 +82,8 @@ These commands ignore marketability.  To loot or transfer only marketable items,
 
 Command | Access | Description
 --- | --- | ---
-`lootitems <Bots> <AppID> <ContextID> <ItemIdentifier>`|`Master`|Sends all items with the matching `AppID`, `ContextID`, and [`ItemIdentifier`](#itemidentifiers) from the given bot to the `Master` user.
-`transferitems <Bots> <TargetBot> <AppID> <ContextID> <ItemIdentifier>`|`Master`|Sends all items with the matching `AppID`, `ContextID`, and [`ItemIdentifier`](#itemidentifiers) from the given bot to the given target bot.
+`lootitems <Bots> <AppID> <ContextID> <ItemIdentifiers>`|`Master`|Sends all items with the matching `AppID`, `ContextID`, and any of [`ItemIdentifiers`](#itemidentifiers) from the given bot to the `Master` user.
+`transferitems <Bots> <TargetBot> <AppID> <ContextID> <ItemIdentifiers>`|`Master`|Sends all items with the matching `AppID`, `ContextID`, and any of [`ItemIdentifiers`](#itemidentifiers) from the given bot to the given target bot.
 `transferitems^ <Bot> <TargetBots> <Amounts> <AppID> <ContextID> <ItemIdentifiers>`|`Master`|Sends an amount of items with the matching `AppID`, `ContextID`, and any of [`ItemIdentifiers`](#itemidentifiers) from the given bot to the given target bot. The `Amounts` specified may be a single amount of each item sent to all target bots, or differing amounts of each item, respectively, sent to all target bots.
 `transferitems% <Bot> <TargetBots> <Amounts> <AppID> <ContextID> <ItemIdentifier>`|`Master`|Sends an amount of an item with the matching `AppID`, `ContextID`, and [`ItemIdentifier`](#itemidentifiers) from the given bot to the given target bot. The `Amounts` specified may be a single amount sent to all target bots, or differing amounts sent to each target bot respectively.
 
