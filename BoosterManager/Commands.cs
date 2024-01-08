@@ -8,6 +8,7 @@ using ArchiSteamFarm.Localization;
 using ArchiSteamFarm.Steam.Data;
 using System.ComponentModel;
 using System.Collections.Immutable;
+using System.Reflection;
 
 namespace BoosterManager {
 	internal static class Commands {
@@ -138,6 +139,18 @@ namespace BoosterManager {
 						case "TRADE2FAOK" or "T2FAOK":
 							return await Response2FAOK(bot, access, Confirmation.EConfirmationType.Trade).ConfigureAwait(false);
 
+						case "TCA" or "TCHECKA" or "TRADECHECKA":
+							return ResponseTradeCheck(access, steamID, "ASF");
+						case "TRADECHECK" or "TCHECK" or "TC":
+							return ResponseTradeCheck(bot, access);
+
+						case "TIAA" or "TINCAA" or "TRADESINCOMINGAA" or "TRADEINCOMINGAA" or "TRADESINCOMMINGAA" or "TRADEINCOMMINGAA" or "TRADEIAA" or "TRADESIAA" or "TRADESINCAA" or "TRADEINCAA":
+							return await ResponseTradeCount(access, steamID, "ASF", "ASF").ConfigureAwait(false);
+						case "TIA" or "TINCA" or "TRADESINCOMINGA" or "TRADEINCOMINGA" or "TRADESINCOMMINGA" or "TRADEINCOMMINGA" or "TRADEIA" or "TRADESIA" or "TRADESINCA" or "TRADEINCA":
+							return await ResponseTradeCount(access, steamID, "ASF").ConfigureAwait(false);
+						case "TI" or "TINC" or "TRADESINCOMING" or "TRADEINCOMING" or "TRADESINCOMMING" or "TRADEINCOMMING" or "TRADEI" or "TRADESI" or "TRADESINC" or "TRADEINC":
+							return await ResponseTradeCount(bot, access).ConfigureAwait(false);
+
 						case "UNPACKGEMS" or "UNPACKGEM":
 							return await ResponseUnpackGems(bot, access).ConfigureAwait(false);
 						
@@ -263,6 +276,14 @@ namespace BoosterManager {
 						
 						case "TRADE2FAOK" or "T2FAOK":
 							return await Response2FAOK(access, steamID, args[1], Confirmation.EConfirmationType.Trade).ConfigureAwait(false);
+
+						case "TRADECHECK" or "TCHECK" or "TC":
+							return ResponseTradeCheck(access, steamID, args[1]);
+
+						case "TI" or "TINC" or "TRADESINCOMING" or "TRADEINCOMING" or "TRADESINCOMMING" or "TRADEINCOMMING" or "TRADEI" or "TRADESI" or "TRADESINC" or "TRADEINC" when args.Length > 2:
+							return await ResponseTradeCount(access, steamID, args[1], args[2]).ConfigureAwait(false);
+						case "TI" or "TINC" or "TRADESINCOMING" or "TRADEINCOMING" or "TRADESINCOMMING" or "TRADEINCOMMING" or "TRADEI" or "TRADESI" or "TRADESINC" or "TRADEINC":
+							return await ResponseTradeCount(access, steamID, args[1]).ConfigureAwait(false);
 						
 						case "TBA" or "MTBA":
 							return await ResponseSendItemToBot(access, steamID, "ASF", Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.BoosterIdentifier.ToString(), marketable: true, recieverBotName: args[1]).ConfigureAwait(false);
@@ -1380,6 +1401,100 @@ namespace BoosterManager {
 			}
 
 			return await ResponseSendMultipleItemsToMultipleBots(sender, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(sender, access, steamID), recieverBotNames, amountsAsText, appIDAsText, contextIDAsText, itemIdentifiersAsText, marketable).ConfigureAwait(false);
+		}
+
+		private static string? ResponseTradeCheck(Bot bot, EAccess access) {
+			if (access < EAccess.Master) {
+				return null;
+			}
+
+			if (!bot.IsConnectedAndLoggedOn) {
+				return FormatBotResponse(bot, Strings.BotNotConnected);
+			}
+
+			MethodInfo? OnTradeCheckTimer = typeof(Bot).GetMethods(BindingFlags.NonPublic|BindingFlags.Public|BindingFlags.Instance).FirstOrDefault(x => x.Name == "OnTradeCheckTimer");
+
+			if (OnTradeCheckTimer == null) {
+				return FormatBotResponse(bot, "Plugin failed to find OnTradeCheckTimer method");
+			}
+
+			OnTradeCheckTimer.Invoke(bot, new object[] { Type.Missing });
+
+			return FormatBotResponse(bot, "Attempting to handle any incoming trades");
+		}
+
+		private static string? ResponseTradeCheck(EAccess access, ulong steamID, string botNames) {
+			if (String.IsNullOrEmpty(botNames)) {
+				throw new ArgumentNullException(nameof(botNames));
+			}
+
+			HashSet<Bot>? bots = Bot.GetBots(botNames);
+
+			if ((bots == null) || (bots.Count == 0)) {
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
+			}
+
+			IEnumerable<string?> results = bots.Select(bot => ResponseTradeCheck(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)));
+
+			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
+
+			return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
+		}
+
+		private static async Task<string?> ResponseTradeCount(Bot bot, EAccess access, string? fromBotNamesAndIDs = null) {
+			if (access < EAccess.Master) {
+				return null;
+			}
+
+			if (!bot.IsConnectedAndLoggedOn) {
+				return FormatBotResponse(bot, Strings.BotNotConnected);
+			}
+
+			HashSet<TradeOffer>? tradeOffers = await bot.ArchiWebHandler.GetTradeOffers(true, true, false, true).ConfigureAwait(false);
+
+			if (tradeOffers == null) {
+				return FormatBotResponse(bot, "Failed to fetch incoming trades");
+			}
+
+			if (fromBotNamesAndIDs != null) {
+				string[] botNamesAndIDs = fromBotNamesAndIDs.Split(",", StringSplitOptions.RemoveEmptyEntries);
+				List<ulong> steamIDs = new();
+
+				foreach (string botNameOrID in botNamesAndIDs) {
+					HashSet<Bot>? bots = Bot.GetBots(botNameOrID);
+					if (bots != null && bots.Count != 0) {
+						foreach(Bot b in bots) {
+							steamIDs.Add(b.SteamID);
+						}
+					} else if (ulong.TryParse(botNameOrID, out ulong steamID)) {
+						steamIDs.Add(steamID);
+					} else {
+						return FormatBotResponse(bot, String.Format("'From' value is not a bot name or a SteamID: {0}", botNameOrID));
+					}
+				}
+
+				return FormatBotResponse(bot, String.Format("Bot has {0} incoming trades from: {1}", tradeOffers.Where(offer => steamIDs.Contains(offer.OtherSteamID64)).Count(), fromBotNamesAndIDs));
+			}
+
+			return FormatBotResponse(bot, String.Format("Bot has {0} incoming trades", tradeOffers.Count));
+		}
+
+		private static async Task<string?> ResponseTradeCount(EAccess access, ulong steamID, string botNames, string? fromBotNamesAndIDs = null) {
+			if (String.IsNullOrEmpty(botNames)) {
+				throw new ArgumentNullException(nameof(botNames));
+			}
+
+			HashSet<Bot>? bots = Bot.GetBots(botNames);
+
+			if ((bots == null) || (bots.Count == 0)) {
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
+			}
+
+			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseTradeCount(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), fromBotNamesAndIDs))).ConfigureAwait(false);
+
+			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
+
+			return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
 		}
 
 		private static async Task<string?> ResponseUnpackGems(Bot bot, EAccess access) {
