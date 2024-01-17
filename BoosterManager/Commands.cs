@@ -271,8 +271,12 @@ namespace BoosterManager {
 						case "LOOTSACKS" or "LOOTSACK":
 							return await ResponseSendItemToBot(access, steamID, Utilities.GetArgsAsText(args, 1, ","), Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.SackIdentifier.ToString()).ConfigureAwait(false);
 						
+						case "MARKET2FAOK" or "M2FAOK" when args.Length > 2:
+							return await Response2FAOK(access, steamID, args[1], Confirmation.EConfirmationType.Market, args[2]).ConfigureAwait(false);
 						case "MARKET2FAOK" or "M2FAOK":
 							return await Response2FAOK(access, steamID, args[1], Confirmation.EConfirmationType.Market).ConfigureAwait(false);
+						case "MARKET2FAOKA" or "M2FAOKA":
+							return await Response2FAOK(access, steamID, "ASF", Confirmation.EConfirmationType.Market, args[1]).ConfigureAwait(false);
 						
 						case "TRADE2FAOK" or "T2FAOK":
 							return await Response2FAOK(access, steamID, args[1], Confirmation.EConfirmationType.Trade).ConfigureAwait(false);
@@ -409,7 +413,7 @@ namespace BoosterManager {
 			}
 		}
 
-		private static async Task<string?> Response2FAOK(Bot bot, EAccess access, Confirmation.EConfirmationType acceptedType) {
+		private static async Task<string?> Response2FAOK(Bot bot, EAccess access, Confirmation.EConfirmationType acceptedType, string? minutesAsText = null) {
 			if (access < EAccess.Master) {
 				return null;
 			}
@@ -422,12 +426,35 @@ namespace BoosterManager {
 				return FormatBotResponse(bot, Strings.BotNoASFAuthenticator);
 			}
 
-			(bool success, _, string message) = await bot.Actions.HandleTwoFactorAuthenticationConfirmations(true, acceptedType).ConfigureAwait(false);
+			string? repeatMessage = null;
+			if (minutesAsText != null && acceptedType == Confirmation.EConfirmationType.Market) {
+				if (!uint.TryParse(minutesAsText, out uint minutes)) {
+					return String.Format(Strings.ErrorParsingObject, nameof(minutesAsText));
+				}
 
-			return FormatBotResponse(bot, success ? message : string.Format(Strings.WarningFailedWithError, message));
+				if (minutes == 0) {
+					if (BoosterHandler.BoosterHandlers[bot.BotName].StopMarketTimer()) {
+						return FormatBotResponse(bot, "Repetition cancelled");
+					} else {
+						return FormatBotResponse(bot, "Repetition was not running");
+					}
+				} else {
+					BoosterHandler.BoosterHandlers[bot.BotName].StartMarketTimer(minutes);
+					repeatMessage = String.Format("This action will repeat again every {0} minutes.  To cancel, send the command: !m2faok {1} 0", minutes, bot.BotName);
+				}
+			}
+			
+			(bool success, _, string message) = await bot.Actions.HandleTwoFactorAuthenticationConfirmations(true, acceptedType).ConfigureAwait(false);
+			string twofacMessage = success ? message : String.Format(Strings.WarningFailedWithError, message);
+
+			if (repeatMessage != null) {
+				return FormatBotResponse(bot, String.Format("{0}. {1}", twofacMessage, repeatMessage));
+			}
+
+			return FormatBotResponse(bot, twofacMessage);
 		}
 
-		private static async Task<string?> Response2FAOK(EAccess access, ulong steamID, string botNames, Confirmation.EConfirmationType acceptedType) {
+		private static async Task<string?> Response2FAOK(EAccess access, ulong steamID, string botNames, Confirmation.EConfirmationType acceptedType, string? minutesAsText = null) {
 			if (String.IsNullOrEmpty(botNames)) {
 				throw new ArgumentNullException(nameof(botNames));
 			}
@@ -438,7 +465,7 @@ namespace BoosterManager {
 				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
 			}
 
-			IList<string?> results = await Utilities.InParallel(bots.Select(bot => Response2FAOK(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), acceptedType))).ConfigureAwait(false);
+			IList<string?> results = await Utilities.InParallel(bots.Select(bot => Response2FAOK(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), acceptedType, minutesAsText))).ConfigureAwait(false);
 
 			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
 

@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using ArchiSteamFarm.Localization;
 using ArchiSteamFarm.Steam;
+using ArchiSteamFarm.Steam.Data;
 using Newtonsoft.Json.Linq;
 
 namespace BoosterManager {
@@ -185,6 +187,11 @@ namespace BoosterManager {
 			}
 
 			return filteredListings;
+		}
+
+		internal static async Task AcceptMarketConfirmations(Bot bot) {
+			(bool success, _, string message) = await bot.Actions.HandleTwoFactorAuthenticationConfirmations(true, Confirmation.EConfirmationType.Market).ConfigureAwait(false);
+			bot.ArchiLogger.LogGenericInfo(success ? message : String.Format(Strings.WarningFailedWithError, message));
 		}
 	}
 }

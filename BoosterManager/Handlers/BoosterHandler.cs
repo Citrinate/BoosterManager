@@ -20,6 +20,7 @@ namespace BoosterManager {
 		internal static ConcurrentDictionary<string, BoosterHandler> BoosterHandlers = new();
 		private static int DelayBetweenBots = 0; // Delay, in minutes, between when bots will craft boosters
 		internal static bool AllowCraftUntradableBoosters = true;
+		private Timer? MarketRepeatTimer = null;
 
 		private BoosterHandler(Bot bot) {
 			Bot = bot;
@@ -30,6 +31,7 @@ namespace BoosterManager {
 
 		public void Dispose() {
 			BoosterQueue.Dispose();
+			MarketRepeatTimer?.Dispose();
 		}
 
 		internal static void AddHandler(Bot bot) {
@@ -189,6 +191,27 @@ namespace BoosterManager {
 			// Refresh gems count
 			BoosterQueue.OnBoosterInfosUpdated += BoosterQueue.ForceUpdateBoosterInfos;
 			BoosterQueue.Start();
+		}
+
+		internal bool StopMarketTimer() {
+			if (MarketRepeatTimer == null) {
+				return false;
+			}
+
+			MarketRepeatTimer.Change(Timeout.Infinite, Timeout.Infinite);
+			MarketRepeatTimer.Dispose();
+			MarketRepeatTimer = null;
+
+			return true;
+		}
+
+		internal void StartMarketTimer(uint minutes) {
+			StopMarketTimer();
+			MarketRepeatTimer = new Timer(async e => await MarketHandler.AcceptMarketConfirmations(Bot).ConfigureAwait(false),
+				null, 
+				TimeSpan.FromMinutes(minutes), 
+				TimeSpan.FromMinutes(minutes)
+			);
 		}
 
 		private static int GetMillisecondsFromNow(DateTime then) => Math.Max(0, (int) (then - DateTime.Now).TotalMilliseconds);
