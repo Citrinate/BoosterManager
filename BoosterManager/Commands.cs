@@ -531,7 +531,7 @@ namespace BoosterManager {
 				return FormatBotResponse(bot, Strings.BotNotConnected);
 			}
 
-			ImmutableHashSet<uint>? eligibleBoosters = await bot.ArchiWebHandler.GetBoosterEligibility().ConfigureAwait(false);
+			var eligibleBoosters = await bot.ArchiWebHandler.GetBoosterEligibility().ConfigureAwait(false);
 			if (eligibleBoosters == null) {
 				return FormatBotResponse(bot, "Failed to get eligible boosters");
 			}
