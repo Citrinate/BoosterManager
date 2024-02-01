@@ -92,6 +92,8 @@ Command | Access | Description
 Command | Access | Description
 --- | --- | ---
 `trade2faok [Bot]`|`Master`|Accepts all pending 2FA trade confirmations for given bot instances.
+`tradecheck [Bot]`|`Master`|Attempt to handle any incoming trades for the given bot using ASF's [trading logic](https://github.com/JustArchiNET/ArchiSteamFarm/wiki/Trading#logic).
+`tradesincoming [Bot] [From]`|`Master`|Displays the number of incoming trades for the given bot, optionally filtered to only count trades `From` the given bot names or 64-bit SteamIDs.
 
 ### Market Commands
 
@@ -101,7 +103,7 @@ Command | Access | Description
 `findandremovelistings <Bots> <ItemIdentifiers>`|`Master`|Removes any market listing belonging to the given bot and matching any of the [`ItemIdentifiers`](#itemidentifiers).
 `listings [Bots]`|`Master`|Displays the total value of all market listings owned by the given bot.
 `removelistings [Bot] <ListingIDs>`|`Master`|Removes market `ListingIDs` belonging to the given bot.
-`market2faok [Bot]`|`Master`|Accepts all pending 2FA market confirmations for given bot instances.
+`market2faok [Bot] [Minutes]`|`Master`|Accepts all pending 2FA market confirmations for given bot instances.  Optionally repeat this action once every `Minutes`.  To cancel any repetition, set `Minutes` to 0.
 `value [Bots] [BalanceLimit]`|`Master`|Displays the combined wallet balance and total value of all market listings owned by the given bot.  The maximum allowed balance in your region may be provided as `BalanceLimit`, a whole number, and it will instead display how close the given bot is to reaching that limit.
 
 ### Log Commands
@@ -137,8 +139,8 @@ Most pluralized commands also have a non-pluralized alias; ex: `lootboosters` ha
 
 Command | Alias |
 --- | --- |
-`findlistings`|`flistings`, `findl`
-`findandremovelistings`|`frlistings`, `findremovel`
+`findlistings`|`fl`
+`findandremovelistings`|`frl`
 `removelistings`|`rlistings`, `removel`
 `logboosterdata`|`logbd`
 `loginventoryhistory`|`logih`
@@ -146,6 +148,8 @@ Command | Alias |
 `logmarkethistory`|`logmh`
 `market2faok`|`m2faok`
 `trade2faok`|`t2faok`
+`tradecheck`|`tc`
+`tradesincoming`|`ti`
 
 Command | Alias |
 --- | --- |
@@ -161,8 +165,11 @@ Command | Alias |
 `lootgems ASF`|`lga`
 `lootkeys ASF`|`lka`
 `lootsacks ASF`|`lsa`
-`market2faok ASF`|`m2faoka`
+`market2faok ASF [Minutes]`|`m2faoka [Minutes]`
 `trade2faok ASF`|`t2faoka`
+`tradecheck ASF`|`tca`
+`tradesincoming ASF [From]`|`tia [From]`
+`tradesincoming ASF ASF`|`tiaa`
 `transferboosters ASF <TargetBot>`|`tba <TargetBot>`
 `transfercards ASF <TargetBot>`|`tca <TargetBot>`
 `transferfoils ASF <TargetBot>`|`tfa <TargetBot>`
