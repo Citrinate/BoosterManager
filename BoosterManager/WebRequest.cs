@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Net.Http;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Steam.Data;
@@ -128,7 +127,7 @@ namespace BoosterManager {
 		}
 
 		internal static async Task<JToken?> GetPriceHistory(Bot bot, uint appID, string hashName) {
-			Uri request = new(ArchiWebHandler.SteamCommunityURL, String.Format("/market/pricehistory/?appid={0}&market_hash_name={1}", appID, WebUtility.UrlEncode(hashName)));
+			Uri request = new(ArchiWebHandler.SteamCommunityURL, String.Format("/market/pricehistory/?appid={0}&market_hash_name={1}", appID, Uri.EscapeDataString(hashName)));
 			ObjectResponse<JToken>? priceHistoryResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<JToken>(request).ConfigureAwait(false);
 			return priceHistoryResponse?.Content;
 		}
