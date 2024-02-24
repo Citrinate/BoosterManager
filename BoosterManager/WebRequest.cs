@@ -1,13 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Text.Json;
 using System.Threading.Tasks;
+using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Steam.Data;
 using ArchiSteamFarm.Steam.Integration;
 using ArchiSteamFarm.Web;
 using ArchiSteamFarm.Web.Responses;
-using Newtonsoft.Json.Linq;
 
 namespace BoosterManager {
 	internal static class WebRequest {
@@ -19,7 +20,9 @@ namespace BoosterManager {
 				BoosterPageResponse boosterPageResponse = new BoosterPageResponse(bot, boosterPage?.Content);
 
 				return (boosterPageResponse, request);
-			} catch (Exception) {
+			} catch (Exception e) {
+				ASF.ArchiLogger.LogGenericException(e);
+				
 				return (null, request);
 			}
 		}
@@ -120,15 +123,15 @@ namespace BoosterManager {
 			return response.Content;
 		}
 
-		internal static async Task<JToken?> GetBadgeInfo(Bot bot, uint appID, uint border = 0) {
+		internal static async Task<JsonDocument?> GetBadgeInfo(Bot bot, uint appID, uint border = 0) {
 			Uri request = new(ArchiWebHandler.SteamCommunityURL, String.Format("/profiles/{0}/ajaxgetbadgeinfo/{1}?border={2}", bot.SteamID, appID, border));
-			ObjectResponse<JToken>? badgeInfoResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<JToken>(request).ConfigureAwait(false);
+			ObjectResponse<JsonDocument>? badgeInfoResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<JsonDocument>(request).ConfigureAwait(false);
 			return badgeInfoResponse?.Content;
 		}
 
-		internal static async Task<JToken?> GetPriceHistory(Bot bot, uint appID, string hashName) {
+		internal static async Task<JsonDocument?> GetPriceHistory(Bot bot, uint appID, string hashName) {
 			Uri request = new(ArchiWebHandler.SteamCommunityURL, String.Format("/market/pricehistory/?appid={0}&market_hash_name={1}", appID, Uri.EscapeDataString(hashName)));
-			ObjectResponse<JToken>? priceHistoryResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<JToken>(request).ConfigureAwait(false);
+			ObjectResponse<JsonDocument>? priceHistoryResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<JsonDocument>(request).ConfigureAwait(false);
 			return priceHistoryResponse?.Content;
 		}
 	}

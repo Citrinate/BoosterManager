@@ -92,10 +92,10 @@ namespace BoosterManager {
 			}
 
 			if (TextID != null) {
-				string? name = item.AdditionalPropertiesReadOnly?["name"].ToObject<string>();
-				string? marketName = item.AdditionalPropertiesReadOnly?["market_name"].ToObject<string>();
-				string? marketHashName = item.AdditionalPropertiesReadOnly?["market_hash_name"].ToObject<string>();
-				string? type = item.AdditionalPropertiesReadOnly?["type"].ToObject<string>();
+				string? name = item.AdditionalPropertiesReadOnly?["name"].GetString();
+				string? marketName = item.AdditionalPropertiesReadOnly?["market_name"].GetString();
+				string? marketHashName = item.AdditionalPropertiesReadOnly?["market_hash_name"].GetString();
+				string? type = item.AdditionalPropertiesReadOnly?["type"].GetString();
 				
 				if ((name == null || !name.Contains(TextID))
 					&& (marketName == null || !marketName.Contains(TextID))

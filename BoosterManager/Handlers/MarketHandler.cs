@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Localization;
 using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Steam.Data;
-using Newtonsoft.Json.Linq;
 
 namespace BoosterManager {
 	internal static class MarketHandler {
@@ -34,15 +34,15 @@ namespace BoosterManager {
 		}
 
 		private static async Task<uint?> GetMarketListingsValue(Bot bot) {
-			Dictionary<ulong, JObject>? listings = await GetFullMarketListings(bot).ConfigureAwait(false);
+			Dictionary<ulong, JsonObject>? listings = await GetFullMarketListings(bot).ConfigureAwait(false);
 
 			if (listings == null) {
 				return null;
 			}
 
 			uint listingsValue = 0;
-			foreach (JObject listing in listings.Values) {
-				uint? price = listing["price"]?.ToObject<uint>();
+			foreach (JsonObject listing in listings.Values) {
+				uint? price = listing["price"]?.GetValue<uint>();
 				if (price == null) {
 					bot.ArchiLogger.LogNullError(price);
 
@@ -106,8 +106,8 @@ namespace BoosterManager {
 			return await RemoveListings(bot, listingIDs).ConfigureAwait(false);
 		}
 
-		private static async Task<Dictionary<ulong, JObject>?> GetFullMarketListings(Bot bot, uint delayInMilliseconds = 5000) {
-			Dictionary<ulong, JObject>? listings = null;
+		private static async Task<Dictionary<ulong, JsonObject>?> GetFullMarketListings(Bot bot, uint delayInMilliseconds = 5000) {
+			Dictionary<ulong, JsonObject>? listings = null;
 			uint totalListings = 0;
 			uint listingsCollected = 0;
 			do {
@@ -128,27 +128,27 @@ namespace BoosterManager {
 					break;
 				}
 
-				if (marketListings.Listings.GetType() != typeof(JArray)) {
-					bot.ArchiLogger.LogGenericError(String.Format("Unexpected listings type: {0}", marketListings.Listings.GetType()));
-
-					return null;
-				}
-
 				totalListings = marketListings.NumActiveListings;
 
 				if (listings == null) {
-					listings = new Dictionary<ulong, JObject>((int)totalListings);
+					listings = new Dictionary<ulong, JsonObject>((int)totalListings);
 				}
 
-				foreach (JObject listing in marketListings.Listings) {
-					ulong? listingid = listing["listingid"]?.ToObject<ulong>();
+				foreach (JsonNode? listing in marketListings.Listings) {
+					if (listing == null) {
+						bot.ArchiLogger.LogNullError(listing);
+						
+						return null;
+					}
+
+					ulong? listingid = listing["listingid"]?.GetValue<ulong>();
 					if (listingid == null) {
 						bot.ArchiLogger.LogNullError(listingid);
 						
 						return null;
 					}
 					
-					if (listings.TryAdd(listingid.Value, listing)) {
+					if (listings.TryAdd(listingid.Value, listing.AsObject())) {
 						listingsCollected++;
 					}
 				}
@@ -158,14 +158,14 @@ namespace BoosterManager {
 		}
 
 		private static async Task<Dictionary<string, List<ulong>>?> GetListingIDsFromIdentifiers(Bot bot, List<ItemIdentifier> itemIdentifiers) {
-			Dictionary<ulong, JObject>? listings = await GetFullMarketListings(bot).ConfigureAwait(false);
+			Dictionary<ulong, JsonObject>? listings = await GetFullMarketListings(bot).ConfigureAwait(false);
 
 			if (listings == null) {
 				return null;
 			}
 
 			Dictionary<string, List<ulong>> filteredListings = new Dictionary<string, List<ulong>>();
-			foreach ((ulong listingID, JObject listing) in listings) {
+			foreach ((ulong listingID, JsonObject listing) in listings) {
 				ItemListing item;
 				try {
 					item = new ItemListing(listing);

@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Plugins.Interfaces;
-using Newtonsoft.Json.Linq;
 using ArchiSteamFarm.Steam.Exchange;
+using System.Text.Json;
+using ArchiSteamFarm.Helpers.Json;
 
 namespace BoosterManager {
 	[Export(typeof(IPlugin))]
@@ -22,51 +23,51 @@ namespace BoosterManager {
 
 		public async Task<string?> OnBotCommand(Bot bot, EAccess access, string message, string[] args, ulong steamID = 0) => await Commands.Response(bot, access, steamID, message, args).ConfigureAwait(false);
 
-		public Task OnASFInit(IReadOnlyDictionary<string, JToken>? additionalConfigProperties = null) {
+		public Task OnASFInit(IReadOnlyDictionary<string, JsonElement>? additionalConfigProperties = null) {
 			if (additionalConfigProperties == null) {
 				return Task.FromResult(0);
 			}
 
-			foreach (KeyValuePair<string, JToken> configProperty in additionalConfigProperties) {
+			foreach (KeyValuePair<string, JsonElement> configProperty in additionalConfigProperties) {
 				switch (configProperty.Key) {
-					case "AllowCraftUntradableBoosters" when configProperty.Value.Type == JTokenType.Boolean: {
+					case "AllowCraftUntradableBoosters" when (configProperty.Value.ValueKind == JsonValueKind.True || configProperty.Value.ValueKind == JsonValueKind.False): {
 						ASF.ArchiLogger.LogGenericInfo("Allow Craft Untradable Boosters : " + configProperty.Value);
-						BoosterHandler.AllowCraftUntradableBoosters = configProperty.Value.ToObject<bool>();
+						BoosterHandler.AllowCraftUntradableBoosters = configProperty.Value.GetBoolean();
 						break;
 					}
-					case "BoosterDelayBetweenBots" when configProperty.Value.Type == JTokenType.Integer: {
+					case "BoosterDelayBetweenBots" when configProperty.Value.ValueKind == JsonValueKind.Number: {
 						ASF.ArchiLogger.LogGenericInfo("Booster Delay Between Bots : " + configProperty.Value);
-						BoosterHandler.UpdateBotDelays((int)configProperty.Value.ToObject<uint>());
+						BoosterHandler.UpdateBotDelays(configProperty.Value.GetInt32());
 						break;
 					}
-					case "BoosterDataAPI" when configProperty.Value.Type == JTokenType.String: {
+					case "BoosterDataAPI" when configProperty.Value.ValueKind == JsonValueKind.String: {
 						ASF.ArchiLogger.LogGenericInfo("Booster Data API : " + configProperty.Value);
-						DataHandler.BoosterDataAPI = new Uri(configProperty.Value.ToObject<string>()!);
+						DataHandler.BoosterDataAPI = new Uri(configProperty.Value.GetString()!);
 						break;
 					}
-					case "InventoryHistoryAPI" when configProperty.Value.Type == JTokenType.String: {
+					case "InventoryHistoryAPI" when configProperty.Value.ValueKind == JsonValueKind.String: {
 						ASF.ArchiLogger.LogGenericInfo("Inventory History API : " + configProperty.Value);
-						DataHandler.InventoryHistoryAPI = new Uri(configProperty.Value.ToObject<string>()!);
+						DataHandler.InventoryHistoryAPI = new Uri(configProperty.Value.GetString()!);
 						break;
 					}
-					case "MarketListingsAPI" when configProperty.Value.Type == JTokenType.String: {
+					case "MarketListingsAPI" when configProperty.Value.ValueKind == JsonValueKind.String: {
 						ASF.ArchiLogger.LogGenericInfo("Market Listings API : " + configProperty.Value);
-						DataHandler.MarketListingsAPI = new Uri(configProperty.Value.ToObject<string>()!);
+						DataHandler.MarketListingsAPI = new Uri(configProperty.Value.GetString()!);
 						break;
 					}
-					case "MarketHistoryAPI" when configProperty.Value.Type == JTokenType.String: {
+					case "MarketHistoryAPI" when configProperty.Value.ValueKind == JsonValueKind.String: {
 						ASF.ArchiLogger.LogGenericInfo("Market History API : " + configProperty.Value);
-						DataHandler.MarketHistoryAPI = new Uri(configProperty.Value.ToObject<string>()!);
+						DataHandler.MarketHistoryAPI = new Uri(configProperty.Value.GetString()!);
 						break;
 					}
-					case "LogDataPageDelay" or "MarketHistoryDelay" when configProperty.Value.Type == JTokenType.Integer: {
+					case "LogDataPageDelay" or "MarketHistoryDelay" when configProperty.Value.ValueKind == JsonValueKind.Number: {
 						ASF.ArchiLogger.LogGenericInfo("Log Data Page Delay : " + configProperty.Value);
-						DataHandler.LogDataPageDelay = configProperty.Value.ToObject<uint>();
+						DataHandler.LogDataPageDelay = configProperty.Value.GetUInt32();
 						break;
 					}
-					case "InventoryHistoryAppFilter" when configProperty.Value.Type == JTokenType.Array && configProperty.Value.Any(): {
+					case "InventoryHistoryAppFilter" when configProperty.Value.ValueKind == JsonValueKind.Array && configProperty.Value.GetArrayLength() > 0: {
 						ASF.ArchiLogger.LogGenericInfo("Inventory History App Filter : " + string.Join(",", configProperty.Value));
-						List<uint>? appIDs = configProperty.Value.ToObject<List<uint>>();
+						List<uint>? appIDs = configProperty.Value.ToJsonObject<List<uint>>();
 						if (appIDs == null) {
 							ASF.ArchiLogger.LogNullError(appIDs);
 						} else {
@@ -80,18 +81,18 @@ namespace BoosterManager {
 			return Task.FromResult(0);
 		}
 
-		public Task OnBotInitModules(Bot bot, IReadOnlyDictionary<string, JToken>? additionalConfigProperties = null) {
+		public Task OnBotInitModules(Bot bot, IReadOnlyDictionary<string, JsonElement>? additionalConfigProperties = null) {
 			BoosterHandler.AddHandler(bot);
 
 			if (additionalConfigProperties == null) {
 				return Task.FromResult(0);
 			}
 
-			foreach (KeyValuePair<string, JToken> configProperty in additionalConfigProperties) {
+			foreach (KeyValuePair<string, JsonElement> configProperty in additionalConfigProperties) {
 				switch (configProperty.Key) {
-					case "GamesToBooster" when configProperty.Value.Type == JTokenType.Array && configProperty.Value.Any(): {
+					case "GamesToBooster" when configProperty.Value.ValueKind == JsonValueKind.Array && configProperty.Value.GetArrayLength() > 0: {
 						bot.ArchiLogger.LogGenericInfo("Games To Booster : " + string.Join(",", configProperty.Value));
-						HashSet<uint>? gameIDs = configProperty.Value.ToObject<HashSet<uint>>();
+						HashSet<uint>? gameIDs = configProperty.Value.ToJsonObject<HashSet<uint>>();
 						if (gameIDs == null) {
 							bot.ArchiLogger.LogNullError(gameIDs);
 						} else {

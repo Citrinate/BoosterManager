@@ -1,15 +1,17 @@
 using System;
 using System.Collections.Concurrent;
 using System.IO;
+using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Helpers;
+using ArchiSteamFarm.Helpers.Json;
 using ArchiSteamFarm.Localization;
-using Newtonsoft.Json;
 
 namespace BoosterManager {
 	internal sealed class BoosterDatabase : SerializableFile {
-		[JsonProperty(Required = Required.DisallowNull)]
-		private readonly ConcurrentDictionary<uint, BoosterLastCraft> BoosterLastCrafts = new();
+		[JsonInclude]
+		private ConcurrentDictionary<uint, BoosterLastCraft> BoosterLastCrafts { get; init; } = new();
 
 		[JsonConstructor]
 		private BoosterDatabase() { }
@@ -21,6 +23,8 @@ namespace BoosterManager {
 
 			FilePath = filePath;
 		}
+
+		protected override Task Save() => Save(this);
 
 		internal static BoosterDatabase? CreateOrLoad(string filePath) {
 			if (string.IsNullOrEmpty(filePath)) {
@@ -42,7 +46,7 @@ namespace BoosterManager {
 					return null;
 				}
 
-				boosterDatabase = JsonConvert.DeserializeObject<BoosterDatabase>(json);
+				boosterDatabase = json.ToJsonObject<BoosterDatabase>();
 			} catch (Exception e) {
 				ASF.ArchiLogger.LogGenericException(e);
 

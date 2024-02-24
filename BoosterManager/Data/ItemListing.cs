@@ -1,6 +1,7 @@
 using System;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using ArchiSteamFarm.Core;
-using Newtonsoft.Json.Linq;
 
 namespace BoosterManager {
 	internal sealed class ItemListing {
@@ -12,10 +13,10 @@ namespace BoosterManager {
 		internal ulong ContextID;
 		internal ulong ClassID;
 
-		internal ItemListing(JObject listing) {
+		internal ItemListing(JsonObject listing) {
 			string? name = listing["asset"]?["name"]?.ToString();
 			if (name == null) {
-				ASF.ArchiLogger.LogNullError(name);				
+				ASF.ArchiLogger.LogNullError(name);
 				throw new InvalidOperationException();
 			}
 
@@ -37,19 +38,19 @@ namespace BoosterManager {
 				throw new InvalidOperationException();
 			}
 
-			uint? appID = listing["asset"]?["appid"]?.ToObject<uint>();
+			uint? appID = listing["asset"]?["appid"]?.GetValue<uint>();
 			if (appID == null) {
 				ASF.ArchiLogger.LogNullError(appID);
 				throw new InvalidOperationException();
 			}
 
-			ulong? contextID = listing["asset"]?["contextid"]?.ToObject<ulong>();
+			ulong? contextID = listing["asset"]?["contextid"]?.GetValue<ulong>();
 			if (contextID == null) {
 				ASF.ArchiLogger.LogNullError(contextID);
 				throw new InvalidOperationException();
 			}
 
-			ulong? classID = listing["asset"]?["classid"]?.ToObject<ulong>();
+			ulong? classID = listing["asset"]?["classid"]?.GetValue<ulong>();
 			if (classID == null) {
 				ASF.ArchiLogger.LogNullError(classID);
 				throw new InvalidOperationException();

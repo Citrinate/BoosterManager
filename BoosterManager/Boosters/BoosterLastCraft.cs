@@ -1,13 +1,15 @@
 using System;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace BoosterManager {
 	internal sealed class BoosterLastCraft {
-		[JsonProperty(Required = Required.Always)]
-		internal DateTime CraftTime;
+		[JsonInclude]
+		[JsonRequired]
+		internal DateTime CraftTime { get; set; }
 
-		[JsonProperty(Required = Required.Always)]
-		internal int BoosterDelay;
+		[JsonInclude]
+		[JsonRequired]
+		internal int BoosterDelay { get; set; }
 
 		[JsonConstructor]
 		private BoosterLastCraft() { }
