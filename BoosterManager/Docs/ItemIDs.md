@@ -2,15 +2,15 @@
 
 ## AppID
 
-An AppID refers to a specific Steam App.  This can be found in the url of an App's Steam store page.
+An AppID refers to a specific Steam App.  This can be found in the url of an App's inventory page.
 
 ---
 
 #### Example
 
-`https://store.steampowered.com/app/730/CounterStrike_2/`
+`https://steamcommunity.com/id/████/inventory/#753`
 
-AppID of `730`
+AppID of `753`
 
 ---
 
