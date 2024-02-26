@@ -1,7 +1,7 @@
 using System;
-using System.Text.Json;
 using System.Text.Json.Nodes;
 using ArchiSteamFarm.Core;
+using ArchiSteamFarm.Helpers.Json;
 
 namespace BoosterManager {
 	internal sealed class ItemListing {
@@ -38,19 +38,19 @@ namespace BoosterManager {
 				throw new InvalidOperationException();
 			}
 
-			uint? appID = listing["asset"]?["appid"]?.GetValue<uint>();
+			uint? appID = listing["asset"]?["appid"]?.ToString().ToJsonObject<uint>();
 			if (appID == null) {
 				ASF.ArchiLogger.LogNullError(appID);
 				throw new InvalidOperationException();
 			}
 
-			ulong? contextID = listing["asset"]?["contextid"]?.GetValue<ulong>();
+			ulong? contextID = listing["asset"]?["contextid"]?.ToString().ToJsonObject<ulong>();
 			if (contextID == null) {
 				ASF.ArchiLogger.LogNullError(contextID);
 				throw new InvalidOperationException();
 			}
 
-			ulong? classID = listing["asset"]?["classid"]?.GetValue<ulong>();
+			ulong? classID = listing["asset"]?["classid"]?.ToString().ToJsonObject<ulong>();
 			if (classID == null) {
 				ASF.ArchiLogger.LogNullError(classID);
 				throw new InvalidOperationException();

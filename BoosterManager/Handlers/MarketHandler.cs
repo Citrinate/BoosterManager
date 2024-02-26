@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
+using ArchiSteamFarm.Helpers.Json;
 using ArchiSteamFarm.Localization;
 using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Steam.Data;
@@ -42,7 +43,7 @@ namespace BoosterManager {
 
 			uint listingsValue = 0;
 			foreach (JsonObject listing in listings.Values) {
-				uint? price = listing["price"]?.GetValue<uint>();
+				uint? price = listing["price"]?.ToString().ToJsonObject<uint>();
 				if (price == null) {
 					bot.ArchiLogger.LogNullError(price);
 
@@ -141,7 +142,7 @@ namespace BoosterManager {
 						return null;
 					}
 
-					ulong? listingid = listing["listingid"]?.GetValue<ulong>();
+					ulong? listingid = listing["listingid"]?.ToString().ToJsonObject<ulong>();
 					if (listingid == null) {
 						bot.ArchiLogger.LogNullError(listingid);
 						
