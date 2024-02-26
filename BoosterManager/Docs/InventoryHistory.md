@@ -109,7 +109,7 @@ Be aware that each of these descriptions describes a unique type of event.  For 
 Event descriptions for Valve games can be found in the following files as strings starting with `ItemHistory_Action`
 
 - Artifact Classic: [game/dcg/resource/dcg_common_english.txt](https://github.com/SteamDatabase/GameTracking-Artifact/blob/master/game/dcg/resource/dcg_common_english.txt)
-- Counter-Strike: Global Offensive: [csgo/resource/csgo_english.txt](https://github.com/SteamDatabase/GameTracking-CS2/blob/master/game/csgo/resource/csgo_english.txt)
+- Counter-Strike 2: [csgo/resource/csgo_english.txt](https://github.com/SteamDatabase/GameTracking-CS2/blob/master/game/csgo/pak01_dir/resource/csgo_english.txt)
 - Dota 2: [game/dota/pak01_dir/resource/localization/dota_english.txt](https://github.com/SteamDatabase/GameTracking-Dota2/blob/6abdd9d13de2f4330ca748082467b9ff6e6cd928/game/dota/pak01_dir/resource/localization/dota_english.txt)
 - Portal 2: [portal2/portal2/resource/portal2_english.txt](https://github.com/SteamDatabase/GameTracking/blob/master/portal2/portal2/resource/portal2_english.txt)
 - Team Fortress 2: [tf/resource/tf_english.txt](https://github.com/SteamDatabase/GameTracking-TF2/blob/master/tf/resource/tf_english.txt)
