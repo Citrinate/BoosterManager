@@ -243,7 +243,7 @@ namespace BoosterManager {
 			[JsonInclude]
 			[JsonPropertyName("success")]
 			[JsonRequired]
-			internal bool Success { get; private init; }
+			internal int Success { get; private init; }
 
 			[JsonConstructor]
 			private ExchangeGooResponse() { }
