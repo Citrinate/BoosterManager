@@ -13,7 +13,7 @@ namespace BoosterManager {
 			[JsonInclude]
 			[JsonPropertyName("success")]
 			[JsonRequired]
-			public readonly EResult Result;
+			public EResult Result { get; private init; }
 
 			[JsonConstructor]
 			public EResultResponse() { }
@@ -56,16 +56,19 @@ namespace BoosterManager {
 		internal sealed class BoostersResponse {
 			[JsonInclude]
 			[JsonPropertyName("goo_amount")]
+			[JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]
 			[JsonRequired]
 			internal uint GooAmount { get; private init; }
 
 			[JsonInclude]
 			[JsonPropertyName("tradable_goo_amount")]
+			[JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]
 			[JsonRequired]
 			internal uint TradableGooAmount { get; private init; }
 
 			[JsonInclude]
 			[JsonPropertyName("untradable_goo_amount")]
+			[JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]
 			[JsonRequired]
 			internal uint UntradableGooAmount { get; private init; }
 
