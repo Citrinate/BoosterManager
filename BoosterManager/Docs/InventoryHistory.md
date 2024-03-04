@@ -47,6 +47,7 @@ I feel the need to provide unofficial documentation here, because doing anything
 
 Much of the inventory history is delivered as `html` that needs to be parsed.  
 
+> [!NOTE]
 > The BoosterManager plugin does not, and likely never will, support parsing of `html`.  The best I can do is to offer this incomplete list of possible history event descriptions.
 
 Be aware that each of these descriptions describes a unique type of event.  For example, "Listed on the Community Market" and "You listed an item on the Community Market." are different types of events, and not two different ways to describe the same event.
@@ -138,6 +139,7 @@ Not all gaps are as large as in the examples above.  It's very common to have lo
 
 In my experience, because small gaps tend to only happen due to market-related activity, they can be safely ignored, as market history is more accurately collected using the Market History API.
 
+> [!NOTE]
 > The BoosterManager plugin cannot detect this bug.  You'll need to monitor the plugin's activity yourself to ensure there's no gaps.  Within your `InventoryHistoryAPI`, `page - data["cursor"]["time"]` represents the size of the gap in seconds between the current page and the next page.  Be aware that `data["cursor"]` [can be](#history-ends-early-bug) `null`.  You can attempt to address this bug with your API by setting the `next_page` or `next_cursor` response parameters, telling the plugin which page you'd like it to fetch next.
 
 ## History Ends Early Bug
@@ -152,6 +154,7 @@ For example, assuming we have history older than `4/30/21`, this can happen:
 
 This is resolved the same way as the [Missing History Bug](#missing-history-bug): by searching for history events at times past the cutoff.
 
+> [!NOTE]
 > The BoosterManager plugin will detect when the bug may have occurred.  On the `InventoryHistoryAPI` side of things, the value for `data[cursor]` will be `null` when it receives a page with this bug on it.  If your API does not send a `next_page` or `next_cursor` response parameter, then the plugin will stop running and send a link in the Steam Chat to the page where the bug occurred.
 
 ## Missing Descriptions Bugs
@@ -170,4 +173,5 @@ There's at least one instance where this type of error will never go away by rel
 
 - Most events involving Steam Gems on or before December 12, 2014 will appear as "Unknown Asset" in place of the gems, and will have no `descriptions` entry.  This is likely due to a gem duplication exploit and the resulting rollbacks.
 
+> [!NOTE]
 > The BoosterManager plugin does not detect these bugs.  You can tell the plugin to refresh the page by sending back `cursor` and `page` in the `next_cursor` and `next_page` response parameters respectively.
