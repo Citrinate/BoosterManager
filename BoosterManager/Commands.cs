@@ -26,6 +26,19 @@ namespace BoosterManager {
 						case "BOOSTERMANAGER" when access >= EAccess.FamilySharing:
 							return String.Format("{0} {1}", nameof(BoosterManager), (typeof(BoosterManager).Assembly.GetName().Version ?? new Version("0")).ToString());
 
+						case "BOOSTERS" or "MBOOSTERS":
+							return await ResponseCountItems(bot, access, ItemIdentifier.BoosterIdentifier, marketable: true).ConfigureAwait(false);
+						case "UBOOSTERS":
+							return await ResponseCountItems(bot, access, ItemIdentifier.BoosterIdentifier, marketable: false).ConfigureAwait(false);
+						case "ABOOSTERS":
+							return await ResponseCountItems(bot, access, ItemIdentifier.BoosterIdentifier).ConfigureAwait(false);
+						case "BA" or "MBA":
+							return await ResponseCountItems(access, steamID, "ASF", ItemIdentifier.BoosterIdentifier, marketable: true).ConfigureAwait(false);
+						case "UBA":
+							return await ResponseCountItems(access, steamID, "ASF", ItemIdentifier.BoosterIdentifier, marketable: false).ConfigureAwait(false);
+						case "ABA":
+							return await ResponseCountItems(access, steamID, "ASF", ItemIdentifier.BoosterIdentifier).ConfigureAwait(false);
+
 						case "BDROP" or "BDROPS":
 							return await ResponseBoosterDrops(bot, access).ConfigureAwait(false);
 
@@ -41,6 +54,32 @@ namespace BoosterManager {
 						
 						case "BSTOPALL" or "BOOSTERSTOPALL":
 							return ResponseBoosterStopTime(bot, access, "0");
+
+						case "CARDS" or "MCARDS" or "CARD" or "MCARD":
+							return await ResponseCountItems(bot, access, ItemIdentifier.CardIdentifier, marketable: true).ConfigureAwait(false);
+						case "UCARDS" or "UCARD":
+							return await ResponseCountItems(bot, access, ItemIdentifier.CardIdentifier, marketable: false).ConfigureAwait(false);
+						case "ACARDS" or "ACARD":
+							return await ResponseCountItems(bot, access, ItemIdentifier.CardIdentifier).ConfigureAwait(false);
+						case "CA" or "MCA":
+							return await ResponseCountItems(access, steamID, "ASF", ItemIdentifier.CardIdentifier, marketable: true).ConfigureAwait(false);
+						case "UCA":
+							return await ResponseCountItems(access, steamID, "ASF", ItemIdentifier.CardIdentifier, marketable: false).ConfigureAwait(false);
+						case "ACA":
+							return await ResponseCountItems(access, steamID, "ASF", ItemIdentifier.CardIdentifier).ConfigureAwait(false);
+
+						case "FOILS" or "MFOILS" or "FOIL" or "MFOIL":
+							return await ResponseCountItems(bot, access, ItemIdentifier.FoilIdentifier, marketable: true).ConfigureAwait(false);
+						case "UFOIL" or "UFOIL":
+							return await ResponseCountItems(bot, access, ItemIdentifier.FoilIdentifier, marketable: false).ConfigureAwait(false);
+						case "AFOIL" or "AFOIL":
+							return await ResponseCountItems(bot, access, ItemIdentifier.FoilIdentifier).ConfigureAwait(false);
+						case "FA" or "MFA":
+							return await ResponseCountItems(access, steamID, "ASF", ItemIdentifier.FoilIdentifier, marketable: true).ConfigureAwait(false);
+						case "UFA":
+							return await ResponseCountItems(access, steamID, "ASF", ItemIdentifier.FoilIdentifier, marketable: false).ConfigureAwait(false);
+						case "AFA":
+							return await ResponseCountItems(access, steamID, "ASF", ItemIdentifier.FoilIdentifier).ConfigureAwait(false);
 						
 						case "GA":
 							return await ResponseGems(access, steamID, "ASF").ConfigureAwait(false);
@@ -166,10 +205,17 @@ namespace BoosterManager {
 					};
 				default:
 					switch (args[0].ToUpperInvariant()) {
-						case "BOOSTER" or "BOOSTERS" when args.Length > 2:
+						case "BOOSTER" when args.Length > 2:
 							return ResponseBooster(access, steamID, args[1], Utilities.GetArgsAsText(args, 2, ","), bot);
-						case "BOOSTER" or "BOOSTERS":
+						case "BOOSTER":
 							return ResponseBooster(bot, access, steamID, args[1]);
+
+						case "BOOSTERS" or "MBOOSTERS":
+							return await ResponseCountItems(access, steamID, Utilities.GetArgsAsText(args, 1, ","), ItemIdentifier.BoosterIdentifier, marketable: true).ConfigureAwait(false);
+						case "UBOOSTERS":
+							return await ResponseCountItems(access, steamID, Utilities.GetArgsAsText(args, 1, ","), ItemIdentifier.BoosterIdentifier, marketable: false).ConfigureAwait(false);
+						case "ABOOSTERS":
+							return await ResponseCountItems(access, steamID, Utilities.GetArgsAsText(args, 1, ","), ItemIdentifier.BoosterIdentifier).ConfigureAwait(false);
 
 						case "BDROP" or "BDROPS":
 							return await ResponseBoosterDrops(access, steamID, args[1]).ConfigureAwait(false);
@@ -192,12 +238,33 @@ namespace BoosterManager {
 							return ResponseBoosterStopTime(access, steamID, args[1], args[2]);
 						case "BSTOPTIME" or "BOOSTERSTOPTIME":
 							return ResponseBoosterStopTime(bot, access, args[1]);
+
+						case "CARDS" or "MCARDS" or "CARD" or "MCARD":
+							return await ResponseCountItems(access, steamID, Utilities.GetArgsAsText(args, 1, ","), ItemIdentifier.CardIdentifier, marketable: true).ConfigureAwait(false);
+						case "UCARDS" or "UCARD":
+							return await ResponseCountItems(access, steamID, Utilities.GetArgsAsText(args, 1, ","), ItemIdentifier.CardIdentifier, marketable: false).ConfigureAwait(false);
+						case "ACARDS" or "ACARD":
+							return await ResponseCountItems(access, steamID, Utilities.GetArgsAsText(args, 1, ","), ItemIdentifier.CardIdentifier).ConfigureAwait(false);
+
+						case "COUNTITEMS" or "COUNTITEM" or "ITEM" or "ITEMS" or "ACOUNTITEMS" or "ACOUNTITEM" or "AITEM" or "AITEMS":
+							return await ResponseCountItems(access, steamID, args[1], args[2], args[3], Utilities.GetArgsAsText(args, 4, " ")).ConfigureAwait(false);
+						case "UCOUNTITEMS" or "UCOUNTITEM" or "UITEM" or "UITEMS":
+							return await ResponseCountItems(access, steamID, args[1], args[2], args[3], Utilities.GetArgsAsText(args, 4, " "), marketable: false).ConfigureAwait(false);
+						case "MCOUNTITEMS" or "MCOUNTITEM" or "MITEM" or "MITEMS":
+							return await ResponseCountItems(access, steamID, args[1], args[2], args[3], Utilities.GetArgsAsText(args, 4, " "), marketable: true).ConfigureAwait(false);
 						
 						case "FINDLISTINGS" or "FINDLISTING" or "FLISTINGS" or "FLISTING" or "FINDL" or "FL" when args.Length > 2:
 							return await ResponseFindListings(access, steamID, args[1], Utilities.GetArgsAsText(args, 2, " ")).ConfigureAwait(false);
 						
 						case "FINDANDREMOVELISTINGS" or "FINDANDREMOVELISTING" or "FINDREMOVELISTINGS" or "FINDREMOVELISTING" or "FINDANDCANCELLISTINGS" or "FINDANDCANCELLISTING" or "FINDCANCELLISTINGS" or "FINDCANCELLISTING" or "FRLISTINGS" or "FRLISTING" or "FINDREMOVEL" or "FRL" when args.Length > 2:
 							return await ResponseFindAndRemoveListings(access, steamID, args[1], Utilities.GetArgsAsText(args, 2, " ")).ConfigureAwait(false);
+
+						case "FOILS" or "MFOILS" or "FOIL" or "MFOIL":
+							return await ResponseCountItems(access, steamID, Utilities.GetArgsAsText(args, 1, ","), ItemIdentifier.FoilIdentifier, marketable: true).ConfigureAwait(false);
+						case "UFOILS" or "UFOIL":
+							return await ResponseCountItems(access, steamID, Utilities.GetArgsAsText(args, 1, ","), ItemIdentifier.FoilIdentifier, marketable: false).ConfigureAwait(false);
+						case "AFOILS" or "AFOIL":
+							return await ResponseCountItems(access, steamID, Utilities.GetArgsAsText(args, 1, ","), ItemIdentifier.FoilIdentifier).ConfigureAwait(false);
 						
 						case "GEMS" or "GEM":
 							return await ResponseGems(access, steamID, Utilities.GetArgsAsText(args, 1, ",")).ConfigureAwait(false);
@@ -266,7 +333,7 @@ namespace BoosterManager {
 							return await ResponseSendItemToBot(access, steamID, args[1], args[2], args[3], Utilities.GetArgsAsText(args, 4, " "), marketable: false).ConfigureAwait(false);
 						case "MLOOTITEMS" or "MLOOTITEM" when args.Length > 4:
 							return await ResponseSendItemToBot(access, steamID, args[1], args[2], args[3], Utilities.GetArgsAsText(args, 4, " "), marketable: true).ConfigureAwait(false);
-						
+
 						case "LOOTKEYS" or "LOOTKEY":
 							return await ResponseSendItemToBot(access, steamID, Utilities.GetArgsAsText(args, 1, ","), ItemIdentifier.KeyIdentifier).ConfigureAwait(false);
 						
@@ -698,7 +765,7 @@ namespace BoosterManager {
 			return responses.Count > 0 ? String.Join(Environment.NewLine, responses) : null;
 		}
 		
-		private static async Task<string?> ResponseCountItems(Bot bot, EAccess access, ItemIdentifier itemIdentifier) {
+		private static async Task<string?> ResponseCountItems(Bot bot, EAccess access, ItemIdentifier itemIdentifier, bool? marketable = null) {
 			string? appIDAsText = itemIdentifier.AppID.ToString();
 			if (appIDAsText == null) {
 				throw new ArgumentNullException(nameof(appIDAsText));
@@ -709,10 +776,10 @@ namespace BoosterManager {
 				throw new ArgumentNullException(nameof(contextIDAsText));
 			}
 
-			return await ResponseCountItems(bot, access, appIDAsText, contextIDAsText, itemIdentifier.ToString()).ConfigureAwait(false);
+			return await ResponseCountItems(bot, access, appIDAsText, contextIDAsText, itemIdentifier.ToString(), marketable).ConfigureAwait(false);
 		}
 
-		private static async Task<string?> ResponseCountItems(Bot bot, EAccess access, string appIDAsText, string contextIDAsText, string itemIdentifierAsText) {
+		private static async Task<string?> ResponseCountItems(Bot bot, EAccess access, string appIDAsText, string contextIDAsText, string itemIdentifierAsText, bool? marketable = null) {
 			if (access < EAccess.Master) {
 				return null;
 			}
@@ -735,7 +802,7 @@ namespace BoosterManager {
 
 			ItemIdentifier itemIdentifier;
 			try {
-				itemIdentifier = new ItemIdentifier(itemIdentifierAsText);
+				itemIdentifier = new ItemIdentifier(itemIdentifierAsText, marketable);
 			} catch (Exception) {
 				return FormatBotResponse(bot, String.Format("Invalid Item Identifier: {0}", itemIdentifierAsText));
 			}
@@ -743,7 +810,7 @@ namespace BoosterManager {
 			return await InventoryHandler.GetItemCount(bot, appID, contextID, itemIdentifier).ConfigureAwait(false);
 		}
 
-		private static async Task<string?> ResponseCountItems(EAccess access, ulong steamID, string botNames, ItemIdentifier itemIdentifier) {
+		private static async Task<string?> ResponseCountItems(EAccess access, ulong steamID, string botNames, ItemIdentifier itemIdentifier, bool? marketable = null) {
 			string? appIDAsText = itemIdentifier.AppID.ToString();
 			if (appIDAsText == null) {
 				throw new ArgumentNullException(nameof(appIDAsText));
@@ -754,10 +821,10 @@ namespace BoosterManager {
 				throw new ArgumentNullException(nameof(contextIDAsText));
 			}
 
-			return await ResponseCountItems(access, steamID, botNames, appIDAsText, contextIDAsText, itemIdentifier.ToString()).ConfigureAwait(false);
+			return await ResponseCountItems(access, steamID, botNames, appIDAsText, contextIDAsText, itemIdentifier.ToString(), marketable).ConfigureAwait(false);
 		}
 
-		private static async Task<string?> ResponseCountItems(EAccess access, ulong steamID, string botNames, string appIDAsText, string contextIDAsText, string itemIdentifiersAsText) {
+		private static async Task<string?> ResponseCountItems(EAccess access, ulong steamID, string botNames, string appIDAsText, string contextIDAsText, string itemIdentifiersAsText, bool? marketable = null) {
 			if (String.IsNullOrEmpty(botNames)) {
 				throw new ArgumentNullException(nameof(botNames));
 			}
@@ -768,7 +835,7 @@ namespace BoosterManager {
 				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
 			}
 
-			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseCountItems(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), appIDAsText, contextIDAsText, itemIdentifiersAsText))).ConfigureAwait(false);
+			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseCountItems(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), appIDAsText, contextIDAsText, itemIdentifiersAsText, marketable))).ConfigureAwait(false);
 
 			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
 

@@ -53,6 +53,7 @@ These commands only operate on marketable boosters.  To loot or transfer only un
 
 Command | Access | Description
 --- | --- | ---
+`boosters [Bots]`|`Master`|Displays the number of marketable boosters owned by the given bot.
 `lootboosters [Bots]`|`Master`|Sends all marketable booster packs from the given bot to the `Master` user.
 `transferboosters [Bots] <TargetBot>`|`Master`|Sends all marketable booster packs from the given bot to the given target bot.
 
@@ -62,6 +63,8 @@ These commands only operate on marketable cards.  To loot or transfer only unmar
 
 Command | Access | Description
 --- | --- | ---
+`cards [Bots]`|`Master`|Displays the number of marketable non-foil trading cards owned by the given bot.
+`foils [Bots]`|`Master`|Displays the number of marketable foil trading cards owned by the given bot.
 `lootcards [Bots]`|`Master`|Sends all marketable non-foil trading cards from the given bot to the `Master` user.
 `lootfoils [Bots]`|`Master`|Sends all marketable foil trading cards from the given bot to the `Master` user.
 `transfercards [Bots] <TargetBot>`|`Master`|Sends all marketable non-foil trading cards from the given bot to the given target bot.
@@ -82,6 +85,7 @@ These commands ignore marketability.  To loot or transfer only marketable items,
 
 Command | Access | Description
 --- | --- | ---
+`countitems <Bots> <AppID> <ContextID> <ItemIdentifier>`|`Master`|Displays the number of items owned by the given bot with the matching `AppID`, `ContextID`, and [`ItemIdentifier`](#itemidentifiers).
 `lootitems <Bots> <AppID> <ContextID> <ItemIdentifiers>`|`Master`|Sends all items with the matching `AppID`, `ContextID`, and any of [`ItemIdentifiers`](#itemidentifiers) from the given bot to the `Master` user.
 `transferitems <Bots> <TargetBot> <AppID> <ContextID> <ItemIdentifiers>`|`Master`|Sends all items with the matching `AppID`, `ContextID`, and any of [`ItemIdentifiers`](#itemidentifiers) from the given bot to the given target bot.
 `transferitems^ <Bot> <TargetBots> <Amounts> <AppID> <ContextID> <ItemIdentifiers>`|`Master`|Sends an amount of items with the matching `AppID`, `ContextID`, and any of [`ItemIdentifiers`](#itemidentifiers) from the given bot to the given target bot. The `Amounts` specified may be a single amount of each item sent to all target bots, or differing amounts of each item, respectively, sent to all target bots.
@@ -158,6 +162,9 @@ Command | Alias |
 --- | --- |
 `bstatus ASF`|`bsa`
 `bstatus^ ASF`|`bsa^`
+`boosters asf`|`ba`
+`cards asf`|`ca`
+`foils asf`|`fa`
 `gems ASF`|`ga`
 `keys ASF`|`ka`
 `listings ASF`|`lia`
