@@ -48,9 +48,9 @@ namespace BoosterManager {
 							return await ResponseGems(bot, access).ConfigureAwait(false);
 						
 						case "KA":
-							return await ResponseKeys(access, steamID, "ASF").ConfigureAwait(false);
+							return await ResponseCountItems(access, steamID, "ASF", ItemIdentifier.KeyIdentifier).ConfigureAwait(false);
 						case "KEYS" or "KEY":
-							return await ResponseKeys(bot, access).ConfigureAwait(false);
+							return await ResponseCountItems(bot, access, ItemIdentifier.KeyIdentifier).ConfigureAwait(false);
 						
 						case "LIA":
 							return await ResponseListings(access, steamID, "ASF").ConfigureAwait(false);
@@ -78,58 +78,58 @@ namespace BoosterManager {
 							return await ResponseLogMarketListings(bot, access).ConfigureAwait(false);
 						
 						case "LBA" or "MLBA":
-							return await ResponseSendItemToBot(access, steamID, "ASF", Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.BoosterIdentifier.ToString(), marketable: true).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, "ASF", ItemIdentifier.BoosterIdentifier, marketable: true).ConfigureAwait(false);
 						case "ULBA":
-							return await ResponseSendItemToBot(access, steamID, "ASF", Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.BoosterIdentifier.ToString(), marketable: false).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, "ASF", ItemIdentifier.BoosterIdentifier, marketable: false).ConfigureAwait(false);
 						case "ALBA":
-							return await ResponseSendItemToBot(access, steamID, "ASF", Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.BoosterIdentifier.ToString()).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, "ASF", ItemIdentifier.BoosterIdentifier).ConfigureAwait(false);
 						case "LOOTBOOSTERS" or "LOOTBOOSTER" or "MLOOTBOOSTERS" or "MLOOTBOOSTER":
-							return await ResponseSendItemToBot(bot, access, Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.BoosterIdentifier.ToString(), marketable: true).ConfigureAwait(false);
+							return await ResponseSendItemToBot(bot, access, ItemIdentifier.BoosterIdentifier, marketable: true).ConfigureAwait(false);
 						case "ULOOTBOOSTERS" or "ULOOTBOOSTER":
-							return await ResponseSendItemToBot(bot, access, Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.BoosterIdentifier.ToString(), marketable: false).ConfigureAwait(false);
+							return await ResponseSendItemToBot(bot, access, ItemIdentifier.BoosterIdentifier, marketable: false).ConfigureAwait(false);
 						case "ALOOTBOOSTERS" or "ALOOTBOOSTER":
-							return await ResponseSendItemToBot(bot, access, Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.BoosterIdentifier.ToString()).ConfigureAwait(false);
+							return await ResponseSendItemToBot(bot, access, ItemIdentifier.BoosterIdentifier).ConfigureAwait(false);
 						
 						case "LCA" or "MLCA":
-							return await ResponseSendItemToBot(access, steamID, "ASF", Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.CardIdentifier.ToString(), marketable: true).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, "ASF", ItemIdentifier.CardIdentifier, marketable: true).ConfigureAwait(false);
 						case "ULCA":
-							return await ResponseSendItemToBot(access, steamID, "ASF", Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.CardIdentifier.ToString(), marketable: false).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, "ASF", ItemIdentifier.CardIdentifier, marketable: false).ConfigureAwait(false);
 						case "ALCA":
-							return await ResponseSendItemToBot(access, steamID, "ASF", Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.CardIdentifier.ToString()).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, "ASF", ItemIdentifier.CardIdentifier).ConfigureAwait(false);
 						case "LOOTCARDS" or "LOOTCARD" or "MLOOTCARDS" or "MLOOTCARD":
-							return await ResponseSendItemToBot(bot, access, Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.CardIdentifier.ToString(), marketable: true).ConfigureAwait(false);
+							return await ResponseSendItemToBot(bot, access, ItemIdentifier.CardIdentifier, marketable: true).ConfigureAwait(false);
 						case "ULOOTCARDS" or "ULOOTCARD":
-							return await ResponseSendItemToBot(bot, access, Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.CardIdentifier.ToString(), marketable: false).ConfigureAwait(false);
+							return await ResponseSendItemToBot(bot, access, ItemIdentifier.CardIdentifier, marketable: false).ConfigureAwait(false);
 						case "ALOOTCARDS" or "ALOOTCARD":
-							return await ResponseSendItemToBot(bot, access, Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.CardIdentifier.ToString()).ConfigureAwait(false);
+							return await ResponseSendItemToBot(bot, access, ItemIdentifier.CardIdentifier).ConfigureAwait(false);
 						
 						case "LFA" or "MLFA":
-							return await ResponseSendItemToBot(access, steamID, "ASF", Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.FoilIdentifier.ToString(), marketable: true).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, "ASF", ItemIdentifier.FoilIdentifier, marketable: true).ConfigureAwait(false);
 						case "ULFA":
-							return await ResponseSendItemToBot(access, steamID, "ASF", Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.FoilIdentifier.ToString(), marketable: false).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, "ASF", ItemIdentifier.FoilIdentifier, marketable: false).ConfigureAwait(false);
 						case "ALFA":
-							return await ResponseSendItemToBot(access, steamID, "ASF", Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.FoilIdentifier.ToString()).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, "ASF", ItemIdentifier.FoilIdentifier).ConfigureAwait(false);
 						case "LOOTFOILS" or "LOOTFOIL" or "MLOOTFOILS" or "MLOOTFOIL":
-							return await ResponseSendItemToBot(bot, access, Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.FoilIdentifier.ToString(), marketable: true).ConfigureAwait(false);
+							return await ResponseSendItemToBot(bot, access, ItemIdentifier.FoilIdentifier, marketable: true).ConfigureAwait(false);
 						case "ULOOTFOILS" or "ULOOTFOIL":
-							return await ResponseSendItemToBot(bot, access, Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.FoilIdentifier.ToString(), marketable: false).ConfigureAwait(false);
+							return await ResponseSendItemToBot(bot, access, ItemIdentifier.FoilIdentifier, marketable: false).ConfigureAwait(false);
 						case "ALOOTFOILS" or "ALOOTFOIL":
-							return await ResponseSendItemToBot(bot, access, Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.FoilIdentifier.ToString()).ConfigureAwait(false);
+							return await ResponseSendItemToBot(bot, access, ItemIdentifier.FoilIdentifier).ConfigureAwait(false);
 						
 						case "LGA":
-							return await ResponseSendItemToBot(access, steamID, "ASF", Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.GemIdentifier.ToString()).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, "ASF", ItemIdentifier.GemIdentifier).ConfigureAwait(false);
 						case "LOOTGEMS" or "LOOTGEM":
-							return await ResponseSendItemToBot(bot, access, Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.GemIdentifier.ToString()).ConfigureAwait(false);
+							return await ResponseSendItemToBot(bot, access, ItemIdentifier.GemIdentifier).ConfigureAwait(false);
 						
 						case "LKA":
-							return await ResponseSendItemToBot(access, steamID, "ASF", KeyHandler.KeyAppID.ToString(), KeyHandler.KeyContextID.ToString(), ItemIdentifier.KeyIdentifier.ToString()).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, "ASF", ItemIdentifier.KeyIdentifier).ConfigureAwait(false);
 						case "LOOTKEYS" or "LOOTKEY":
-							return await ResponseSendItemToBot(bot, access, KeyHandler.KeyAppID.ToString(), KeyHandler.KeyContextID.ToString(), ItemIdentifier.KeyIdentifier.ToString()).ConfigureAwait(false);
+							return await ResponseSendItemToBot(bot, access, ItemIdentifier.KeyIdentifier).ConfigureAwait(false);
 						
 						case "LSA":
-							return await ResponseSendItemToBot(access, steamID, "ASF", Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.SackIdentifier.ToString()).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, "ASF", ItemIdentifier.SackIdentifier).ConfigureAwait(false);
 						case "LOOTSACKS" or "LOOTSACK":
-							return await ResponseSendItemToBot(bot, access, Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.SackIdentifier.ToString()).ConfigureAwait(false);
+							return await ResponseSendItemToBot(bot, access, ItemIdentifier.SackIdentifier).ConfigureAwait(false);
 						
 						case "M2FAOKA":
 							return await Response2FAOK(access, steamID, "ASF", Confirmation.EConfirmationType.Market).ConfigureAwait(false);
@@ -203,7 +203,7 @@ namespace BoosterManager {
 							return await ResponseGems(access, steamID, Utilities.GetArgsAsText(args, 1, ",")).ConfigureAwait(false);
 						
 						case "KEYS" or "KEY":
-							return await ResponseKeys(access, steamID, Utilities.GetArgsAsText(args, 1, ",")).ConfigureAwait(false);
+							return await ResponseCountItems(access, steamID, Utilities.GetArgsAsText(args, 1, ","), ItemIdentifier.KeyIdentifier).ConfigureAwait(false);
 						
 						case "LISTINGS" or "LISTING":
 							return await ResponseListings(access, steamID, Utilities.GetArgsAsText(args, 1, ",")).ConfigureAwait(false);
@@ -237,28 +237,28 @@ namespace BoosterManager {
 							return await ResponseLogMarketListings(access, steamID, Utilities.GetArgsAsText(args, 1, ",")).ConfigureAwait(false);
 						
 						case "LOOTBOOSTERS" or "LOOTBOOSTER" or "MLOOTBOOSTERS" or "MLOOTBOOSTER":
-							return await ResponseSendItemToBot(access, steamID, Utilities.GetArgsAsText(args, 1, ","), Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.BoosterIdentifier.ToString(), marketable: true).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, Utilities.GetArgsAsText(args, 1, ","), ItemIdentifier.BoosterIdentifier, marketable: true).ConfigureAwait(false);
 						case "ULOOTBOOSTERS" or "ULOOTBOOSTER":
-							return await ResponseSendItemToBot(access, steamID, Utilities.GetArgsAsText(args, 1, ","), Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.BoosterIdentifier.ToString(), marketable: false).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, Utilities.GetArgsAsText(args, 1, ","), ItemIdentifier.BoosterIdentifier, marketable: false).ConfigureAwait(false);
 						case "ALOOTBOOSTERS" or "ALOOTBOOSTER":
-							return await ResponseSendItemToBot(access, steamID, Utilities.GetArgsAsText(args, 1, ","), Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.BoosterIdentifier.ToString()).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, Utilities.GetArgsAsText(args, 1, ","), ItemIdentifier.BoosterIdentifier).ConfigureAwait(false);
 						
 						case "LOOTCARDS" or "LOOTCARD" or "MLOOTCARDS" or "MLOOTCARD":
-							return await ResponseSendItemToBot(access, steamID, Utilities.GetArgsAsText(args, 1, ","), Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.CardIdentifier.ToString(), marketable: true).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, Utilities.GetArgsAsText(args, 1, ","), ItemIdentifier.CardIdentifier, marketable: true).ConfigureAwait(false);
 						case "ULOOTCARDS" or "ULOOTCARD":
-							return await ResponseSendItemToBot(access, steamID, Utilities.GetArgsAsText(args, 1, ","), Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.CardIdentifier.ToString(), marketable: false).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, Utilities.GetArgsAsText(args, 1, ","), ItemIdentifier.CardIdentifier, marketable: false).ConfigureAwait(false);
 						case "ALOOTCARDS" or "ALOOTCARD":
-							return await ResponseSendItemToBot(access, steamID, Utilities.GetArgsAsText(args, 1, ","), Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.CardIdentifier.ToString()).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, Utilities.GetArgsAsText(args, 1, ","), ItemIdentifier.CardIdentifier).ConfigureAwait(false);
 						
 						case "LOOTFOILS" or "LOOTFOIL" or "MLOOTFOILS" or "MLOOTFOIL":
-							return await ResponseSendItemToBot(access, steamID, Utilities.GetArgsAsText(args, 1, ","), Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.FoilIdentifier.ToString(), marketable: true).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, Utilities.GetArgsAsText(args, 1, ","), ItemIdentifier.FoilIdentifier, marketable: true).ConfigureAwait(false);
 						case "ULOOTFOILS" or "ULOOTFOIL":
-							return await ResponseSendItemToBot(access, steamID, Utilities.GetArgsAsText(args, 1, ","), Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.FoilIdentifier.ToString(), marketable: false).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, Utilities.GetArgsAsText(args, 1, ","), ItemIdentifier.FoilIdentifier, marketable: false).ConfigureAwait(false);
 						case "ALOOTFOILS" or "ALOOTFOIL":
-							return await ResponseSendItemToBot(access, steamID, Utilities.GetArgsAsText(args, 1, ","), Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.FoilIdentifier.ToString()).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, Utilities.GetArgsAsText(args, 1, ","), ItemIdentifier.FoilIdentifier).ConfigureAwait(false);
 						
 						case "LOOTGEMS" or "LOOTGEM":
-							return await ResponseSendItemToBot(access, steamID, Utilities.GetArgsAsText(args, 1, ","), Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.GemIdentifier.ToString()).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, Utilities.GetArgsAsText(args, 1, ","), ItemIdentifier.GemIdentifier).ConfigureAwait(false);
 						
 						case "LOOTITEMS" or "LOOTITEM" or "ALOOTITEMS" or "ALOOTITEM" when args.Length > 4:
 							return await ResponseSendItemToBot(access, steamID, args[1], args[2], args[3], Utilities.GetArgsAsText(args, 4, " ")).ConfigureAwait(false);
@@ -268,10 +268,10 @@ namespace BoosterManager {
 							return await ResponseSendItemToBot(access, steamID, args[1], args[2], args[3], Utilities.GetArgsAsText(args, 4, " "), marketable: true).ConfigureAwait(false);
 						
 						case "LOOTKEYS" or "LOOTKEY":
-							return await ResponseSendItemToBot(access, steamID, Utilities.GetArgsAsText(args, 1, ","), KeyHandler.KeyAppID.ToString(), KeyHandler.KeyContextID.ToString(), ItemIdentifier.KeyIdentifier.ToString()).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, Utilities.GetArgsAsText(args, 1, ","), ItemIdentifier.KeyIdentifier).ConfigureAwait(false);
 						
 						case "LOOTSACKS" or "LOOTSACK":
-							return await ResponseSendItemToBot(access, steamID, Utilities.GetArgsAsText(args, 1, ","), Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.SackIdentifier.ToString()).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, Utilities.GetArgsAsText(args, 1, ","), ItemIdentifier.SackIdentifier).ConfigureAwait(false);
 						
 						case "MARKET2FAOK" or "M2FAOK" when args.Length > 2:
 							return await Response2FAOK(access, steamID, args[1], Confirmation.EConfirmationType.Market, args[2]).ConfigureAwait(false);
@@ -292,71 +292,71 @@ namespace BoosterManager {
 							return await ResponseTradeCount(access, steamID, args[1]).ConfigureAwait(false);
 						
 						case "TBA" or "MTBA":
-							return await ResponseSendItemToBot(access, steamID, "ASF", Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.BoosterIdentifier.ToString(), marketable: true, recieverBotName: args[1]).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, "ASF", ItemIdentifier.BoosterIdentifier, marketable: true, recieverBotName: args[1]).ConfigureAwait(false);
 						case "UTBA":
-							return await ResponseSendItemToBot(access, steamID, "ASF", Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.BoosterIdentifier.ToString(), marketable: false, recieverBotName: args[1]).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, "ASF", ItemIdentifier.BoosterIdentifier, marketable: false, recieverBotName: args[1]).ConfigureAwait(false);
 						case "ATBA":
-							return await ResponseSendItemToBot(access, steamID, "ASF", Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.BoosterIdentifier.ToString(), recieverBotName: args[1]).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, "ASF", ItemIdentifier.BoosterIdentifier, recieverBotName: args[1]).ConfigureAwait(false);
 						case "TRANSFERBOOSTERS" or "TRANSFERBOOSTER" or "MTRANSFERBOOSTERS" or "MTRANSFERBOOSTER" when args.Length > 2:
-							return await ResponseSendItemToBot(access, steamID, args[1], Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.BoosterIdentifier.ToString(), marketable: true, recieverBotName: args[2]).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, args[1], ItemIdentifier.BoosterIdentifier, marketable: true, recieverBotName: args[2]).ConfigureAwait(false);
 						case "UTRANSFERBOOSTERS" or "UTRANSFERBOOSTER" when args.Length > 2:
-							return await ResponseSendItemToBot(access, steamID, args[1], Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.BoosterIdentifier.ToString(), marketable: false, recieverBotName: args[2]).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, args[1], ItemIdentifier.BoosterIdentifier, marketable: false, recieverBotName: args[2]).ConfigureAwait(false);
 						case "ATRANSFERBOOSTERS" or "ATRANSFERBOOSTER" when args.Length > 2:
-							return await ResponseSendItemToBot(access, steamID, args[1], Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.BoosterIdentifier.ToString(), recieverBotName: args[2]).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, args[1], ItemIdentifier.BoosterIdentifier, recieverBotName: args[2]).ConfigureAwait(false);
 						case "TRANSFERBOOSTERS" or "TRANSFERBOOSTER" or "MTRANSFERBOOSTERS" or "MTRANSFERBOOSTER":
-							return await ResponseSendItemToBot(bot, access, Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.BoosterIdentifier.ToString(), marketable: true, recieverBotName: args[1]).ConfigureAwait(false);
+							return await ResponseSendItemToBot(bot, access, ItemIdentifier.BoosterIdentifier, marketable: true, recieverBotName: args[1]).ConfigureAwait(false);
 						case "UTRANSFERBOOSTERS" or "UTRANSFERBOOSTER":
-							return await ResponseSendItemToBot(bot, access, Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.BoosterIdentifier.ToString(), marketable: false, recieverBotName: args[1]).ConfigureAwait(false);
+							return await ResponseSendItemToBot(bot, access, ItemIdentifier.BoosterIdentifier, marketable: false, recieverBotName: args[1]).ConfigureAwait(false);
 						case "ATRANSFERBOOSTERS" or "ATRANSFERBOOSTER":
-							return await ResponseSendItemToBot(bot, access, Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.BoosterIdentifier.ToString(), recieverBotName: args[1]).ConfigureAwait(false);
+							return await ResponseSendItemToBot(bot, access, ItemIdentifier.BoosterIdentifier, recieverBotName: args[1]).ConfigureAwait(false);
 						
 						case "TCA" or "MTCA":
-							return await ResponseSendItemToBot(access, steamID, "ASF", Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.CardIdentifier.ToString(), marketable: true, recieverBotName: args[1]).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, "ASF", ItemIdentifier.CardIdentifier, marketable: true, recieverBotName: args[1]).ConfigureAwait(false);
 						case "UTCA":
-							return await ResponseSendItemToBot(access, steamID, "ASF", Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.CardIdentifier.ToString(), marketable: false, recieverBotName: args[1]).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, "ASF", ItemIdentifier.CardIdentifier, marketable: false, recieverBotName: args[1]).ConfigureAwait(false);
 						case "ATCA":
-							return await ResponseSendItemToBot(access, steamID, "ASF", Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.CardIdentifier.ToString(), recieverBotName: args[1]).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, "ASF", ItemIdentifier.CardIdentifier, recieverBotName: args[1]).ConfigureAwait(false);
 						case "TRANSFERCARDS" or "TRANSFERCARD" or "MTRANSFERCARDS" or "MTRANSFERCARD" when args.Length > 2:
-							return await ResponseSendItemToBot(access, steamID, args[1], Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.CardIdentifier.ToString(), marketable: true, recieverBotName: args[2]).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, args[1], ItemIdentifier.CardIdentifier, marketable: true, recieverBotName: args[2]).ConfigureAwait(false);
 						case "UTRANSFERCARDS" or "UTRANSFERCARD" when args.Length > 2:
-							return await ResponseSendItemToBot(access, steamID, args[1], Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.CardIdentifier.ToString(), marketable: false, recieverBotName: args[2]).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, args[1], ItemIdentifier.CardIdentifier, marketable: false, recieverBotName: args[2]).ConfigureAwait(false);
 						case "ATRANSFERCARDS" or "ATRANSFERCARD" when args.Length > 2:
-							return await ResponseSendItemToBot(access, steamID, args[1], Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.CardIdentifier.ToString(), recieverBotName: args[2]).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, args[1], ItemIdentifier.CardIdentifier, recieverBotName: args[2]).ConfigureAwait(false);
 						case "TRANSFERCARDS" or "TRANSFERCARD" or "MTRANSFERCARDS" or "MTRANSFERCARD":
-							return await ResponseSendItemToBot(bot, access, Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.CardIdentifier.ToString(), marketable: true, recieverBotName: args[1]).ConfigureAwait(false);
+							return await ResponseSendItemToBot(bot, access, ItemIdentifier.CardIdentifier, marketable: true, recieverBotName: args[1]).ConfigureAwait(false);
 						case "UTRANSFERCARDS" or "UTRANSFERCARD":
-							return await ResponseSendItemToBot(bot, access, Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.CardIdentifier.ToString(), marketable: false, recieverBotName: args[1]).ConfigureAwait(false);
+							return await ResponseSendItemToBot(bot, access, ItemIdentifier.CardIdentifier, marketable: false, recieverBotName: args[1]).ConfigureAwait(false);
 						case "ATRANSFERCARDS" or "ATRANSFERCARD":
-							return await ResponseSendItemToBot(bot, access, Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.CardIdentifier.ToString(), recieverBotName: args[1]).ConfigureAwait(false);
+							return await ResponseSendItemToBot(bot, access, ItemIdentifier.CardIdentifier, recieverBotName: args[1]).ConfigureAwait(false);
 						
 						case "TFA" or "MTFA":
-							return await ResponseSendItemToBot(access, steamID, "ASF", Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.FoilIdentifier.ToString(), marketable: true, recieverBotName: args[1]).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, "ASF", ItemIdentifier.FoilIdentifier, marketable: true, recieverBotName: args[1]).ConfigureAwait(false);
 						case "UTFA":
-							return await ResponseSendItemToBot(access, steamID, "ASF", Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.FoilIdentifier.ToString(), marketable: false, recieverBotName: args[1]).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, "ASF", ItemIdentifier.FoilIdentifier, marketable: false, recieverBotName: args[1]).ConfigureAwait(false);
 						case "ATFA":
-							return await ResponseSendItemToBot(access, steamID, "ASF", Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.FoilIdentifier.ToString(), recieverBotName: args[1]).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, "ASF", ItemIdentifier.FoilIdentifier, recieverBotName: args[1]).ConfigureAwait(false);
 						case "TRANSFERFOILS" or "TRANSFERFOIL" or "MTRANSFERFOILS" or "MTRANSFERFOIL" when args.Length > 2:
-							return await ResponseSendItemToBot(access, steamID, args[1], Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.FoilIdentifier.ToString(), marketable: true, recieverBotName: args[2]).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, args[1], ItemIdentifier.FoilIdentifier, marketable: true, recieverBotName: args[2]).ConfigureAwait(false);
 						case "UTRANSFERFOILS" or "UTRANSFERFOIL" when args.Length > 2:
-							return await ResponseSendItemToBot(access, steamID, args[1], Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.FoilIdentifier.ToString(), marketable: false, recieverBotName: args[2]).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, args[1], ItemIdentifier.FoilIdentifier, marketable: false, recieverBotName: args[2]).ConfigureAwait(false);
 						case "ATRANSFERFOILS" or "ATRANSFERFOIL" when args.Length > 2:
-							return await ResponseSendItemToBot(access, steamID, args[1], Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.FoilIdentifier.ToString(), recieverBotName: args[2]).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, args[1], ItemIdentifier.FoilIdentifier, recieverBotName: args[2]).ConfigureAwait(false);
 						case "TRANSFERFOILS" or "TRANSFERFOIL" or "MTRANSFERFOILS" or "MTRANSFERFOIL":
-							return await ResponseSendItemToBot(bot, access, Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.FoilIdentifier.ToString(), marketable: true, recieverBotName: args[1]).ConfigureAwait(false);
+							return await ResponseSendItemToBot(bot, access, ItemIdentifier.FoilIdentifier, marketable: true, recieverBotName: args[1]).ConfigureAwait(false);
 						case "UTRANSFERFOILS" or "UTRANSFERFOIL":
-							return await ResponseSendItemToBot(bot, access, Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.FoilIdentifier.ToString(), marketable: false, recieverBotName: args[1]).ConfigureAwait(false);
+							return await ResponseSendItemToBot(bot, access, ItemIdentifier.FoilIdentifier, marketable: false, recieverBotName: args[1]).ConfigureAwait(false);
 						case "ATRANSFERFOILS" or "ATRANSFERFOIL":
-							return await ResponseSendItemToBot(bot, access, Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.FoilIdentifier.ToString(), recieverBotName: args[1]).ConfigureAwait(false);
+							return await ResponseSendItemToBot(bot, access, ItemIdentifier.FoilIdentifier, recieverBotName: args[1]).ConfigureAwait(false);
 						
 						case "TRANSFERGEMS" or "TRANSFERGEM" when args.Length > 3:
-							return await ResponseSendItemToMultipleBots(access, steamID, args[1], args[2], args[3], Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.GemIdentifier.ToString()).ConfigureAwait(false);
+							return await ResponseSendItemToMultipleBots(access, steamID, args[1], args[2], args[3], ItemIdentifier.GemIdentifier).ConfigureAwait(false);
 						case "TRANSFERGEMS" or "TRANSFERGEM" when args.Length > 2:
-							return await ResponseSendItemToMultipleBots(bot, access, args[1], args[2], Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.GemIdentifier.ToString()).ConfigureAwait(false);
+							return await ResponseSendItemToMultipleBots(bot, access, args[1], args[2], ItemIdentifier.GemIdentifier).ConfigureAwait(false);
 
 						case "TRANSFERGEMS^" or "TRANSFERGEM^" when args.Length > 2:
-							return await ResponseSendItemToBot(access, steamID, args[1], Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.GemIdentifier.ToString(), recieverBotName: args[2]).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, args[1], ItemIdentifier.GemIdentifier, recieverBotName: args[2]).ConfigureAwait(false);
 						case "TRANSFERGEMS^" or "TRANSFERGEM^":
-							return await ResponseSendItemToBot(bot, access, Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.GemIdentifier.ToString(), recieverBotName: args[1]).ConfigureAwait(false);
+							return await ResponseSendItemToBot(bot, access, ItemIdentifier.GemIdentifier, recieverBotName: args[1]).ConfigureAwait(false);
 						
 						case "TRANSFERITEMS" or "TRANSFERITEM" or "ATRANSFERITEMS" or "ATRANSFERITEM" when args.Length > 5:
 							return await ResponseSendItemToBot(access, steamID, args[1], args[3], args[4], Utilities.GetArgsAsText(args, 5, " "), recieverBotName: args[2]).ConfigureAwait(false);
@@ -380,19 +380,19 @@ namespace BoosterManager {
 							return await ResponseSendItemToMultipleBots(access, steamID, args[1], args[2], args[3], args[4], args[5], Utilities.GetArgsAsText(args, 6, " "), marketable: true).ConfigureAwait(false);
 						
 						case "TRANSFERKEYS" or "TRANSFERKEY" when args.Length > 3:
-							return await ResponseSendItemToMultipleBots(access, steamID, args[1], args[2], args[3], KeyHandler.KeyAppID.ToString(), KeyHandler.KeyContextID.ToString(), ItemIdentifier.KeyIdentifier.ToString()).ConfigureAwait(false);
+							return await ResponseSendItemToMultipleBots(access, steamID, args[1], args[2], args[3], ItemIdentifier.KeyIdentifier).ConfigureAwait(false);
 						case "TRANSFERKEYS" or "TRANSFERKEY" when args.Length > 2:
-							return await ResponseSendItemToMultipleBots(bot, access, args[1], args[2], KeyHandler.KeyAppID.ToString(), KeyHandler.KeyContextID.ToString(), ItemIdentifier.KeyIdentifier.ToString()).ConfigureAwait(false);
+							return await ResponseSendItemToMultipleBots(bot, access, args[1], args[2], ItemIdentifier.KeyIdentifier).ConfigureAwait(false);
 
 						case "TRANSFERKEYS^" or "TRANSFERKEY^" when args.Length > 2:
-							return await ResponseSendItemToBot(access, steamID, args[1], KeyHandler.KeyAppID.ToString(), KeyHandler.KeyContextID.ToString(), ItemIdentifier.KeyIdentifier.ToString(), recieverBotName: args[2]).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, args[1], ItemIdentifier.KeyIdentifier, recieverBotName: args[2]).ConfigureAwait(false);
 						case "TRANSFERKEYS^" or "TRANSFERKEY^":
-							return await ResponseSendItemToBot(bot, access, KeyHandler.KeyAppID.ToString(), KeyHandler.KeyContextID.ToString(), ItemIdentifier.KeyIdentifier.ToString(), recieverBotName: args[1]).ConfigureAwait(false);
+							return await ResponseSendItemToBot(bot, access, ItemIdentifier.KeyIdentifier, recieverBotName: args[1]).ConfigureAwait(false);
 						
 						case "TRANSFERSACKS" or "TRANSFERSACK" when args.Length > 2:
-							return await ResponseSendItemToBot(access, steamID, args[1], Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.SackIdentifier.ToString(), recieverBotName: args[2]).ConfigureAwait(false);
+							return await ResponseSendItemToBot(access, steamID, args[1], ItemIdentifier.SackIdentifier, recieverBotName: args[2]).ConfigureAwait(false);
 						case "TRANSFERSACKS" or "TRANSFERSACK":
-							return await ResponseSendItemToBot(bot, access, Asset.SteamAppID.ToString(), Asset.SteamCommunityContextID.ToString(), ItemIdentifier.SackIdentifier.ToString(), recieverBotName: args[1]).ConfigureAwait(false);
+							return await ResponseSendItemToBot(bot, access, ItemIdentifier.SackIdentifier, recieverBotName: args[1]).ConfigureAwait(false);
 						
 						case "REMOVELISTINGS" or "REMOVELISTING" or "CANCELLISTINGS" or "CANCELLISTING" or "RLISTINGS" or "RLISTING" or "REMOVEL" or "RL" when args.Length > 2:
 							return await ResponseRemoveListings(access, steamID, args[1], Utilities.GetArgsAsText(args, 2, ",")).ConfigureAwait(false);
@@ -697,6 +697,83 @@ namespace BoosterManager {
 
 			return responses.Count > 0 ? String.Join(Environment.NewLine, responses) : null;
 		}
+		
+		private static async Task<string?> ResponseCountItems(Bot bot, EAccess access, ItemIdentifier itemIdentifier) {
+			string? appIDAsText = itemIdentifier.AppID.ToString();
+			if (appIDAsText == null) {
+				throw new ArgumentNullException(nameof(appIDAsText));
+			}
+
+			string? contextIDAsText = itemIdentifier.ContextID.ToString();
+			if (contextIDAsText == null) {
+				throw new ArgumentNullException(nameof(contextIDAsText));
+			}
+
+			return await ResponseCountItems(bot, access, appIDAsText, contextIDAsText, itemIdentifier.ToString()).ConfigureAwait(false);
+		}
+
+		private static async Task<string?> ResponseCountItems(Bot bot, EAccess access, string appIDAsText, string contextIDAsText, string itemIdentifierAsText) {
+			if (access < EAccess.Master) {
+				return null;
+			}
+
+			if (!bot.IsConnectedAndLoggedOn) {
+				return FormatBotResponse(bot, Strings.BotNotConnected);
+			}
+
+			if (!uint.TryParse(appIDAsText, out uint appID)) {
+				return FormatBotResponse(bot, String.Format(Strings.ErrorIsInvalid, nameof(appIDAsText)));
+			}
+
+			if (!ulong.TryParse(contextIDAsText, out ulong contextID)) {
+				return FormatBotResponse(bot, String.Format(Strings.ErrorIsInvalid, nameof(contextIDAsText)));
+			}
+
+			if (String.IsNullOrEmpty(itemIdentifierAsText)) {
+				throw new ArgumentNullException(nameof(itemIdentifierAsText));
+			}
+
+			ItemIdentifier itemIdentifier;
+			try {
+				itemIdentifier = new ItemIdentifier(itemIdentifierAsText);
+			} catch (Exception) {
+				return FormatBotResponse(bot, String.Format("Invalid Item Identifier: {0}", itemIdentifierAsText));
+			}
+
+			return await InventoryHandler.GetItemCount(bot, appID, contextID, itemIdentifier).ConfigureAwait(false);
+		}
+
+		private static async Task<string?> ResponseCountItems(EAccess access, ulong steamID, string botNames, ItemIdentifier itemIdentifier) {
+			string? appIDAsText = itemIdentifier.AppID.ToString();
+			if (appIDAsText == null) {
+				throw new ArgumentNullException(nameof(appIDAsText));
+			}
+
+			string? contextIDAsText = itemIdentifier.ContextID.ToString();
+			if (contextIDAsText == null) {
+				throw new ArgumentNullException(nameof(contextIDAsText));
+			}
+
+			return await ResponseCountItems(access, steamID, botNames, appIDAsText, contextIDAsText, itemIdentifier.ToString()).ConfigureAwait(false);
+		}
+
+		private static async Task<string?> ResponseCountItems(EAccess access, ulong steamID, string botNames, string appIDAsText, string contextIDAsText, string itemIdentifiersAsText) {
+			if (String.IsNullOrEmpty(botNames)) {
+				throw new ArgumentNullException(nameof(botNames));
+			}
+
+			HashSet<Bot>? bots = Bot.GetBots(botNames);
+
+			if ((bots == null) || (bots.Count == 0)) {
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
+			}
+
+			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseCountItems(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), appIDAsText, contextIDAsText, itemIdentifiersAsText))).ConfigureAwait(false);
+
+			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
+
+			return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
+		}
 
 		private static async Task<string?> ResponseFindListings(Bot bot, EAccess access, string itemIdentifiersAsText) {
 			if (String.IsNullOrEmpty(itemIdentifiersAsText)) {
@@ -810,36 +887,6 @@ namespace BoosterManager {
 			}
 
 			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseGems(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)))).ConfigureAwait(false);
-
-			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
-
-			return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
-		}
-
-		private static async Task<string?> ResponseKeys(Bot bot, EAccess access) {
-			if (access < EAccess.Master) {
-				return null;
-			}
-
-			if (!bot.IsConnectedAndLoggedOn) {
-				return FormatBotResponse(bot, Strings.BotNotConnected);
-			}
-
-			return await KeyHandler.GetKeyCount(bot).ConfigureAwait(false);
-		}
-
-		private static async Task<string?> ResponseKeys(EAccess access, ulong steamID, string botNames) {
-			if (String.IsNullOrEmpty(botNames)) {
-				throw new ArgumentNullException(nameof(botNames));
-			}
-
-			HashSet<Bot>? bots = Bot.GetBots(botNames);
-
-			if ((bots == null) || (bots.Count == 0)) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
-			}
-
-			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseKeys(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)))).ConfigureAwait(false);
 
 			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
 
@@ -1156,6 +1203,20 @@ namespace BoosterManager {
 			return await ResponseRemoveListings(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), listingIDs).ConfigureAwait(false);
 		}
 
+		private static async Task<string?> ResponseSendItemToBot(Bot bot, EAccess access, ItemIdentifier itemIdentifier, bool? marketable = null, string? recieverBotName = null) {
+			string? appIDAsText = itemIdentifier.AppID.ToString();
+			if (appIDAsText == null) {
+				throw new ArgumentNullException(nameof(appIDAsText));
+			}
+
+			string? contextIDAsText = itemIdentifier.ContextID.ToString();
+			if (contextIDAsText == null) {
+				throw new ArgumentNullException(nameof(contextIDAsText));
+			}
+
+			return await ResponseSendItemToBot(bot, access, appIDAsText, contextIDAsText, itemIdentifier.ToString(), marketable, recieverBotName).ConfigureAwait(false);
+		}
+
 		private static async Task<string?> ResponseSendItemToBot(Bot bot, EAccess access, string appIDAsText, string contextIDAsText, string itemIdentifiersAsText, bool? marketable = null, string? recieverBotName = null) {
 			if (String.IsNullOrEmpty(appIDAsText)) {
 				throw new ArgumentNullException(nameof(appIDAsText));
@@ -1219,6 +1280,20 @@ namespace BoosterManager {
 			return FormatBotResponse(bot, success ? message : String.Format(Strings.WarningFailedWithError, message));
 		}
 
+		private static async Task<string?> ResponseSendItemToBot(EAccess access, ulong steamID, string senderBotNames, ItemIdentifier itemIdentifier, bool? marketable = null, string? recieverBotName = null) {
+			string? appIDAsText = itemIdentifier.AppID.ToString();
+			if (appIDAsText == null) {
+				throw new ArgumentNullException(nameof(appIDAsText));
+			}
+
+			string? contextIDAsText = itemIdentifier.ContextID.ToString();
+			if (contextIDAsText == null) {
+				throw new ArgumentNullException(nameof(contextIDAsText));
+			}
+
+			return await ResponseSendItemToBot(access, steamID, senderBotNames, appIDAsText, contextIDAsText, itemIdentifier.ToString(), marketable, recieverBotName).ConfigureAwait(false);
+		}
+
 		private static async Task<string?> ResponseSendItemToBot(EAccess access, ulong steamID, string senderBotNames, string appIDAsText, string contextIDAsText, string itemIdentifiersAsText, bool? marketable = null, string? recieverBotName = null) {
 			if (String.IsNullOrEmpty(senderBotNames)) {
 				throw new ArgumentNullException(nameof(senderBotNames));
@@ -1238,6 +1313,20 @@ namespace BoosterManager {
 			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
 
 			return responses.Count > 0 ? String.Join(Environment.NewLine, responses) : null;
+		}
+
+		private static async Task<string?> ResponseSendItemToMultipleBots(Bot bot, EAccess access, string recieverBotNames, string amountsAsText, ItemIdentifier itemIdentifier, bool? marketable = null) {
+			string? appIDAsText = itemIdentifier.AppID.ToString();
+			if (appIDAsText == null) {
+				throw new ArgumentNullException(nameof(appIDAsText));
+			}
+
+			string? contextIDAsText = itemIdentifier.ContextID.ToString();
+			if (contextIDAsText == null) {
+				throw new ArgumentNullException(nameof(contextIDAsText));
+			}
+
+			return await ResponseSendItemToMultipleBots(bot, access, recieverBotNames, amountsAsText, appIDAsText, contextIDAsText, itemIdentifier.ToString(), marketable).ConfigureAwait(false);
 		}
 
 		private static async Task<string?> ResponseSendItemToMultipleBots(Bot bot, EAccess access, string recieverBotNames, string amountsAsText, string appIDAsText, string contextIDAsText, string itemIdentifierAsText, bool? marketable = null) {
@@ -1320,7 +1409,21 @@ namespace BoosterManager {
 
 			List<(Bot, uint)> recievers = Zip(recieverBots, amounts).ToList();
 
-			return await InventoryHandler.SendItemToMultipleBots(bot, recievers, appID, contextID, itemIdentifier);
+			return await InventoryHandler.SendItemToMultipleBots(bot, recievers, appID, contextID, itemIdentifier).ConfigureAwait(false);
+		}
+
+		private static async Task<string?> ResponseSendItemToMultipleBots(EAccess access, ulong steamID, string senderBotName, string recieverBotNames, string amountsAsText, ItemIdentifier itemIdentifier, bool? marketable = null) {
+			string? appIDAsText = itemIdentifier.AppID.ToString();
+			if (appIDAsText == null) {
+				throw new ArgumentNullException(nameof(appIDAsText));
+			}
+
+			string? contextIDAsText = itemIdentifier.ContextID.ToString();
+			if (contextIDAsText == null) {
+				throw new ArgumentNullException(nameof(contextIDAsText));
+			}
+
+			return await ResponseSendItemToMultipleBots(access, steamID, senderBotName, recieverBotNames, amountsAsText, appIDAsText, contextIDAsText, itemIdentifier.ToString(), marketable).ConfigureAwait(false);
 		}
 
 		private static async Task<string?> ResponseSendItemToMultipleBots(EAccess access, ulong steamID, string senderBotName, string recieverBotNames, string amountsAsText, string appIDAsText, string contextIDAsText, string itemIdentifierAsText, bool? marketable = null) {

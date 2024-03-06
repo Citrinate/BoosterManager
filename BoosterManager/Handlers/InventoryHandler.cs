@@ -199,5 +199,29 @@ namespace BoosterManager {
 
 			return items;
 		}
+
+		internal static async Task<string> GetItemCount(Bot bot, uint appID, ulong contextID, ItemIdentifier itemIdentifier) {
+			HashSet<Asset> inventory;
+			try {
+				inventory = await bot.ArchiWebHandler.GetInventoryAsync(appID: appID, contextID: contextID).Where(item => itemIdentifier.IsItemMatch(item)).ToHashSetAsync().ConfigureAwait(false);
+			} catch (Exception e) {
+				bot.ArchiLogger.LogGenericException(e);
+				return Commands.FormatBotResponse(bot, Strings.WarningFailed);
+			}
+
+			(uint tradable, uint untradable) items = (0,0);
+
+			foreach (Asset item in inventory) {
+				if (item.Tradable) {
+					items.tradable += item.Amount;
+				} else {
+					items.untradable += item.Amount;
+				}
+			}
+
+			return Commands.FormatBotResponse(bot, String.Format("Tradable: {0:N0}{1}", items.tradable,
+				(items.untradable) == 0 ? "" : String.Format("; Untradable: {0:N0}", items.untradable))
+			);
+		}
 	}
 }

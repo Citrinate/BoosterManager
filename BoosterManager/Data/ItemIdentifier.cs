@@ -16,11 +16,11 @@ namespace BoosterManager {
 
 		internal static readonly ItemIdentifier GemIdentifier = new ItemIdentifier() { AppID = Asset.SteamAppID, ContextID = Asset.SteamCommunityContextID, ClassID = GemHandler.GemsClassID };
 		internal static readonly ItemIdentifier SackIdentifier = new ItemIdentifier() { AppID = Asset.SteamAppID, ContextID = Asset.SteamCommunityContextID, ClassID = GemHandler.SackOfGemsClassID };
-		internal static readonly ItemIdentifier GemAndSackIdentifier = new ItemIdentifier() { Type = Asset.EType.SteamGems };
-		internal static readonly ItemIdentifier CardIdentifier = new ItemIdentifier() { Type = Asset.EType.TradingCard };
-		internal static readonly ItemIdentifier FoilIdentifier = new ItemIdentifier() { Type = Asset.EType.FoilTradingCard };
-		internal static readonly ItemIdentifier BoosterIdentifier = new ItemIdentifier() { Type = Asset.EType.BoosterPack };
-		internal static readonly ItemIdentifier KeyIdentifier = new ItemIdentifier() { TextID = KeyHandler.MarketHash };
+		internal static readonly ItemIdentifier GemAndSackIdentifier = new ItemIdentifier() { AppID = Asset.SteamAppID, ContextID = Asset.SteamCommunityContextID, Type = Asset.EType.SteamGems };
+		internal static readonly ItemIdentifier CardIdentifier = new ItemIdentifier() { AppID = Asset.SteamAppID, ContextID = Asset.SteamCommunityContextID, Type = Asset.EType.TradingCard };
+		internal static readonly ItemIdentifier FoilIdentifier = new ItemIdentifier() { AppID = Asset.SteamAppID, ContextID = Asset.SteamCommunityContextID, Type = Asset.EType.FoilTradingCard };
+		internal static readonly ItemIdentifier BoosterIdentifier = new ItemIdentifier() { AppID = Asset.SteamAppID, ContextID = Asset.SteamCommunityContextID, Type = Asset.EType.BoosterPack };
+		internal static readonly ItemIdentifier KeyIdentifier = new ItemIdentifier() { AppID = 440, ContextID = 2, TextID = "Mann Co. Supply Crate Key" };
 
 		internal ItemIdentifier() {}
 		
@@ -51,20 +51,20 @@ namespace BoosterManager {
 		}
 
 		public override string ToString() {
-			if (AppID != null && ContextID != null) {
-				if (ClassID != null) {
-					return String.Format("{1}{0}{2}{0}{3}", Separator, AppID, ContextID, ClassID);
-				} else {
-					return String.Format("{1}{0}{2}", Separator, AppID, ContextID);
-				}
+			if (TextID != null) {
+				return TextID;
 			}
 
 			if (Type != null) {
 				return String.Format("Type{0}{1}", Separator, Type.ToString());
 			}
 
-			if (TextID != null) {
-				return TextID;
+			if (AppID != null && ContextID != null) {
+				if (ClassID != null) {
+					return String.Format("{1}{0}{2}{0}{3}", Separator, AppID, ContextID, ClassID);
+				} else {
+					return String.Format("{1}{0}{2}", Separator, AppID, ContextID);
+				}
 			}
 
 			return "Invalid";
