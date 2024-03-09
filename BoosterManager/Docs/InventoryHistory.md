@@ -110,7 +110,7 @@ Be aware that each of these descriptions describes a unique type of event.  For 
 Event descriptions for Valve games can be found in the following files as strings starting with `ItemHistory_Action`
 
 - Artifact Classic: [game/dcg/resource/dcg_common_english.txt](https://github.com/SteamDatabase/GameTracking-Artifact/blob/master/game/dcg/resource/dcg_common_english.txt)
-- Counter-Strike: Global Offensive: [csgo/resource/csgo_english.txt](https://github.com/SteamDatabase/GameTracking-CS2/blob/master/game/csgo/resource/csgo_english.txt)
+- Counter-Strike 2: [csgo/resource/csgo_english.txt](https://github.com/SteamDatabase/GameTracking-CS2/blob/master/game/csgo/pak01_dir/resource/csgo_english.txt)
 - Dota 2: [game/dota/pak01_dir/resource/localization/dota_english.txt](https://github.com/SteamDatabase/GameTracking-Dota2/blob/6abdd9d13de2f4330ca748082467b9ff6e6cd928/game/dota/pak01_dir/resource/localization/dota_english.txt)
 - Portal 2: [portal2/portal2/resource/portal2_english.txt](https://github.com/SteamDatabase/GameTracking/blob/master/portal2/portal2/resource/portal2_english.txt)
 - Team Fortress 2: [tf/resource/tf_english.txt](https://github.com/SteamDatabase/GameTracking-TF2/blob/master/tf/resource/tf_english.txt)
@@ -122,18 +122,18 @@ The Inventory History API provides no way to fetch specific pages, instead we sp
 As an example, assuming you know there should be history on your account between `4/30/21` and `1/5/21`, your history might look like this:
 
 ```
-… → 5/2/21 → 5/1/21 → 4/30/21 → 1/5/21 → 1/4/21 → …
+… → 5/2/21 → 5/1/21 → 4/30/21 → … Missing … → 1/5/21 → 1/4/21 → …
 ```
 
 This bug can be addressed by searching for history within the gap.  You can use the in-browser "Jump to date" feature, or try setting the `start_time` parameter yourself.  It may take several attempts to find a value for `start_time` that causes the missing history to re-appear.
 
-If you search at date `x` and find missing history there, then history older than `x` should also re-appear, but history newer than `x` might not.  Looking at the previous example and assuming there's history between `4/30/21` and `3/14/21`; if `x = 3/14/21` then the gap may shrink, but not disappear, and some of the missing history may also show up right before `3/14/21`:
+If you search at date `x` and find missing history there, then history older than `x` should also re-appear, but history newer than `x` might not.  Looking at the previous example and assuming there's history between `4/30/21` and `3/14/21`; if `x = 3/14/21` then the gap may shrink, but not disappear:
 
 ```
-… → 5/2/21 → 5/1/21 → 4/30/21 → 3/15/21 → 3/14/21 → 3/13/21 → … → 1/5/21 → 1/4/21 → …
+… → 5/2/21 → 5/1/21 → 4/30/21 → … Still Missing … → 3/15/21 → 3/14/21 → 3/13/21 → … Not Missing Anymore … → 1/6/21 → 1/5/21 → …
 ```
 
-For this reason it's better to start your search right where the gap begins and proceed gradually.  Setting the `start_time` parameter yourself allows you to move in increments of 1 second.  The "Jump to date" feature moves in increments of 24 hours.  You can also use the `cursor[time]` and `cursor[time_frac]` parameters to move in increments of 1 millisecond.
+For this reason it's better to start your search right where the gap begins and proceed gradually.  The "Jump to date" feature moves in increments of 24 hours.  Setting the `start_time` parameter yourself allows you to move in increments of 1 second.  You can also use the `cursor[time]` and `cursor[time_frac]` parameters to move in increments of 1 millisecond.
 
 Not all gaps are as large as in the examples above.  It's very common to have lots of small gaps when numerous events share the same time (ex: confirming multiple market listings at once).  Here the gaps length can be shorter than a second, and may skip as few as 1 event.  These gaps can be addressed in the same way as large gaps, but because of how small they are, they're very hard to identify and correct for.
 

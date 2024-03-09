@@ -54,7 +54,7 @@ namespace BoosterManager {
 			foreach (Asset sack in sacks) {
 				Steam.ExchangeGooResponse? response = await WebRequest.UnpackGems(bot, sack.AssetID, sack.Amount);
 
-				if (response == null || !response.Success) {
+				if (response == null || response.Success != 1) {
 					return Commands.FormatBotResponse(bot, Strings.WarningFailed);
 				}
 			}

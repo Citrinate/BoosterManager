@@ -2,13 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Text.Json;
 using System.Threading.Tasks;
 using ArchiSteamFarm.IPC.Controllers.Api;
 using ArchiSteamFarm.IPC.Responses;
 using ArchiSteamFarm.Localization;
 using ArchiSteamFarm.Steam;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json.Linq;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace BoosterManager {
@@ -150,7 +150,7 @@ namespace BoosterManager {
 		/// </summary>
 		[HttpGet("{botName:required}/GetBadgeInfo/{appID:required}")]
 		[SwaggerOperation (Summary = "Retrieves badge info for given bot.")]
-		[ProducesResponseType(typeof(GenericResponse<JToken>), (int) HttpStatusCode.OK)]
+		[ProducesResponseType(typeof(GenericResponse<JsonDocument>), (int) HttpStatusCode.OK)]
 		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.BadRequest)]
 		public async Task<ActionResult<GenericResponse>> GetBadgeInfo(string botName, uint appID, uint border = 0) {
 			if (string.IsNullOrEmpty(botName)) {
@@ -166,12 +166,12 @@ namespace BoosterManager {
 				return BadRequest(new GenericResponse(false, Strings.BotNotConnected));
 			}
 
-			JToken? badgeInfo = await WebRequest.GetBadgeInfo(bot, appID, border).ConfigureAwait(false);
+			JsonDocument? badgeInfo = await WebRequest.GetBadgeInfo(bot, appID, border).ConfigureAwait(false);
 			if (badgeInfo == null) {
 				return BadRequest(new GenericResponse(false, "Failed to fetch badge info"));
 			}
 
-			return Ok(new GenericResponse<JToken>(true, badgeInfo));
+			return Ok(new GenericResponse<JsonDocument>(true, badgeInfo));
 		}
 
 		/// <summary>
@@ -179,7 +179,7 @@ namespace BoosterManager {
 		/// </summary>
 		[HttpGet("{botNames:required}/GetPriceHistory/{appID:required}/{hashName:required}")]
 		[SwaggerOperation (Summary = "Retrieves price history for market items.")]
-		[ProducesResponseType(typeof(GenericResponse<JToken>), (int) HttpStatusCode.OK)]
+		[ProducesResponseType(typeof(GenericResponse<JsonDocument>), (int) HttpStatusCode.OK)]
 		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.BadRequest)]
 		public async Task<ActionResult<GenericResponse>> GetPriceHistory(string botNames, uint appID, string hashName) {
 			if (string.IsNullOrEmpty(botNames)) {
@@ -200,12 +200,12 @@ namespace BoosterManager {
 				return BadRequest(new GenericResponse(false, Strings.BotNotConnected));
 			}
 
-			JToken? priceHistory = await WebRequest.GetPriceHistory(bot, appID, hashName).ConfigureAwait(false);
+			JsonDocument? priceHistory = await WebRequest.GetPriceHistory(bot, appID, hashName).ConfigureAwait(false);
 			if (priceHistory == null) {
 				return BadRequest(new GenericResponse(false, "Failed to fetch price history"));
 			}
 
-			return Ok(new GenericResponse<JToken>(true, priceHistory));
+			return Ok(new GenericResponse<JsonDocument>(true, priceHistory));
 		}
 	}
 }

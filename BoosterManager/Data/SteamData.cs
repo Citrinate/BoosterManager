@@ -1,23 +1,28 @@
 using System;
+using System.Text.Json.Serialization;
 using ArchiSteamFarm.Steam;
-using Newtonsoft.Json;
 
 namespace BoosterManager {
 	internal sealed class SteamData<T> {
-		[JsonProperty(PropertyName = "steamid")]
-		public ulong SteamID;
+		[JsonInclude]
+		[JsonPropertyName("steamid")]
+		public ulong SteamID { get; private init; }
 
-		[JsonProperty(PropertyName = "source")]
-		public string Source;
+		[JsonInclude]
+		[JsonPropertyName("source")]
+		public string Source { get; private init; }
 
-		[JsonProperty(PropertyName = "page")]
-		public uint? Page;
+		[JsonInclude]
+		[JsonPropertyName("page")]
+		public uint? Page { get; private init; }
 
-		[JsonProperty(PropertyName = "cursor")]
-		public Steam.InventoryHistoryCursor? Cursor;
+		[JsonInclude]
+		[JsonPropertyName("cursor")]
+		public Steam.InventoryHistoryCursor? Cursor { get; private init; }
 
-		[JsonProperty(PropertyName = "data")]
-		public T Data;
+		[JsonInclude]
+		[JsonPropertyName("data")]
+		public T Data { get; private init; }
 
 		internal SteamData(Bot bot, T steamData, Uri source, uint? page, Steam.InventoryHistoryCursor? cursor) {
 			SteamID = bot.SteamID;

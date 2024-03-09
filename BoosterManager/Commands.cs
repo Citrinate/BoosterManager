@@ -7,7 +7,6 @@ using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Localization;
 using ArchiSteamFarm.Steam.Data;
 using System.ComponentModel;
-using System.Collections.Immutable;
 using System.Reflection;
 
 namespace BoosterManager {
@@ -24,6 +23,9 @@ namespace BoosterManager {
 			switch (args.Length) {
 				case 1:
 					switch (args[0].ToUpperInvariant()) {
+						case "BOOSTERMANAGER" when access >= EAccess.FamilySharing:
+							return String.Format("{0} {1}", nameof(BoosterManager), (typeof(BoosterManager).Assembly.GetName().Version ?? new Version("0")).ToString());
+
 						case "BDROP" or "BDROPS":
 							return await ResponseBoosterDrops(bot, access).ConfigureAwait(false);
 

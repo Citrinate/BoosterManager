@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using AngleSharp.Dom;
 using ArchiSteamFarm.Localization;
 using ArchiSteamFarm.Steam;
-using Newtonsoft.Json;
 
 namespace BoosterManager {
 	internal sealed class BoosterPageResponse {
@@ -37,7 +37,7 @@ namespace BoosterManager {
 
 			IEnumerable<Steam.BoosterInfo>? enumerableBoosters;
 			try {
-				enumerableBoosters = JsonConvert.DeserializeObject<IEnumerable<Steam.BoosterInfo>>(info.Value, new Steam.BoosterInfoDateConverter());
+				enumerableBoosters = JsonSerializer.Deserialize<IEnumerable<Steam.BoosterInfo>>(info.Value, new JsonSerializerOptions { NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowReadingFromString });
 			} catch (JsonException ex) {
 				Bot.ArchiLogger.LogGenericError(ex.Message);
 

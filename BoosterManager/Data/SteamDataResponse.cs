@@ -1,24 +1,31 @@
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
 namespace BoosterManager {
 	internal sealed class SteamDataResponse {
-		[JsonProperty(PropertyName = "success", Required = Required.Always)]
-		internal readonly bool Success = false;
+		[JsonInclude]
+		[JsonPropertyName("success")]
+		[JsonRequired]
+		internal bool Success { get; private init; } = false;
 
-		[JsonProperty(PropertyName = "message", Required = Required.Default)]
-		internal readonly string? Message = null;
+		[JsonInclude]
+		[JsonPropertyName("message")]
+		internal string? Message { get; private init; } = null;
 
-		[JsonProperty(PropertyName = "show_message", Required = Required.DisallowNull)]
-		internal readonly bool ShowMessage = true;
+		[JsonInclude]
+		[JsonPropertyName("show_message")]
+		internal bool ShowMessage { get; private init; } = true;
 
-		[JsonProperty(PropertyName = "get_next_page", Required = Required.DisallowNull)]
-		internal readonly bool GetNextPage = false;
+		[JsonInclude]
+		[JsonPropertyName("get_next_page")]
+		internal bool GetNextPage { get; private init; } = false;
 
-		[JsonProperty(PropertyName = "next_page", Required = Required.Default)]
-		internal readonly uint? NextPage = null;
+		[JsonInclude]
+		[JsonPropertyName("next_page")]
+		internal uint? NextPage { get; private init; } = null;
 
-		[JsonProperty(PropertyName = "next_cursor", Required = Required.Default)]
-		internal readonly Steam.InventoryHistoryCursor? NextCursor = null;
+		[JsonInclude]
+		[JsonPropertyName("next_cursor")]
+		internal Steam.InventoryHistoryCursor? NextCursor { get; private init; } = null;
 
 		[JsonConstructor]
 		internal SteamDataResponse() { }

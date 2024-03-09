@@ -1,137 +1,202 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Text.Json;
+using System.Text.Json.Nodes;
+using System.Text.Json.Serialization;
 using SteamKit2;
 
 #pragma warning disable 649
 namespace BoosterManager {
 	internal static class Steam {
 		internal class EResultResponse {
-			[JsonProperty(PropertyName = "success", Required = Required.Always)]
-			public readonly EResult Result;
+			[JsonInclude]
+			[JsonPropertyName("success")]
+			[JsonRequired]
+			public EResult Result { get; private init; }
 
 			[JsonConstructor]
 			public EResultResponse() { }
 		}
 
 		internal sealed class BoosterInfo {
-			[JsonProperty(PropertyName = "appid", Required = Required.Always)]
-			internal readonly uint AppID;
+			[JsonInclude]
+			[JsonPropertyName("appid")]
+			[JsonRequired]
+			internal uint AppID { get; private init; }
 
-			[JsonProperty(PropertyName = "name", Required = Required.Always)]
-			internal readonly string Name = "";
+			[JsonInclude]
+			[JsonPropertyName("name")]
+			[JsonRequired]
+			internal string Name { get; private init; } = "";
 
-			[JsonProperty(PropertyName = "series", Required = Required.Always)]
-			internal readonly uint Series;
+			[JsonInclude]
+			[JsonPropertyName("series")]
+			[JsonRequired]
+			internal uint Series { get; private init; }
 
-			[JsonProperty(PropertyName = "price", Required = Required.Always)]
-			internal readonly uint Price;
+			[JsonInclude]
+			[JsonPropertyName("price")]
+			[JsonRequired]
+			internal uint Price { get; private init; }
 
-			[JsonProperty(PropertyName = "unavailable", Required = Required.DisallowNull)]
-			internal readonly bool Unavailable;
+			[JsonInclude]
+			[JsonPropertyName("unavailable")]
+			internal bool Unavailable { get; private init; }
 
-			[JsonProperty(PropertyName = "available_at_time", Required = Required.Default)]
-			internal readonly DateTime? AvailableAtTime;
+			[JsonInclude]
+			[JsonPropertyName("available_at_time")]
+			[JsonConverter(typeof(BoosterInfoDateConverter))]
+			internal DateTime? AvailableAtTime { get; private init; }
 
 			[JsonConstructor]
 			public BoosterInfo() { }
 		}
 
 		internal sealed class BoostersResponse {
-			[JsonProperty(PropertyName = "goo_amount", Required = Required.Always)]
-			internal readonly uint GooAmount;
+			[JsonInclude]
+			[JsonPropertyName("goo_amount")]
+			[JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]
+			[JsonRequired]
+			internal uint GooAmount { get; private init; }
 
-			[JsonProperty(PropertyName = "tradable_goo_amount", Required = Required.Always)]
-			internal readonly uint TradableGooAmount;
+			[JsonInclude]
+			[JsonPropertyName("tradable_goo_amount")]
+			[JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]
+			[JsonRequired]
+			internal uint TradableGooAmount { get; private init; }
 
-			[JsonProperty(PropertyName = "untradable_goo_amount", Required = Required.Always)]
-			internal readonly uint UntradableGooAmount;
+			[JsonInclude]
+			[JsonPropertyName("untradable_goo_amount")]
+			[JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]
+			[JsonRequired]
+			internal uint UntradableGooAmount { get; private init; }
 
-			[JsonProperty(PropertyName = "purchase_result", Required = Required.DisallowNull)]
-			internal readonly EResultResponse Result = new();
+			[JsonInclude]
+			[JsonPropertyName("purchase_result")]
+			internal EResultResponse Result { get; private init; } = new();
 
-			[JsonProperty(PropertyName = "purchase_eresult", Required = Required.DisallowNull)]
-			internal readonly EResult PurchaseEResult;
+			[JsonInclude]
+			[JsonPropertyName("purchase_eresult")]
+			internal EResult PurchaseEResult { get; private init; }
 
 			[JsonConstructor]
 			private BoostersResponse() { }
 		}
 		
 		internal sealed class MarketListingsResponse {
-			[JsonProperty(PropertyName = "success", Required = Required.Always)]
-			internal readonly bool Success;
+			[JsonInclude]
+			[JsonPropertyName("success")]
+			[JsonRequired]
+			internal bool Success { get; private init; }
 
-			[JsonProperty(PropertyName = "pagesize", Required = Required.Always)]
-			internal readonly int PageSize;
+			[JsonInclude]
+			[JsonPropertyName("pagesize")]
+			[JsonRequired]
+			internal int PageSize { get; private init; }
 
-			[JsonProperty(PropertyName = "total_count", Required = Required.Always)]
-			internal readonly uint TotalCount;
+			[JsonInclude]
+			[JsonPropertyName("total_count")]
+			[JsonRequired]
+			internal uint TotalCount { get; private init; }
 
-			[JsonProperty(PropertyName = "assets", Required = Required.Always)]
-			internal readonly JToken? Assets;
+			[JsonInclude]
+			[JsonPropertyName("assets")]
+			[JsonRequired]
+			internal JsonElement? Assets { get; private init; }
 
-			[JsonProperty(PropertyName = "start", Required = Required.Always)]
-			internal readonly uint Start;
+			[JsonInclude]
+			[JsonPropertyName("start")]
+			[JsonRequired]
+			internal uint Start { get; private init; }
 
-			[JsonProperty(PropertyName = "num_active_listings", Required = Required.Always)]
-			internal readonly uint NumActiveListings;
+			[JsonInclude]
+			[JsonPropertyName("num_active_listings")]
+			[JsonRequired]
+			internal uint NumActiveListings { get; private init; }
 
-			[JsonProperty(PropertyName = "listings", Required = Required.AllowNull)]
-			internal readonly JArray? Listings;
+			[JsonInclude]
+			[JsonPropertyName("listings")]
+			[JsonRequired]
+			internal JsonArray? Listings { get; private init; }
 
-			[JsonProperty(PropertyName = "listings_on_hold", Required = Required.Always)]
-			internal readonly JArray? ListingsOnHold = new();
+			[JsonInclude]
+			[JsonPropertyName("listings_on_hold")]
+			[JsonRequired]
+			internal JsonArray? ListingsOnHold { get; private init; } = new();
 
-			[JsonProperty(PropertyName = "listings_to_confirm", Required = Required.Always)]
-			internal readonly JArray ListingsToConfirm = new();
+			[JsonInclude]
+			[JsonPropertyName("listings_to_confirm")]
+			[JsonRequired]
+			internal JsonArray ListingsToConfirm { get; private init; } = new();
 
-			[JsonProperty(PropertyName = "buy_orders", Required = Required.Always)]
-			internal readonly JArray BuyOrders = new();
+			[JsonInclude]
+			[JsonPropertyName("buy_orders")]
+			[JsonRequired]
+			internal JsonArray BuyOrders { get; private init; } = new();
 
 			[JsonConstructor]
 			private MarketListingsResponse() { }
 		}
 
 		internal sealed class MarketHistoryResponse {
-			[JsonProperty(PropertyName = "success", Required = Required.Always)]
-			internal readonly bool Success;
+			[JsonInclude]
+			[JsonPropertyName("success")]
+			[JsonRequired]
+			internal bool Success { get; private init; }
 
-			[JsonProperty(PropertyName = "pagesize", Required = Required.Always)]
-			internal readonly uint PageSize;
+			[JsonInclude]
+			[JsonPropertyName("pagesize")]
+			[JsonRequired]
+			internal uint PageSize { get; private init; }
 
-			[JsonProperty(PropertyName = "total_count", Required = Required.Always)]
-			internal readonly uint? TotalCount;
+			[JsonInclude]
+			[JsonPropertyName("total_count")]
+			[JsonRequired]
+			internal uint? TotalCount { get; private init; }
 
-			[JsonProperty(PropertyName = "start", Required = Required.Always)]
-			internal readonly uint Start;
+			[JsonInclude]
+			[JsonPropertyName("start")]
+			[JsonRequired]
+			internal uint Start { get; private init; }
 
-			[JsonProperty(PropertyName = "assets", Required = Required.Always)]
-			internal readonly JToken? Assets;
+			[JsonInclude]
+			[JsonPropertyName("assets")]
+			[JsonRequired]
+			internal JsonElement? Assets { get; private init; }
 
-			[JsonProperty(PropertyName = "events", Required = Required.Default)]
-			internal readonly JArray? Events = new();
+			[JsonInclude]
+			[JsonPropertyName("events")]
+			internal JsonArray? Events { get; private init; }
 
-			[JsonProperty(PropertyName = "purchases", Required = Required.Default)]
-			internal readonly JToken? Purchases;
+			[JsonInclude]
+			[JsonPropertyName("purchases")]
+			internal JsonElement? Purchases { get; private init; }
 
-			[JsonProperty(PropertyName = "listings", Required = Required.Always)]
-			internal readonly JToken? Listings;
+			[JsonInclude]
+			[JsonPropertyName("listings")]
+			[JsonRequired]
+			internal JsonElement? Listings { get; private init; }
 
 			[JsonConstructor]
 			private MarketHistoryResponse() { }
 		}
 
 		internal sealed class InventoryHistoryCursor {
-			[JsonProperty(PropertyName = "time", Required = Required.Always)]
-			internal readonly uint Time;
+			[JsonInclude]
+			[JsonPropertyName("time")]
+			[JsonRequired]
+			internal uint Time { get; private init; }
 
-			[JsonProperty(PropertyName = "time_frac", Required = Required.Always)]
-			internal readonly uint TimeFrac;
+			[JsonInclude]
+			[JsonPropertyName("time_frac")]
+			[JsonRequired]
+			internal uint TimeFrac { get; private init; }
 
-			[JsonProperty(PropertyName = "s", Required = Required.Always)]
-			internal readonly string S = "";
+			[JsonInclude]
+			[JsonPropertyName("s")]
+			[JsonRequired]
+			internal string S { get; private init; } = "";
 
 			[JsonConstructor]
 			internal InventoryHistoryCursor() { }
@@ -144,41 +209,52 @@ namespace BoosterManager {
 		}
 
 		internal sealed class InventoryHistoryResponse {
-			[JsonProperty(PropertyName = "success", Required = Required.Always)]
-			internal readonly bool Success;
+			[JsonInclude]
+			[JsonPropertyName("success")]
+			[JsonRequired]
+			internal bool Success { get; private init; }
 
-			[JsonProperty(PropertyName = "error", Required = Required.Default)]
-			internal readonly string? Error = "";
+			[JsonInclude]
+			[JsonPropertyName("error")]
+			internal string? Error { get; private init; } = "";
 
-			[JsonProperty(PropertyName = "html", Required = Required.Default)]
-			internal readonly string Html = "";
+			[JsonInclude]
+			[JsonPropertyName("html")]
+			internal string Html { get; private init; } = "";
 
-			[JsonProperty(PropertyName = "num", Required = Required.Default)]
-			internal readonly uint Num = 0;
+			[JsonInclude]
+			[JsonPropertyName("num")]
+			internal uint Num { get; private init; } = 0;
 
-			[JsonProperty(PropertyName = "descriptions", Required = Required.Default)]
-			internal readonly JToken? Descriptions;
+			[JsonInclude]
+			[JsonPropertyName("descriptions")]
+			internal JsonElement? Descriptions { get; private init; }
 
-			[JsonProperty(PropertyName = "apps", Required = Required.Default)]
-			internal readonly JArray Apps = new();
+			[JsonInclude]
+			[JsonPropertyName("apps")]
+			internal JsonArray Apps { get; private init; } = new();
 
-			[JsonProperty(PropertyName = "cursor", Required = Required.Default)]
-			internal readonly InventoryHistoryCursor? Cursor;
+			[JsonInclude]
+			[JsonPropertyName("cursor")]
+			internal InventoryHistoryCursor? Cursor { get; private init; }
 
 			[JsonConstructor]
 			private InventoryHistoryResponse() { }
 		}
 
 		internal sealed class ExchangeGooResponse {
-			[JsonProperty(PropertyName = "success", Required = Required.Always)]
-			internal readonly bool Success;
+			[JsonInclude]
+			[JsonPropertyName("success")]
+			[JsonRequired]
+			internal int Success { get; private init; }
 
 			[JsonConstructor]
 			private ExchangeGooResponse() { }
 		}
 
 		// https://stackoverflow.com/a/51319347
-		internal sealed class BoosterInfoDateConverter : JsonConverter {
+		// internal sealed class BoosterInfoDateConverter : JsonConverter {
+		internal sealed class BoosterInfoDateConverter : JsonConverter<DateTime> {
 			private List<string> DateTimeFormats = new List<string>() {
 				"MMM d @ h:mmtt",
 				"MMM d, yyyy @ h:mmtt",
@@ -186,30 +262,24 @@ namespace BoosterManager {
 				"d MMM, yyyy @ h:mmtt"
 			};
 			
-			public override bool CanConvert(Type objectType) {
-				return objectType == typeof(DateTime?);
-			}
-			
-			public override object ReadJson(JsonReader reader, Type objectType, object? existingValue, JsonSerializer serializer) {
-				if (reader.Value == null) {
+			public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) {
+				string? dateString = reader.GetString();
+				if (dateString == null) {
 					throw new JsonException("Unable to parse null as a date.");
 				}
-				string dateString = (string)reader.Value;
+
 				DateTime date;
 				foreach (string format in DateTimeFormats) {
 					if (DateTime.TryParseExact(dateString, format, new CultureInfo("en-US"), DateTimeStyles.None, out date)) {
 						return date;
 					}
 				}
+
 				throw new JsonException("Unable to parse \"" + dateString + "\" as a date.");
 			}
-			
-			public override bool CanWrite {
-				get { return false; }
-			}
-			
-			public override void WriteJson(JsonWriter writer, object? value, JsonSerializer serializer) {
-				throw new NotImplementedException();
+
+			public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options) {
+				writer.WriteStringValue(value.ToString("s", System.Globalization.CultureInfo.InvariantCulture));
 			}
 		}
 	}
