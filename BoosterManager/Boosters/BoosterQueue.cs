@@ -103,22 +103,35 @@ namespace BoosterManager {
 
 		internal void AddBooster(uint gameID, BoosterType type) {
 			void handler() {
-				if (BoosterInfos.TryGetValue(gameID, out Steam.BoosterInfo? boosterInfo)) {
+				try {
+					if (!BoosterInfos.TryGetValue(gameID, out Steam.BoosterInfo? boosterInfo)) {
+						Bot.ArchiLogger.LogGenericError(String.Format("Can't craft boosters for {0}", gameID));
+
+						return;
+					}
+
 					if (Boosters.TryGetValue(gameID, out Booster? existingBooster)) {
 						// Re-add a booster that was successfully crafted and is waiting to be cleared out of the queue
 						if (existingBooster.Type == BoosterType.OneTime && existingBooster.WasCrafted) {
 							RemoveBooster(gameID);
 						}
 					}
+
+					if (!BoosterHandler.AllowCraftUnmarketableBoosters && !MarketableApps.AppIDs.Contains(gameID)) {
+						Bot.ArchiLogger.LogGenericError(String.Format("Won't craft unmarketable boosters for {0}", gameID));
+
+						return;
+					}
+
 					Booster newBooster = new Booster(Bot, gameID, type, boosterInfo, this, GetLastCraft(gameID));
 					if (Boosters.TryAdd(gameID, newBooster)) {
 						Bot.ArchiLogger.LogGenericInfo(String.Format("Added {0} to booster queue.", gameID));
 					}
-				} else {
-					Bot.ArchiLogger.LogGenericError(String.Format("Can't craft boosters for {0}", gameID));
+				} finally {
+					OnBoosterInfosUpdated -= handler;
 				}
-				OnBoosterInfosUpdated -= handler;
 			}
+
 			OnBoosterInfosUpdated += handler;
 		}
 
@@ -142,6 +155,10 @@ namespace BoosterManager {
 		private async Task<Boolean> UpdateBoosterInfos() {
 			if (OnBoosterInfosUpdated == null) {
 				return true;
+			}
+
+			if (!BoosterHandler.AllowCraftUnmarketableBoosters && !await MarketableApps.Update().ConfigureAwait(false)) {
+				return false;
 			}
 
 			(BoosterPageResponse? boosterPage, _) = await WebRequest.GetBoosterPage(Bot).ConfigureAwait(false);
@@ -171,6 +188,7 @@ namespace BoosterManager {
 			} else {
 				nTp = TradabilityPreference.Default;
 			}
+			
 			Steam.BoostersResponse? result = await booster.Craft(nTp).ConfigureAwait(false);
 			GooAmount = result?.GooAmount ?? GooAmount;
 			TradableGooAmount = result?.TradableGooAmount ?? TradableGooAmount;
@@ -184,8 +202,18 @@ namespace BoosterManager {
 			// Sometimes Steam will falsely report that an attempt to craft a booster failed, when it really didn't. It could also happen that the user crafted the booster on their own.
 			// For any error we get, we'll need to refresh the booster page and see if the AvailableAtTime has changed to determine if we really failed to craft
 			void handler() {
-				Bot.ArchiLogger.LogGenericInfo(String.Format("An error was encountered when trying to craft a booster from {0}, trying to resolve it now", booster.GameID));
-				if (BoosterInfos.TryGetValue(booster.GameID, out Steam.BoosterInfo? newBoosterInfo)) {
+				try {
+					Bot.ArchiLogger.LogGenericInfo(String.Format("An error was encountered when trying to craft a booster from {0}, trying to resolve it now", booster.GameID));
+
+					if (!BoosterInfos.TryGetValue(booster.GameID, out Steam.BoosterInfo? newBoosterInfo)) {
+						// No longer have access to craft boosters for this game (game removed from account, or sometimes due to very rare Steam bugs)
+						BoosterHandler.PerpareStatusReport(String.Format("No longer able to craft boosters from {0} ({1})", booster.Info.Name, booster.GameID));
+						RemoveBooster(booster.GameID);
+						CheckIfFinished(booster.Type);
+
+						return;
+					}
+
 					if (newBoosterInfo.Unavailable && newBoosterInfo.AvailableAtTime != null
 						&& newBoosterInfo.AvailableAtTime != booster.Info.AvailableAtTime
 						&& (
@@ -196,17 +224,16 @@ namespace BoosterManager {
 						Bot.ArchiLogger.LogGenericInfo(String.Format("Booster from {0} was recently created either by us or by user", booster.GameID));
 						booster.SetWasCrafted();
 						CheckIfFinished(booster.Type);
-					} else {
-						Bot.ArchiLogger.LogGenericInfo(String.Format("Booster from {0} was not created, retrying", booster.GameID));
+
+						return;
 					}
-				} else {
-					// No longer have access to craft boosters for this game (game removed from account, or sometimes due to very rare Steam bugs)
-					BoosterHandler.PerpareStatusReport(String.Format("No longer able to craft boosters from {0} ({1})", booster.Info.Name, booster.GameID));
-					RemoveBooster(booster.GameID);
-					CheckIfFinished(booster.Type);
+
+					Bot.ArchiLogger.LogGenericInfo(String.Format("Booster from {0} was not created, retrying", booster.GameID));
+				} finally {
+					OnBoosterInfosUpdated -= handler;
 				}
-				OnBoosterInfosUpdated -= handler;
 			}
+
 			OnBoosterInfosUpdated += handler;
 		}
 

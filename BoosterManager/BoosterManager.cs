@@ -53,6 +53,11 @@ namespace BoosterManager {
 						BoosterHandler.AllowCraftUntradableBoosters = configProperty.Value.GetBoolean();
 						break;
 					}
+					case "AllowCraftUnmarketableBoosters" when (configProperty.Value.ValueKind == JsonValueKind.True || configProperty.Value.ValueKind == JsonValueKind.False): {
+						ASF.ArchiLogger.LogGenericInfo("Allow Craft Unmarketable Boosters : " + configProperty.Value);
+						BoosterHandler.AllowCraftUnmarketableBoosters = configProperty.Value.GetBoolean();
+						break;
+					}
 					case "BoosterDelayBetweenBots" when configProperty.Value.ValueKind == JsonValueKind.Number: {
 						ASF.ArchiLogger.LogGenericInfo("Booster Delay Between Bots : " + configProperty.Value);
 						BoosterHandler.UpdateBotDelays(configProperty.Value.GetInt32());
