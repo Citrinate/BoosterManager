@@ -10,7 +10,7 @@ namespace BoosterManager {
 		internal static HashSet<uint> AppIDs = new();
 		
 		private static Uri Source = new("https://raw.githubusercontent.com/Citrinate/Steam-MarketableApps/main/data/marketable_apps.min.json");
-		private static TimeSpan UpdateFrequency = TimeSpan.FromHours(1);
+		private static TimeSpan UpdateFrequency = TimeSpan.FromMinutes(30);
 		private static DateTime? LastUpdate;
 		private static SemaphoreSlim UpdateSemaphore = new SemaphoreSlim(1, 1);
 

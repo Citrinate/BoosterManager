@@ -205,6 +205,9 @@ Command | Alias |
 "AllowCraftUnmarketableBoosters": false,
 ```
 
+> [!NOTE]
+> There can be a delay of up to 1 hour before the plugin is aware that the booster for a new game is marketable, or that the booster for a removed game is unmarketable.
+
 ---
 
 ### GamesToBooster
