@@ -16,28 +16,22 @@ namespace BoosterManager {
 	public sealed class BoosterManager : IASF, IBotModules, IBotCommand2, IBotTradeOfferResults {
 		public string Name => nameof(BoosterManager);
 		public Version Version => typeof(BoosterManager).Assembly.GetName().Version ?? new Version("0");
-		private bool ASFEnhanceEnabled = false;
 
 		public Task OnLoaded() {
 			ASF.ArchiLogger.LogGenericInfo("BoosterManager ASF Plugin by Citrinate");
 
 			// ASFEnhanced Adapter https://github.com/chr233/ASFEnhanceAdapterDemoPlugin
 			var flag = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
-			var handler = typeof(Commands).GetMethod(nameof(Commands.Response), flag);
+			var handler = typeof(AdapterBridge).GetMethod(nameof(AdapterBridge.Response), flag);
 			const string pluginId = nameof(BoosterManager);
 			const string cmdPrefix = "BOOSTERMANAGER";
 			const string repoName = "Citrinate/BoosterManager";
-			var registered = AdapterBridge.InitAdapter(Name, pluginId, cmdPrefix, repoName, handler);
-			ASFEnhanceEnabled = registered;
+			AdapterBridge.InitAdapter(Name, pluginId, cmdPrefix, repoName, handler);
 
 			return Task.CompletedTask;
 		}
 
 		public async Task<string?> OnBotCommand(Bot bot, EAccess access, string message, string[] args, ulong steamID = 0) {
-			if (ASFEnhanceEnabled) {
-				return null;
-			}
-
 			return await Commands.Response(bot, access, steamID, message, args).ConfigureAwait(false);
 		}
 
