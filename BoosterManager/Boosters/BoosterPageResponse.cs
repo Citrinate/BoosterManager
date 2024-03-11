@@ -37,7 +37,7 @@ namespace BoosterManager {
 
 			IEnumerable<Steam.BoosterInfo>? enumerableBoosters;
 			try {
-				enumerableBoosters = JsonSerializer.Deserialize<IEnumerable<Steam.BoosterInfo>>(info.Value, new JsonSerializerOptions { NumberHandling = System.Text.Json.Serialization.JsonNumberHandling.AllowReadingFromString });
+				enumerableBoosters = JsonSerializer.Deserialize<IEnumerable<Steam.BoosterInfo>>(info.Value);
 			} catch (JsonException ex) {
 				Bot.ArchiLogger.LogGenericError(ex.Message);
 

@@ -37,6 +37,7 @@ namespace BoosterManager {
 
 			[JsonInclude]
 			[JsonPropertyName("price")]
+			[JsonNumberHandling(JsonNumberHandling.AllowReadingFromString)]
 			[JsonRequired]
 			internal uint Price { get; private init; }
 
@@ -118,22 +119,22 @@ namespace BoosterManager {
 			[JsonInclude]
 			[JsonPropertyName("listings")]
 			[JsonRequired]
-			internal JsonArray? Listings { get; private init; }
+			internal List<JsonNode>? Listings { get; private init; }
 
 			[JsonInclude]
 			[JsonPropertyName("listings_on_hold")]
 			[JsonRequired]
-			internal JsonArray? ListingsOnHold { get; private init; } = new();
+			internal List<JsonNode>? ListingsOnHold { get; private init; } = new();
 
 			[JsonInclude]
 			[JsonPropertyName("listings_to_confirm")]
 			[JsonRequired]
-			internal JsonArray ListingsToConfirm { get; private init; } = new();
+			internal List<JsonNode> ListingsToConfirm { get; private init; } = new();
 
 			[JsonInclude]
 			[JsonPropertyName("buy_orders")]
 			[JsonRequired]
-			internal JsonArray BuyOrders { get; private init; } = new();
+			internal List<JsonNode> BuyOrders { get; private init; } = new();
 
 			[JsonConstructor]
 			private MarketListingsResponse() { }
@@ -167,7 +168,7 @@ namespace BoosterManager {
 
 			[JsonInclude]
 			[JsonPropertyName("events")]
-			internal JsonArray? Events { get; private init; }
+			internal List<JsonNode>? Events { get; private init; }
 
 			[JsonInclude]
 			[JsonPropertyName("purchases")]
@@ -232,7 +233,7 @@ namespace BoosterManager {
 
 			[JsonInclude]
 			[JsonPropertyName("apps")]
-			internal JsonArray Apps { get; private init; } = new();
+			internal List<JsonNode> Apps { get; private init; } = new();
 
 			[JsonInclude]
 			[JsonPropertyName("cursor")]
