@@ -13,7 +13,7 @@ This project is based off of the [Booster Creator Plugin](https://github.com/Rud
 - Unpack the downloaded .zip file to the `plugins` folder inside your ASF folder.
 - (Re)start ASF, you should get a message indicating that the plugin loaded successfully.
 
-> **Note**
+> [!NOTE]
 > This plugin is only tested to work with ASF-generic.  It may or may not work with other ASF variants, but feel free to report any issues you may encounter.
 
 ## Usage
@@ -220,7 +220,7 @@ Example:
 "GamesToBooster": [730, 570],
 ```
 
-> **Note**
+> [!NOTE]
 > It's not possible to remove any of these `AppIDs` from the booster queue using any commands.  Any changes you want to make will need to be made in the configuration file.
 
 ---
@@ -235,7 +235,7 @@ Example:
 "BoosterDelayBetweenBots": 60,
 ```
 
-> **Note**
+> [!NOTE]
 > This is not recommended to be used except in the most extreme cases.
 
 ---

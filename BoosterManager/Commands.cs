@@ -225,6 +225,9 @@ namespace BoosterManager {
 						
 						case "BSTATUS" or "BOOSTERSTATUS":
 							return ResponseBoosterStatus(access, steamID, args[1]);
+
+						case "BSTATUS^" or "BOOSTERSTATUS^":
+							return ResponseBoosterStatus(access, steamID, args[1], true);
 						
 						case "BSTOP" or "BOOSTERSTOP" when args.Length > 2:
 							return ResponseBoosterStop(access, steamID, args[1], Utilities.GetArgsAsText(args, 2, ","));
