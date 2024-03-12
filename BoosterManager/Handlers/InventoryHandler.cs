@@ -15,7 +15,7 @@ namespace BoosterManager {
 
 			HashSet<Asset> itemStacks;
 			try {
-				itemStacks = await sender.ArchiWebHandler.GetInventoryAsync(appID: appID, contextID: contextID).Where(item => itemIdentifier.IsItemMatch(item)).ToHashSetAsync().ConfigureAwait(false);
+				itemStacks = await sender.ArchiWebHandler.GetInventoryAsync(appID: appID, contextID: contextID).Where(item => item.Tradable && itemIdentifier.IsItemMatch(item)).ToHashSetAsync().ConfigureAwait(false);
 			} catch (Exception e) {
 				sender.ArchiLogger.LogGenericException(e);
 				return Commands.FormatBotResponse(sender, Strings.WarningFailed);
