@@ -56,7 +56,7 @@ namespace BoosterManager {
 			}
 
 			if (!await UpdateBoosterInfos().ConfigureAwait(false)) {
-				Bot.ArchiLogger.LogGenericError("Failed to update booster information");
+				Bot.ArchiLogger.LogGenericError("Failed to update booster information, will retry in 1 minute");
 				UpdateTimer(DateTime.Now.AddMinutes(1));
 
 				return;
