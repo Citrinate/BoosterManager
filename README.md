@@ -91,6 +91,7 @@ Command | Access | Description
 
 Command | Access | Description
 --- | --- | ---
+`boostermanager`|`FamilySharing`|Prints version of plugin.
 `trade2faok [Bot]`|`Master`|Accepts all pending 2FA trade confirmations for given bot instances.
 `tradecheck [Bot]`|`Master`|Attempt to handle any incoming trades for the given bot using ASF's [trading logic](https://github.com/JustArchiNET/ArchiSteamFarm/wiki/Trading#logic).
 `tradesincoming [Bot] [From]`|`Master`|Displays the number of incoming trades for the given bot, optionally filtered to only count trades `From` the given bot names or 64-bit SteamIDs.
