@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Localization;
 using ArchiSteamFarm.Steam;
@@ -15,7 +16,7 @@ namespace BoosterManager {
 
 			HashSet<Asset> itemStacks;
 			try {
-				itemStacks = await sender.ArchiWebHandler.GetInventoryAsync(appID: appID, contextID: contextID).Where(item => item.Tradable && itemIdentifier.IsItemMatch(item)).ToHashSetAsync().ConfigureAwait(false);
+				itemStacks = await sender.ArchiHandler.GetMyInventoryAsync(appID: appID, contextID: contextID).Where(item => item.Tradable && itemIdentifier.IsItemMatch(item)).ToHashSetAsync().ConfigureAwait(false);
 			} catch (Exception e) {
 				sender.ArchiLogger.LogGenericException(e);
 				return Commands.FormatBotResponse(sender, Strings.WarningFailed);
@@ -53,7 +54,13 @@ namespace BoosterManager {
 				return (true, "Successfully sent nothing!");
 			}
 
-			HashSet<Asset>? itemsToGive = GetItemsFromStacks(sender, itemStacks, amountToSend, amountToSkip);
+			HashSet<Asset>? itemsToGive;
+			try {
+				itemsToGive = GetItemsFromStacks(sender, itemStacks, amountToSend, amountToSkip);
+			} catch (Exception e) {
+				return (false, e.Message);
+			}
+
 			if (itemsToGive == null) {
 				return (false, "Not enough to send!");
 			}
@@ -80,7 +87,7 @@ namespace BoosterManager {
 
 			HashSet<Asset> inventory;
 			try {
-				inventory = await sender.ArchiWebHandler.GetInventoryAsync(appID: appID, contextID: contextID).ToHashSetAsync().ConfigureAwait(false);
+				inventory = await sender.ArchiHandler.GetMyInventoryAsync(appID: appID, contextID: contextID).ToHashSetAsync().ConfigureAwait(false);
 			} catch (Exception e) {
 				sender.ArchiLogger.LogGenericException(e);
 				return Commands.FormatBotResponse(sender, Strings.WarningFailed);
@@ -132,7 +139,13 @@ namespace BoosterManager {
 			// Allow for partial trades, but not partial amounts of individual items.
 			// If user is trying to send: 3 of ItemA and 2 of ItemB.  Yet they have: 3 of ItemA and 1 of ItemB.  This will send only: 3 of ItemA and 0 of ItemB
 			foreach ((HashSet<Asset> itemStacks, ItemIdentifier itemIdentifier, uint amount) in itemStacksWithAmounts) {
-				HashSet<Asset>? itemsToGive = GetItemsFromStacks(sender, itemStacks, amount, amount * numRecieversProcessed);
+				HashSet<Asset>? itemsToGive;
+				try {
+					itemsToGive = GetItemsFromStacks(sender, itemStacks, amount, amount * numRecieversProcessed);
+				} catch (Exception e) {
+					return (false, e.Message);
+				}
+
 				if (itemsToGive == null) {
 					sender.ArchiLogger.LogGenericInfo(String.Format("Not enough of {0} to send!", itemIdentifier.ToString()));
 					responses.Add(String.Format("Not enough of {0} to send :steamthumbsdown:", itemIdentifier.ToString()));
@@ -187,7 +200,20 @@ namespace BoosterManager {
 					break;
 				}
 
-				items.Add(new Asset(appID: itemStack.AppID, contextID: itemStack.ContextID, classID: itemStack.ClassID, assetID: itemStack.AssetID, amount: amountToTakeFromStack));
+				if (itemStack.Amount != amountToTakeFromStack) {
+					// This asset has an amount greater than 1 (such as in the case of gems)
+					// We only want to send some, but not all of this amount
+					PropertyInfo? propertyInfo = itemStack.GetType().GetProperty("Amount");
+					if (propertyInfo == null) {
+						bot.ArchiLogger.LogGenericError("Couldn't find Asset.Amount");
+
+						throw new Exception("Plugin error, please report this");
+					}
+
+					propertyInfo.SetValue(itemStack, amountToTakeFromStack);
+				}
+
+				items.Add(itemStack);
 				amountTaken += amountToTakeFromStack;
 			}
 

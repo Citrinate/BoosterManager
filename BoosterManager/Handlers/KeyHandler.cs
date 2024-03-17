@@ -15,7 +15,7 @@ namespace BoosterManager {
 		internal static async Task<string> GetKeyCount(Bot bot) {
 			HashSet<Asset> inventory;
 			try {
-				inventory = await bot.ArchiWebHandler.GetInventoryAsync(appID: KeyAppID, contextID: KeyContextID).Where(item => ItemIdentifier.KeyIdentifier.IsItemMatch(item)).ToHashSetAsync().ConfigureAwait(false);
+				inventory = await bot.ArchiHandler.GetMyInventoryAsync(appID: KeyAppID, contextID: KeyContextID).Where(item => ItemIdentifier.KeyIdentifier.IsItemMatch(item)).ToHashSetAsync().ConfigureAwait(false);
 			} catch (Exception e) {
 				bot.ArchiLogger.LogGenericException(e);
 				return Commands.FormatBotResponse(bot, Strings.WarningFailed);
