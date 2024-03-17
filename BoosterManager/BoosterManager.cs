@@ -12,8 +12,10 @@ using ArchiSteamFarm.Helpers.Json;
 
 namespace BoosterManager {
 	[Export(typeof(IPlugin))]
-	public sealed class BoosterManager : IASF, IBotModules, IBotCommand2, IBotTradeOfferResults {
+	public sealed class BoosterManager : IASF, IBotModules, IBotCommand2, IBotTradeOfferResults, IGitHubPluginUpdates {
 		public string Name => nameof(BoosterManager);
+		public string RepositoryName => "Citrinate/BoosterManager";
+		public bool CanUpdate => !BoosterHandler.IsCraftingOneTimeBoosters();
 		public Version Version => typeof(BoosterManager).Assembly.GetName().Version ?? new Version("0");
 
 		public Task OnLoaded() {
