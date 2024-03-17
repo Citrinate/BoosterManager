@@ -135,7 +135,7 @@ Format | Example |
 `AppID::ContextID`|The identifier `753::6` will match with all Steam Community items
 `AppID::ContextID::ClassID`|The identifier `753::6::667933237` will match all "Sack of Gems" items
 
-> **Note**
+> [!NOTE]
 > Information on how to determine an item's `AppID`, `ContextID`, and `ClassID` may be found [here](https://github.com/Citrinate/BoosterManager/blob/master/BoosterManager/Docs/ItemIDs.md).
 
 ---

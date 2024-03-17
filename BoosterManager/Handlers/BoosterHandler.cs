@@ -215,6 +215,10 @@ namespace BoosterManager {
 			);
 		}
 
+		internal static bool IsCraftingOneTimeBoosters() {
+			return BoosterHandlers.Any(handler => handler.Value.BoosterQueue.GetNumBoosters(BoosterType.OneTime, wasCrafted: false) > 0);
+		}
+
 		private static int GetMillisecondsFromNow(DateTime then) => Math.Max(0, (int) (then - DateTime.Now).TotalMilliseconds);
 	}
 }

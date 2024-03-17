@@ -357,7 +357,7 @@ namespace BoosterManager {
 		private bool FilterBoosterByType(Booster booster, BoosterType type) => type == BoosterType.Any || booster.Type == type;
 		private HashSet<Booster> GetBoosters(BoosterType type, bool? wasCrafted = null) => Boosters.Values.Where(booster => (wasCrafted == null || booster.WasCrafted == wasCrafted) && FilterBoosterByType(booster, type)).ToHashSet<Booster>();
 		private HashSet<uint> GetBoosterIDs(BoosterType type, bool? wasCrafted = null) => GetBoosters(type, wasCrafted).Select(booster => booster.GameID).ToHashSet<uint>();
-		private int GetNumBoosters(BoosterType type, bool? wasCrafted = null) => GetBoosters(type, wasCrafted).Count;
+		internal int GetNumBoosters(BoosterType type, bool? wasCrafted = null) => GetBoosters(type, wasCrafted).Count;
 		internal int GetGemsNeeded(BoosterType type, bool? wasCrafted = null) => GetBoosters(type, wasCrafted).Sum(booster => (int) booster.Info.Price);
 		internal void ForceUpdateBoosterInfos() => OnBoosterInfosUpdated -= ForceUpdateBoosterInfos;
 		private static int GetMillisecondsFromNow(DateTime then) => Math.Max(0, (int) (then - DateTime.Now).TotalMilliseconds);

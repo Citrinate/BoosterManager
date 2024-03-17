@@ -8,7 +8,7 @@ namespace BoosterManager {
 		internal ulong? ContextID = null;
 		internal ulong? ClassID = null;
 		internal string? TextID = null;
-		internal Asset.EType? Type = null;
+		internal EAssetType? Type = null;
 		internal bool? Marketable = null;
 
 		internal const string Delimiter = "&&";
@@ -16,10 +16,10 @@ namespace BoosterManager {
 
 		internal static readonly ItemIdentifier GemIdentifier = new ItemIdentifier() { AppID = Asset.SteamAppID, ContextID = Asset.SteamCommunityContextID, ClassID = GemHandler.GemsClassID };
 		internal static readonly ItemIdentifier SackIdentifier = new ItemIdentifier() { AppID = Asset.SteamAppID, ContextID = Asset.SteamCommunityContextID, ClassID = GemHandler.SackOfGemsClassID };
-		internal static readonly ItemIdentifier GemAndSackIdentifier = new ItemIdentifier() { AppID = Asset.SteamAppID, ContextID = Asset.SteamCommunityContextID, Type = Asset.EType.SteamGems };
-		internal static readonly ItemIdentifier CardIdentifier = new ItemIdentifier() { AppID = Asset.SteamAppID, ContextID = Asset.SteamCommunityContextID, Type = Asset.EType.TradingCard };
-		internal static readonly ItemIdentifier FoilIdentifier = new ItemIdentifier() { AppID = Asset.SteamAppID, ContextID = Asset.SteamCommunityContextID, Type = Asset.EType.FoilTradingCard };
-		internal static readonly ItemIdentifier BoosterIdentifier = new ItemIdentifier() { AppID = Asset.SteamAppID, ContextID = Asset.SteamCommunityContextID, Type = Asset.EType.BoosterPack };
+		internal static readonly ItemIdentifier GemAndSackIdentifier = new ItemIdentifier() { AppID = Asset.SteamAppID, ContextID = Asset.SteamCommunityContextID, Type = EAssetType.SteamGems };
+		internal static readonly ItemIdentifier CardIdentifier = new ItemIdentifier() { AppID = Asset.SteamAppID, ContextID = Asset.SteamCommunityContextID, Type = EAssetType.TradingCard };
+		internal static readonly ItemIdentifier FoilIdentifier = new ItemIdentifier() { AppID = Asset.SteamAppID, ContextID = Asset.SteamCommunityContextID, Type = EAssetType.FoilTradingCard };
+		internal static readonly ItemIdentifier BoosterIdentifier = new ItemIdentifier() { AppID = Asset.SteamAppID, ContextID = Asset.SteamCommunityContextID, Type = EAssetType.BoosterPack };
 		internal static readonly ItemIdentifier KeyIdentifier = new ItemIdentifier() { AppID = 440, ContextID = 2, TextID = "Mann Co. Supply Crate Key" };
 
 		internal ItemIdentifier() {}
@@ -39,7 +39,7 @@ namespace BoosterManager {
 				AppID = appID;
 				ContextID = contextID;
 				ClassID = classID;
-			} else if (ids.Length == 2 && ids[0] == "Type" && Enum.TryParse<Asset.EType>(ids[1], out Asset.EType type)) {
+			} else if (ids.Length == 2 && ids[0] == "Type" && Enum.TryParse<EAssetType>(ids[1], out EAssetType type)) {
 				// Format: Type::TypeEnum
 				// Note: This format is useful internally, but not publicly documented
 				// This is because it only works with inventory items and not items listed on the marketplace
@@ -92,10 +92,10 @@ namespace BoosterManager {
 			}
 
 			if (TextID != null) {
-				string? name = item.AdditionalPropertiesReadOnly?["name"].GetString();
-				string? marketName = item.AdditionalPropertiesReadOnly?["market_name"].GetString();
-				string? marketHashName = item.AdditionalPropertiesReadOnly?["market_hash_name"].GetString();
-				string? type = item.AdditionalPropertiesReadOnly?["type"].GetString();
+				string? name = item.Description?.Name;
+				string? marketName = item.Description?.MarketName;
+				string? marketHashName = item.Description?.MarketHashName;
+				string? type = item.Description?.TypeText;
 				
 				if ((name == null || !name.Contains(TextID))
 					&& (marketName == null || !marketName.Contains(TextID))
