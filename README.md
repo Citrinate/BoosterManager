@@ -91,7 +91,6 @@ Command | Access | Description
 
 Command | Access | Description
 --- | --- | ---
-`boostermanager`|`FamilySharing`|Prints version of plugin.
 `trade2faok [Bot]`|`Master`|Accepts all pending 2FA trade confirmations for given bot instances.
 `tradecheck [Bot]`|`Master`|Attempt to handle any incoming trades for the given bot using ASF's [trading logic](https://github.com/JustArchiNET/ArchiSteamFarm/wiki/Trading#logic).
 `tradesincoming [Bot] [From]`|`Master`|Displays the number of incoming trades for the given bot, optionally filtered to only count trades `From` the given bot names or 64-bit SteamIDs.
@@ -117,6 +116,12 @@ Command | Access | Description
 `logmarketlistings [Bots]`|`Master`|Collects market listings data from the given bot and sends it to [`MarketListingsAPI`](#marketlistingsapi)
 `logmarkethistory [Bots] [Count] [Start]`|`Master`|Collects market history data from the given bot and sends it to [`MarketHistoryAPI`](#markethistoryapi).  The number of pages of market history may be specified using `Count`, and may begin on the page specified by `Start`
 `logstop [Bots]`|`Master`|Stops any actively running `loginventoryhistory` or `logmarkethistory` commands.
+
+### Other Commands
+
+Command | Access | Description
+--- | --- | ---
+`boostermanager`|`FamilySharing`|Prints version of plugin.
 
 ---
 
