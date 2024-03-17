@@ -9,7 +9,6 @@ using ArchiSteamFarm.Plugins.Interfaces;
 using ArchiSteamFarm.Steam.Exchange;
 using System.Text.Json;
 using ArchiSteamFarm.Helpers.Json;
-using System.Reflection;
 
 namespace BoosterManager {
 	[Export(typeof(IPlugin))]
@@ -19,14 +18,6 @@ namespace BoosterManager {
 
 		public Task OnLoaded() {
 			ASF.ArchiLogger.LogGenericInfo("BoosterManager ASF Plugin by Citrinate");
-
-			// ASFEnhanced Adapter https://github.com/chr233/ASFEnhanceAdapterDemoPlugin
-			var flag = BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
-			var handler = typeof(AdapterBridge).GetMethod(nameof(AdapterBridge.Response), flag);
-			const string pluginId = nameof(BoosterManager);
-			const string cmdPrefix = "BOOSTERMANAGER";
-			const string repoName = "Citrinate/BoosterManager";
-			AdapterBridge.InitAdapter(Name, pluginId, cmdPrefix, repoName, handler);
 
 			return Task.CompletedTask;
 		}
