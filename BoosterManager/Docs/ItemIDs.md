@@ -4,9 +4,7 @@
 
 An AppID refers to a specific Steam App.  This can be found in the url of an App's inventory page.
 
----
-
-#### Example
+### Example
 
 `https://steamcommunity.com/id/████/inventory/#753`
 
@@ -18,9 +16,7 @@ AppID of `753`
 
 Apps can have multiple inventories, and the ContextID refers to the inventory an item exists in.  The ContextID can be found in the url you'd get by right clicking any item in your inventory, and selecting "Copy link address".
 
----
-
-#### Example
+### Example
 
 `https://steamcommunity.com/id/████/inventory/#753_6_22000101010` 
 
@@ -36,9 +32,7 @@ AssetID of `22000101010`
 
 The ClassID refers to all copies of an item.  This can be found in the source code of an item's market listing page.  Alternatively, or if an item doesn't have a market listing page, this can be found at `https://steamcommunity.com/my/inventory/json/AppID/ContextID`.  There also exists another location which can be used similarly at `https://steamcommunity.com/inventory/SteamID/AppID/ContextID`, which has the query parameters `count` and `start_assetid`.
 
----
-
-#### Example using a Market Listing Page
+### Example using a Market Listing Page
 
 The source code for [:TheMessenger:](https://steamcommunity.com/market/listings/753/764790-%3ATheMessenger%3A) contains the text:
 
@@ -52,9 +46,7 @@ ContextID of `6`
 
 ClassID of `2994832731`
 
----
-
-#### Example using JSON inventory
+### Example using JSON inventory
 
 It will be necessary to first get the AppID, ContextID, and AssetID of the item.  The AssetID refers to a specific copy of an item, and all three can be found using the above method to find the ContextID.
 
@@ -65,3 +57,17 @@ When navigating to https://steamcommunity.com/my/inventory/json/753/6 and search
 ```
 
 ClassID of `2994832731`
+
+---
+
+## ItemName, ItemType, and HashName
+
+These identifiers can easily be found either from an inventory or on a market listing page.
+
+### Example for an inventory item
+
+![Inventory Item](https://raw.githubusercontent.com/Citrinate/BoosterManager/master/BoosterManager/Docs/Screenshots/inventory_item.png)
+
+### Example for a market item
+
+![Market Item](https://raw.githubusercontent.com/Citrinate/BoosterManager/master/BoosterManager/Docs/Screenshots/market_item.png)

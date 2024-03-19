@@ -138,7 +138,7 @@ Format | Example |
 `AppID::ContextID::ClassID`|The identifier `753::6::667933237` will match all "Sack of Gems" items
 
 > [!NOTE]
-> Information on how to determine an item's `AppID`, `ContextID`, and `ClassID` may be found [here](https://github.com/Citrinate/BoosterManager/blob/master/BoosterManager/Docs/ItemIDs.md).
+> Information on how to determine an item's `AppID`, `ContextID`, `ClassID`, `ItemName`, `ItemType`, and `HashName` may be found [here](https://github.com/Citrinate/BoosterManager/blob/master/BoosterManager/Docs/ItemIDs.md).
 
 ---
 
