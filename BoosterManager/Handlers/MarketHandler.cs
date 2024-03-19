@@ -90,6 +90,52 @@ namespace BoosterManager {
 
 			return Commands.FormatBotResponse(bot, String.Format("Removed {0} listings", listingIDs.Count));
 		}
+		
+		internal static async Task<string> RemovePendingListings(Bot bot) {
+			(Steam.MarketListingsResponse? marketListings, _) = await WebRequest.GetMarketListings(bot).ConfigureAwait(false);
+
+			if (marketListings == null || marketListings.ListingsToConfirm == null || !marketListings.Success) {
+				return "Failed to load Market Listings";
+			}
+
+			if (marketListings.ListingsToConfirm.Count == 0) {
+				return "No pending market listings found";
+			}
+
+			HashSet<ulong> pendingListingIDs = new();
+
+			foreach (JsonNode? listing in marketListings.ListingsToConfirm) {
+				if (listing == null) {
+					bot.ArchiLogger.LogNullError(listing);
+						
+					return "Failed to load Market Listings";
+				}
+
+				ulong? listingid = listing["listingid"]?.ToString().ToJsonObject<ulong>();
+				if (listingid == null) {
+					bot.ArchiLogger.LogNullError(listingid);
+						
+					return "Failed to load Market Listings";
+				}
+					
+				pendingListingIDs.Add(listingid.Value);
+			}
+
+			int failedToRemove = 0;
+
+			foreach (ulong listingID in pendingListingIDs) {
+				await Task.Delay(100).ConfigureAwait(false);
+				if (!await WebRequest.RemoveListing(bot, listingID).ConfigureAwait(false)) {
+					failedToRemove++;
+				}
+			}
+
+			if (failedToRemove != 0) {
+				return String.Format("Successfully removed {0} pending market listings, failed to remove {1} listings", pendingListingIDs.Count - failedToRemove, failedToRemove);
+			}
+
+			return String.Format("Successfully removed {0} pending market listings", pendingListingIDs.Count);
+		}
 
 		internal static async Task<string> FindAndRemoveListings(Bot bot, List<ItemIdentifier> itemIdentifiers) {
 			Dictionary<string, List<ulong>>? filteredListings = await GetListingIDsFromIdentifiers(bot, itemIdentifiers).ConfigureAwait(false);

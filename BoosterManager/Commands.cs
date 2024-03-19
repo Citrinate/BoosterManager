@@ -175,6 +175,9 @@ namespace BoosterManager {
 						case "MARKET2FAOK" or "M2FAOK":
 							return await Response2FAOK(bot, access, Confirmation.EConfirmationType.Market).ConfigureAwait(false);
 
+						case "REMOVEPENDING" or "REMOVEPENDINGLISTINGS" or "CANCELPENDING" or "CANCELPENDINGLISTINGS" or "RP":
+							return await ResponseRemovePendingListings(bot, access).ConfigureAwait(false);
+
 						case "T2FAOKA":
 							return await Response2FAOK(access, steamID, "ASF", Confirmation.EConfirmationType.Trade).ConfigureAwait(false);
 						case "TRADE2FAOK" or "T2FAOK":
@@ -468,6 +471,9 @@ namespace BoosterManager {
 							return await ResponseRemoveListings(access, steamID, args[1], Utilities.GetArgsAsText(args, 2, ",")).ConfigureAwait(false);
 						case "REMOVELISTINGS" or "REMOVELISTING" or "CANCELLISTINGS" or "CANCELLISTING" or "RLISTINGS" or "RLISTING" or "REMOVEL" or "RL" :
 							return await ResponseRemoveListings(bot, access, args[1]).ConfigureAwait(false);
+
+						case "REMOVEPENDING" or "REMOVEPENDINGLISTINGS" or "CANCELPENDING" or "CANCELPENDINGLISTINGS" or "RP":
+							return await ResponseRemovePendingListings(access, steamID, Utilities.GetArgsAsText(args, 1, ",")).ConfigureAwait(false);
 						
 						case "UNPACKGEMS" or "UNPACKGEM":
 							return await ResponseUnpackGems(access, steamID, Utilities.GetArgsAsText(args, 1, ",")).ConfigureAwait(false);
@@ -1271,6 +1277,32 @@ namespace BoosterManager {
 			}
 
 			return await ResponseRemoveListings(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), listingIDs).ConfigureAwait(false);
+		}
+
+		private static async Task<string?> ResponseRemovePendingListings(Bot bot, EAccess access) {
+			if (access < EAccess.Master) {
+				return null;
+			}
+
+			if (!bot.IsConnectedAndLoggedOn) {
+				return FormatBotResponse(bot, Strings.BotNotConnected);
+			}
+
+			return await MarketHandler.RemovePendingListings(bot).ConfigureAwait(false);
+		}
+
+		private static async Task<string?> ResponseRemovePendingListings(EAccess access, ulong steamID, string botName) {
+			if (String.IsNullOrEmpty(botName)) {
+				throw new ArgumentNullException(nameof(botName));
+			}
+
+			Bot? bot = Bot.GetBot(botName);
+
+			if (bot == null) {
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botName)) : null;
+			}
+
+			return await ResponseRemovePendingListings(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)).ConfigureAwait(false);
 		}
 
 		private static async Task<string?> ResponseSendItemToBot(Bot bot, EAccess access, ItemIdentifier itemIdentifier, bool? marketable = null, string? recieverBotName = null) {

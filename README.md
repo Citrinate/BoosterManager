@@ -107,6 +107,7 @@ Command | Access | Description
 `findandremovelistings <Bots> <ItemIdentifiers>`|`Master`|Removes any market listing belonging to the given bot and matching any of the [`ItemIdentifiers`](#itemidentifiers).
 `listings [Bots]`|`Master`|Displays the total value of all market listings owned by the given bot.
 `removelistings [Bot] <ListingIDs>`|`Master`|Removes market `ListingIDs` belonging to the given bot.
+`removepending <Bots>`|`Master`|Removes all pending market listings belonging to the given bot.
 `market2faok [Bot] [Minutes]`|`Master`|Accepts all pending 2FA market confirmations for given bot instances.  Optionally repeat this action once every `Minutes`.  To cancel any repetition, set `Minutes` to 0.
 `value [Bots] [BalanceLimit]`|`Master`|Displays the combined wallet balance and total value of all market listings owned by the given bot.  The maximum allowed balance in your region may be provided as `BalanceLimit`, a whole number, and it will instead display how close the given bot is to reaching that limit.
 
@@ -149,6 +150,7 @@ Command | Alias |
 `findlistings`|`fl`
 `findandremovelistings`|`frl`
 `removelistings`|`rlistings`, `removel`
+`removepending`|`rp`
 `logboosterdata`|`logbd`
 `loginventoryhistory`|`logih`
 `logmarketlistings`|`logml`
