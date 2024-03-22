@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using ArchiSteamFarm.Localization;
 using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Steam.Data;
+using BoosterManager.Localization;
 
 namespace BoosterManager {
 	internal static class GemHandler {
@@ -17,7 +17,7 @@ namespace BoosterManager {
 				inventory = await bot.ArchiHandler.GetMyInventoryAsync().Where(item => ItemIdentifier.GemAndSackIdentifier.IsItemMatch(item)).ToHashSetAsync().ConfigureAwait(false);
 			} catch (Exception e) {
 				bot.ArchiLogger.LogGenericException(e);
-				return Commands.FormatBotResponse(bot, Strings.WarningFailed);
+				return Commands.FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.WarningFailed);
 			}
 
 			(uint tradable, uint untradable) gems = (0,0);
@@ -33,9 +33,21 @@ namespace BoosterManager {
 				}
 			}
 
-			return Commands.FormatBotResponse(bot, String.Format("Tradable: {0:N0}{1}{2}", gems.tradable, sacks.tradable == 0 ? "" : String.Format(" (+{0:N0} Sacks)", sacks.tradable),
-				(gems.untradable + sacks.untradable) == 0 ? "" : String.Format("; Untradable: {0:N0}{1}", gems.untradable, sacks.untradable == 0 ? "" : String.Format(" (+{0:N0} Sacks)", sacks.untradable))
-			));
+			string response = String.Format(Strings.ItemsCountTradable, String.Format("{0:N0}", gems.tradable));
+
+			if (sacks.tradable > 0) {
+				response += String.Format(" (+{0})", String.Format(Strings.GemSacksCount, String.Format("{0:N0}", sacks.tradable)));
+			}
+
+			if (gems.untradable + sacks.untradable > 0) {
+				response += String.Format("; {0}", String.Format(Strings.ItemsCountUntradable, String.Format("{0:N0}", gems.untradable)));
+				
+				if (sacks.untradable > 0) {
+					response += String.Format(" (+{0})", String.Format(Strings.GemSacksCount, String.Format("{0:N0}", sacks.untradable)));
+				}
+			}
+
+			return Commands.FormatBotResponse(bot, response);
 		}
 
 		internal static async Task<string> UnpackGems(Bot bot) {
@@ -44,22 +56,22 @@ namespace BoosterManager {
 				sacks = await bot.ArchiHandler.GetMyInventoryAsync().Where(item => ItemIdentifier.SackIdentifier.IsItemMatch(item) && (BoosterHandler.AllowCraftUntradableBoosters || item.Tradable)).ToHashSetAsync().ConfigureAwait(false);
 			} catch (Exception e) {
 				bot.ArchiLogger.LogGenericException(e);
-				return Commands.FormatBotResponse(bot, Strings.WarningFailed);
+				return Commands.FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.WarningFailed);
 			}
 
 			if (sacks.Count == 0) {
-				return Commands.FormatBotResponse(bot, "No gems to unpack");
+				return Commands.FormatBotResponse(bot, Strings.NoSacksFound);
 			}
 
 			foreach (Asset sack in sacks) {
 				Steam.ExchangeGooResponse? response = await WebRequest.UnpackGems(bot, sack.AssetID, sack.Amount);
 
 				if (response == null || response.Success != 1) {
-					return Commands.FormatBotResponse(bot, Strings.WarningFailed);
+					return Commands.FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.WarningFailed);
 				}
 			}
 
-			return Commands.FormatBotResponse(bot, Strings.Success);
+			return Commands.FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.Success);
 		}
 	}
 }

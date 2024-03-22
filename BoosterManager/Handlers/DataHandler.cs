@@ -3,8 +3,8 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using ArchiSteamFarm.Localization;
 using ArchiSteamFarm.Steam;
+using BoosterManager.Localization;
 using Nito.Disposables.Internals;
 
 namespace BoosterManager {
@@ -19,7 +19,7 @@ namespace BoosterManager {
 
 		internal static async Task<string> SendAllData(Bot bot) {
 			if (BoosterDataAPI == null && InventoryHistoryAPI == null && MarketListingsAPI == null && MarketHistoryAPI == null) {
-				return Commands.FormatBotResponse(bot, "API endpoints not defined");
+				return Commands.FormatBotResponse(bot, Strings.APIEndpointsUndefined);
 			}
 
 			List<Task<string?>> tasks = new List<Task<string?>>();
@@ -35,7 +35,7 @@ namespace BoosterManager {
 			List<string> responses = tasks.Select(task => task.Result).WhereNotNull().ToList<string>();
 
 			if (responses.Count == 0) {
-				return Commands.FormatBotResponse(bot, "No messages to display");
+				return Commands.FormatBotResponse(bot, Strings.NoMessages);
 			}
 
 			if (responses.Count > 1) {
@@ -46,7 +46,7 @@ namespace BoosterManager {
 
 		public static async Task<string> SendBoosterDataOnly(Bot bot) {
 			if (BoosterDataAPI == null) {
-				return Commands.FormatBotResponse(bot, "Booster Data API endpoint not defined");
+				return Commands.FormatBotResponse(bot, Strings.BoosterEndpointUndefined);
 			}
 
 			List<Task<string?>> tasks = new List<Task<string?>>();
@@ -59,7 +59,7 @@ namespace BoosterManager {
 			List<string> responses = tasks.Select(task => task.Result).WhereNotNull().ToList<string>();
 
 			if (responses.Count == 0) {
-				return Commands.FormatBotResponse(bot, "No messages to display");
+				return Commands.FormatBotResponse(bot, Strings.NoMessages);
 			}
 
 			if (responses.Count > 1) {
@@ -70,11 +70,11 @@ namespace BoosterManager {
 
 		public static async Task<string> SendInventoryHistoryOnly(Bot bot, Bot respondingBot, ulong recipientSteamID, uint? numPages = 1, uint? startTime = null, uint? timeFrac = null, string? s = null) {
 			if (InventoryHistoryAPI == null) {
-				return Commands.FormatBotResponse(bot, "Inventory History API endpoint not defined");
+				return Commands.FormatBotResponse(bot, Strings.InventoryHistoryEndpointUndefined);
 			}
 
 			if (numPages == 0) {
-				return Commands.FormatBotResponse(bot, "Finished sending no pages");
+				return Commands.FormatBotResponse(bot, Strings.FinishedZeroPages);
 			}
 
 			List<Task<string?>> tasks = new List<Task<string?>>();
@@ -93,7 +93,7 @@ namespace BoosterManager {
 			List<string> responses = tasks.Select(task => task.Result).WhereNotNull().ToList<string>();
 
 			if (responses.Count == 0) {
-				return Commands.FormatBotResponse(bot, "No messages to display");
+				return Commands.FormatBotResponse(bot, Strings.NoMessages);
 			}
 
 			if (responses.Count > 1) {
@@ -104,7 +104,7 @@ namespace BoosterManager {
 
 		public static async Task<string> SendMarketListingsOnly(Bot bot) {
 			if (MarketListingsAPI == null) {
-				return Commands.FormatBotResponse(bot, "Market Listings API endpoint not defined");
+				return Commands.FormatBotResponse(bot, Strings.MarketListingsEndpointUndefined);
 			}
 
 			List<Task<string?>> tasks = new List<Task<string?>>();
@@ -117,7 +117,7 @@ namespace BoosterManager {
 			List<string> responses = tasks.Select(task => task.Result).WhereNotNull().ToList<string>();
 
 			if (responses.Count == 0) {
-				return Commands.FormatBotResponse(bot, "No messages to display");
+				return Commands.FormatBotResponse(bot, Strings.NoMessages);
 			}
 
 			if (responses.Count > 1) {
@@ -128,11 +128,11 @@ namespace BoosterManager {
 
 		public static async Task<string> SendMarketHistoryOnly(Bot bot, uint? numPages = 1, uint? startPage = 0) {
 			if (MarketHistoryAPI == null) {
-				return Commands.FormatBotResponse(bot, "Market History API endpoint not defined");
+				return Commands.FormatBotResponse(bot, Strings.MarketHistoryEndpointUndefined);
 			}
 
 			if (numPages == 0) {
-				return Commands.FormatBotResponse(bot, "Finished sending no pages");
+				return Commands.FormatBotResponse(bot, Strings.FinishedZeroPages);
 			}
 
 			List<Task<string?>> tasks = new List<Task<string?>>();
@@ -147,7 +147,7 @@ namespace BoosterManager {
 			List<string> responses = tasks.Select(task => task.Result).WhereNotNull().ToList<string>();
 
 			if (responses.Count == 0) {
-				return Commands.FormatBotResponse(bot, "No messages to display");
+				return Commands.FormatBotResponse(bot, Strings.NoMessages);
 			}
 
 			if (responses.Count > 1) {
@@ -159,7 +159,7 @@ namespace BoosterManager {
 		public static string StopSend(Bot bot) {
 			ForceStop.AddOrUpdate(bot.BotName, DateTime.Now, (_, _) => DateTime.Now);
 
-			return Commands.FormatBotResponse(bot, Strings.Success);
+			return Commands.FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.Success);
 		}
 
 		private static async Task<string?> SendBoosterData(Bot bot, DateTime tasksStartedTime, uint delayInMilliseconds = 0, bool retryOnFailure = false) {
@@ -170,7 +170,7 @@ namespace BoosterManager {
 			if (delayInMilliseconds != 0) {
 				for (int i = 0; i < delayInMilliseconds; i += 1000) {
 					if (WasManuallyStopped(bot, tasksStartedTime)) {
-						return String.Format("Manually stopped before fetching Booster Data");
+						return String.Format(Strings.BoosterDataFetchStopped);
 					}
 
 					await Task.Delay(1000).ConfigureAwait(false);
@@ -178,7 +178,7 @@ namespace BoosterManager {
 			}
 
 			if (WasManuallyStopped(bot, tasksStartedTime)) {
-				return String.Format("Manually stopped before fetching Booster Data");
+				return String.Format(Strings.BoosterDataFetchStopped);
 			}
 
 			(BoosterPageResponse? boosterPage, Uri source) = await WebRequest.GetBoosterPage(bot).ConfigureAwait(false);
@@ -188,7 +188,7 @@ namespace BoosterManager {
 					return await SendBoosterData(bot, tasksStartedTime, LogDataPageDelay * 1000, retryOnFailure).ConfigureAwait(false);
 				}
 
-				return "Failed to fetch Booster Data :steamthumbsdown:";
+				return String.Format("{0} :steamthumbsdown:", Strings.BoosterDataFetchFailed);
 			}
 
 			SteamDataResponse response = await WebRequest.SendSteamData<IEnumerable<Steam.BoosterInfo>>(BoosterDataAPI, bot, boosterPage.BoosterInfos, source).ConfigureAwait(false);
@@ -202,10 +202,10 @@ namespace BoosterManager {
 			}
 
 			if (!response.Success) {
-				return "API failed to accept Booster Data :steamthumbsdown:";
+				return String.Format("{0} :steamthumbsdown:", Strings.BoosterDataEndpointFailed);
 			}
 
-			return "Successly sent Booster Data";
+			return Strings.BoosterDataEndpointSuccess;
 		}
 
 		private static async Task<string?> SendInventoryHistory(Bot bot, List<Task<string?>> tasks, DateTime tasksStartedTime, Steam.InventoryHistoryCursor? cursor = null, uint? startTime = null, uint pagesRemaining = 0, uint delayInMilliseconds = 0, bool retryOnRateLimit = false, bool showRateLimitMessage = true, Bot? respondingBot = null, ulong? recipientSteamID = null) {
@@ -218,7 +218,7 @@ namespace BoosterManager {
 			if (delayInMilliseconds != 0) {
 				for (int i = 0; i < delayInMilliseconds; i += 1000) {
 					if (WasManuallyStopped(bot, tasksStartedTime)) {
-						return String.Format("Manually stopped before fetching Inventory History for Time < {0} ({1:MMM d, yyyy} @ {1:T})", pageTime, GetDateTimeFromTimestamp(pageTime));
+						return String.Format(Strings.InventoryHistoryFetchStopped, pageTime, String.Format("{0:MMM d, yyyy}", GetDateTimeFromTimestamp(pageTime)), String.Format("{0:T}", GetDateTimeFromTimestamp(pageTime)));
 					}
 
 					await Task.Delay(1000).ConfigureAwait(false);
@@ -226,7 +226,7 @@ namespace BoosterManager {
 			}
 
 			if (WasManuallyStopped(bot, tasksStartedTime)) {
-				return String.Format("Manually stopped before fetching Inventory History for Time < {0} ({1:MMM d, yyyy} @ {1:T})", pageTime, GetDateTimeFromTimestamp(pageTime));
+				return String.Format(Strings.InventoryHistoryFetchStopped, pageTime, String.Format("{0:MMM d, yyyy}", GetDateTimeFromTimestamp(pageTime)), String.Format("{0:T}", GetDateTimeFromTimestamp(pageTime)));
 			}
 
 			if (!bot.IsConnectedAndLoggedOn) {
@@ -242,7 +242,7 @@ namespace BoosterManager {
 				if (retryOnRateLimit) {
 					// This API has a very reachable rate limit
 					if (showRateLimitMessage && respondingBot != null && recipientSteamID != null) {
-						string message = "Rate limit exceeded while attempting to fetch Inventory History. Will keep trying, but it could take up to 12 hours to continue.  If you'd like to stop, use the 'logstop' command.";					
+						string message = Strings.InventoryHistoryRateLimitExceeded;
 						await respondingBot.SendMessage(recipientSteamID.Value, Commands.FormatBotResponse(bot, message)).ConfigureAwait(false);
 					}
 
@@ -257,10 +257,11 @@ namespace BoosterManager {
 				}
 
 				if (inventoryHistory?.Error != null) {
-					return String.Format("Failed to fetch Inventory History for Time < {0} ({1:MMM d, yyyy} @ {1:T}): {2} :steamthumbsdown:", pageTime, GetDateTimeFromTimestamp(pageTime), inventoryHistory.Error);
+					return String.Format("{0}: {1} :steamthumbsdown:", String.Format(Strings.InventoryHistoryFetchFailed, pageTime, String.Format("{0:MMM d, yyyy}", GetDateTimeFromTimestamp(pageTime)), String.Format("{0:T}", GetDateTimeFromTimestamp(pageTime))), inventoryHistory.Error);
 				}
 
-				return String.Format("Failed to fetch Inventory History for Time < {0} ({1:MMM d, yyyy} @ {1:T}) :steamthumbsdown:", pageTime, GetDateTimeFromTimestamp(pageTime));
+
+				return String.Format("{0} :steamthumbsdown:", String.Format(Strings.InventoryHistoryFetchFailed, pageTime, String.Format("{0:MMM d, yyyy}", GetDateTimeFromTimestamp(pageTime)), String.Format("{0:T}", GetDateTimeFromTimestamp(pageTime))));
 			}
 
 			SteamDataResponse response = await WebRequest.SendSteamData<Steam.InventoryHistoryResponse>(InventoryHistoryAPI, bot, inventoryHistory, source!, pageTime, cursor).ConfigureAwait(false);
@@ -283,13 +284,13 @@ namespace BoosterManager {
 						if (response.Message != null) {
 							messages.Add(response.Message);
 						} else if (!response.Success) {
-							messages.Add(String.Format("API failed to accept Inventory History for Time < {0} ({1:MMM d, yyyy} @ {1:T}) :steamthumbsdown:", pageTime, GetDateTimeFromTimestamp(pageTime)));
+							messages.Add(String.Format("{0} :steamthumbsdown:", String.Format(Strings.InventoryHistoryEndpointFailed, pageTime, String.Format("{0:MMM d, yyyy}", GetDateTimeFromTimestamp(pageTime)), String.Format("{0:T}", GetDateTimeFromTimestamp(pageTime)))));
 						} else {
-							messages.Add(String.Format("Successfully sent Inventory History for Time < {0} ({1:MMM d, yyyy} @ {1:T})", pageTime, GetDateTimeFromTimestamp(pageTime)));
+							messages.Add(String.Format(Strings.InventoryHistoryEndpointSuccess, pageTime, String.Format("{0:MMM d, yyyy}", GetDateTimeFromTimestamp(pageTime)), String.Format("{0:T}", GetDateTimeFromTimestamp(pageTime))));
 						}
 					}
-					messages.Add(String.Format("Inventory History ended at the page starting on {0:MMM d, yyyy} @ {0:T}", GetDateTimeFromTimestamp(pageTime)));
-					messages.Add("Please verify that your history actually ends here, as there's a bug on Steam's end which can cause the history to end early.  Refer to the README for more information.");
+					messages.Add(String.Format(Strings.InventoryHistoryEnded, String.Format("{0:MMM d, yyyy}", GetDateTimeFromTimestamp(pageTime)), String.Format("{0:T}", GetDateTimeFromTimestamp(pageTime))));
+					messages.Add(Strings.InventoryHistorySteamError);
 					messages.Add(String.Format("({0})", source));
 
 					return String.Join(Environment.NewLine, messages);
@@ -305,10 +306,10 @@ namespace BoosterManager {
 			}
 
 			if (!response.Success) {
-				return String.Format("API failed to accept Inventory History for Time < {0} ({1:MMM d, yyyy} @ {1:T}) :steamthumbsdown:", pageTime, GetDateTimeFromTimestamp(pageTime));
+				return String.Format("{0} :steamthumbsdown:", String.Format(Strings.InventoryHistoryEndpointFailed, pageTime, String.Format("{0:MMM d, yyyy}", GetDateTimeFromTimestamp(pageTime)), String.Format("{0:T}", GetDateTimeFromTimestamp(pageTime))));
 			}
 
-			return String.Format("Successfully sent Inventory History for Time < {0} ({1:MMM d, yyyy} @ {1:T})", pageTime, GetDateTimeFromTimestamp(pageTime));
+			return String.Format(Strings.InventoryHistoryEndpointSuccess, pageTime, String.Format("{0:MMM d, yyyy}", GetDateTimeFromTimestamp(pageTime)), String.Format("{0:T}", GetDateTimeFromTimestamp(pageTime)));
 		}
 
 		private static async Task<string?> SendMarketListings(Bot bot, uint delayInMilliseconds = 0) {
@@ -325,7 +326,7 @@ namespace BoosterManager {
 			(Steam.MarketListingsResponse? marketListings, Uri source) = await WebRequest.GetMarketListings(bot).ConfigureAwait(false);
 
 			if (marketListings == null || !marketListings.Success) {
-				return "Failed to fetch Market Listings :steamthumbsdown:";
+				return String.Format("{0} :steamthumbsdown:", Strings.MarketListingsFetchFailed);
 			}
 			
 			SteamDataResponse response = await WebRequest.SendSteamData<Steam.MarketListingsResponse>(MarketListingsAPI, bot, marketListings, source).ConfigureAwait(false);
@@ -339,10 +340,10 @@ namespace BoosterManager {
 			}
 
 			if (!response.Success) {
-				return "API failed to accept Market Listings :steamthumbsdown:";
+				return String.Format("{0} :steamthumbsdown:", Strings.MarketListingsEndpointFailed);
 			}
 
-			return "Successfully sent Market Listings";
+			return Strings.MarketListingsEndpointSuccess;
 		}
 
 		private static async Task<string?> SendMarketHistory(Bot bot, List<Task<string?>> tasks, DateTime tasksStartedTime, uint page = 0, uint pagesRemaining = 0, uint delayInMilliseconds = 0) {
@@ -353,7 +354,7 @@ namespace BoosterManager {
 			if (delayInMilliseconds != 0) {
 				for (int i = 0; i < delayInMilliseconds; i += 1000) {
 					if (WasManuallyStopped(bot, tasksStartedTime)) {
-						return String.Format("Manually stopped before fetching Market History (Page {0})", page + 1);
+						return String.Format(Strings.MarketHistoryFetchStopped, page + 1);
 					}
 
 					await Task.Delay(1000).ConfigureAwait(false);
@@ -361,7 +362,7 @@ namespace BoosterManager {
 			}
 
 			if (WasManuallyStopped(bot, tasksStartedTime)) {
-				return String.Format("Manually stopped before fetching Market History (Page {0})", page + 1);
+				return String.Format(Strings.MarketHistoryFetchStopped, page + 1);
 			}
 
 			if (!bot.IsConnectedAndLoggedOn) {
@@ -373,7 +374,7 @@ namespace BoosterManager {
 			(Steam.MarketHistoryResponse? marketHistory, Uri source) = await WebRequest.GetMarketHistory(bot, start, count).ConfigureAwait(false);
 
 			if (marketHistory == null || !marketHistory.Success) {
-				return String.Format("Failed to fetch Market History (Page {0}) :steamthumbsdown:", page + 1);
+				return String.Format("{0} :steamthumbsdown:", String.Format(Strings.MarketHistoryFetchFailed, page + 1));
 			}
 
 			SteamDataResponse response = await WebRequest.SendSteamData<Steam.MarketHistoryResponse>(MarketHistoryAPI, bot, marketHistory, source, page + 1).ConfigureAwait(false);
@@ -399,10 +400,10 @@ namespace BoosterManager {
 			}
 
 			if (!response.Success) {
-				return String.Format("API failed to accept Market History (Page {0}) :steamthumbsdown:", page + 1);
+				return String.Format("{0} :steamthumbsdown:", String.Format(Strings.MarketHistoryEndpointFailed, page + 1));
 			}
 
-			return String.Format("Successfully sent Market History (Page {0})", page + 1);
+			return String.Format(Strings.MarketHistoryEndpointSuccess, page + 1);
 		}
 
 		private static DateTime GetDateTimeFromTimestamp(uint timestamp) => DateTime.UnixEpoch.AddSeconds(timestamp).ToLocalTime();

@@ -1,0 +1,512 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!--
+    Microsoft ResX Schema
+
+    Version 2.0
+
+    The primary goals of this format is to allow a simple XML format
+    that is mostly human readable. The generation and parsing of the
+    various data types are done through the TypeConverter classes
+    associated with the data types.
+
+    Example:
+
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+
+    There are any number of "resheader" rows that contain simple
+    name/value pairs.
+
+    Each data row contains a name, and value. The row also contains a
+    type or mimetype. Type corresponds to a .NET class that support
+    text/value conversion through the TypeConverter architecture.
+    Classes that don't support this are serialized and stored with the
+    mimetype set.
+
+    The mimetype is used for serialized objects, and tells the
+    ResXResourceReader how to depersist the object. This is currently not
+    extensible. For a given mimetype the value must be set accordingly:
+
+    Note - application/x-microsoft.net.object.binary.base64 is the format
+    that the ResXResourceWriter will generate, however the reader can
+    read any of the formats listed below.
+
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string"/>
+              <xsd:attribute name="type" type="xsd:string"/>
+              <xsd:attribute name="mimetype" type="xsd:string"/>
+              <xsd:attribute ref="xml:space"/>
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string"/>
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
+              <xsd:attribute ref="xml:space"/>
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required"/>
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="BoosterInfoUpdateFailed" xml:space="preserve">
+    <value>Failed to update booster information, will retry in 1 minute</value>
+    <comment/>
+  </data>
+  <data name="NotEnoughGems" xml:space="preserve">
+    <value>{0} more gems are needed to finish crafting boosters. Crafting will resume when more gems are available.</value>
+    <comment>{0} will be replaced by a number of gems</comment>
+  </data>
+  <data name="BoosterCreationFailed" xml:space="preserve">
+    <value>Failed to create booster from {0}</value>
+    <comment>{0} will be replaced by an appID</comment>
+  </data>
+  <data name="BoosterCreationSuccess" xml:space="preserve">
+    <value>Successfuly created booster from {0}</value>
+    <comment>{0} will be replaced by an appID</comment>
+  </data>
+  <data name="NextBoosterCraft" xml:space="preserve">
+    <value>Next booster will be crafted at {0}</value>
+    <comment>{0} will be replaced by a time</comment>
+  </data>
+  <data name="BoosterUncraftable" xml:space="preserve">
+    <value>Can't craft boosters for {0}</value>
+    <comment>{0} will be replaced by an appID</comment>
+  </data>
+  <data name="BoosterQueued" xml:space="preserve">
+    <value>Added {0} to booster queue.</value>
+    <comment>{0} will be replaced by an appID</comment>
+  </data>
+  <data name="BoosterUnqueued" xml:space="preserve">
+    <value>Removed {0} from booster queue.</value>
+    <comment>{0} will be replaced by an appID</comment>
+  </data>
+  <data name="PermanentBoosterRequeued" xml:space="preserve">
+    <value>Re-adding permanent {0} to booster queue.</value>
+    <comment>{0} will be replaced by an appID</comment>
+  </data>
+  <data name="BoosterInfoUpdateSuccess" xml:space="preserve">
+    <value>Booster information updated</value>
+    <comment/>
+  </data>
+  <data name="BoosterUnexpectedlyUncraftable" xml:space="preserve">
+    <value>No longer able to craft boosters from {0} ({1})</value>
+    <comment>{0} will be replaced by a game name, {1} will be replaced by an appID</comment>
+  </data>
+  <data name="BoosterUnexpectedlyCrafted" xml:space="preserve">
+    <value>Booster from {0} was recently created either by us or by user</value>
+    <comment>{0} will be replaced by an appID</comment>
+  </data>
+  <data name="BoosterCreationError" xml:space="preserve">
+    <value>An error was encountered when trying to craft a booster from {0}, trying to resolve it now</value>
+    <comment>{0} will be replaced by an appID</comment>
+  </data>
+  <data name="BoosterCreationRetry" xml:space="preserve">
+    <value>Booster from {0} was not created, retrying</value>
+    <comment>{0} will be replaced by an appID</comment>
+  </data>
+  <data name="BoosterCreationFinished" xml:space="preserve">
+    <value>Finished crafting {0} boosters!</value>
+    <comment>{0} will be replaced by a number of boosters</comment>
+  </data>
+  <data name="BoosterUnqueuedByUser" xml:space="preserve">
+    <value>User removed {0} from booster queue.</value>
+    <comment>{0} will be replaced by an appID</comment>
+  </data>
+  <data name="BoosterInfoUpdating" xml:space="preserve">
+    <value>Updating booster information...</value>
+    <comment/>
+  </data>
+  <data name="QueueStatusShort" xml:space="preserve">
+    <value>{0} boosters from {1} gems will be crafted by {2}</value>
+    <comment>{0} will be replaced by a number of boosters, {1} will be replaced by a number of gems, {2} will be replaced by a time</comment>
+  </data>
+  <data name="QueueEmpty" xml:space="preserve">
+    <value>Bot is not crafting any boosters.</value>
+    <comment/>
+  </data>
+  <data name="QueueStatusNotEnoughGems" xml:space="preserve">
+    <value>Not enough gems</value>
+    <comment/>
+  </data>
+  <data name="QueueStatusGemsNeeded" xml:space="preserve">
+    <value>Need {0} more gems for the next booster!</value>
+    <comment>{0} will be replaced by a number of gems</comment>
+  </data>
+  <data name="QueueStatusTotalGemsNeeded" xml:space="preserve">
+    <value>Need {0} more gems to finish all boosters!</value>
+    <comment>{0} will be replaced by a number of gems</comment>
+  </data>
+  <data name="QueueStatusOneTimeBoosters" xml:space="preserve">
+    <value>Crafted {0}/{1} one-time boosters. Crafting will finish at {2}, and will use {3} gems.</value>
+    <comment>{0} will be replaced by a number of boosters, {1} will be replaced by a number of boosters, {2} will be replaced by a time, {3} will be replaced by a number of gems</comment>
+  </data>
+  <data name="QueueStatusOneTimeBoosterList" xml:space="preserve">
+    <value>One-time boosters waiting to be crafted: {0}</value>
+    <comment>{0} will be replaced by a list of appIDs</comment>
+  </data>
+  <data name="QueueStatusPermanentBoosters" xml:space="preserve">
+    <value>Permanent boosters that will be crafted continually for {0} gems: {1}</value>
+    <comment>{0} will be replaced by a number of gems, {1} will be replaced by a list of appIDs</comment>
+  </data>
+  <data name="QueueStatusNextBoosterCraftingNow" xml:space="preserve">
+    <value>Next booster will be crafted now: {0} ({1})</value>
+    <comment>{0} will be replaced by a game name, {1} will be replaced by an appID</comment>
+  </data>
+  <data name="QueueStatusNextBoosterCraftingLater" xml:space="preserve">
+    <value>Next booster will be crafted at {0}: {1} ({2})</value>
+    <comment>{0} will be replaced by a time, {1} will be replaced by a game name, {2} will be replaced by an appID</comment>
+  </data>
+  <data name="BoosterCreationStarting" xml:space="preserve">
+    <value>Attempting to craft {0} boosters...</value>
+    <comment>{0} will be replaced by a number of boosters</comment>
+  </data>
+  <data name="BoostersUncraftable" xml:space="preserve">
+    <value>Bot cannot craft boosters for the requested games</value>
+    <comment/>
+  </data>
+  <data name="QueueRemovalByAppFail" xml:space="preserve">
+    <value>Bot was not attempting to craft any of those boosters. If you're trying to remove boosters from your "GamesToBooster" config setting, you'll need to remove them from your config file.</value>
+    <comment/>
+  </data>
+  <data name="QueueRemovalByTimeFail" xml:space="preserve">
+    <value>Didn't find any boosters that could be removed.</value>
+    <comment/>
+  </data>
+  <data name="QueueRemovalSuccess" xml:space="preserve">
+    <value>Will no longer craft these {0} boosters: {1}</value>
+    <comment>{0} will be replaced by a number of boosters, {1} will be replaced by a list of appIDs</comment>
+  </data>
+  <data name="APIEndpointsUndefined" xml:space="preserve">
+    <value>API endpoints not defined</value>
+    <comment/>
+  </data>
+  <data name="NoMessages" xml:space="preserve">
+    <value>No messages to display</value>
+    <comment/>
+  </data>
+  <data name="BoosterEndpointUndefined" xml:space="preserve">
+    <value>Booster Data API endpoint not defined</value>
+    <comment/>
+  </data>
+  <data name="InventoryHistoryEndpointUndefined" xml:space="preserve">
+    <value>Inventory History API endpoint not defined</value>
+    <comment/>
+  </data>
+  <data name="MarketListingsEndpointUndefined" xml:space="preserve">
+    <value>Market Listings API endpoint not defined</value>
+    <comment/>
+  </data>
+  <data name="MarketHistoryEndpointUndefined" xml:space="preserve">
+    <value>Market History API endpoint not defined</value>
+    <comment/>
+  </data>
+  <data name="FinishedZeroPages" xml:space="preserve">
+    <value>Finished sending no pages</value>
+    <comment/>
+  </data>
+  <data name="BoosterDataFetchStopped" xml:space="preserve">
+    <value>Manually stopped before fetching Booster Data</value>
+    <comment/>
+  </data>
+  <data name="BoosterDataFetchFailed" xml:space="preserve">
+    <value>Failed to fetch Booster Data</value>
+    <comment/>
+  </data>
+  <data name="BoosterDataEndpointFailed" xml:space="preserve">
+    <value>API failed to accept Booster Data</value>
+    <comment/>
+  </data>
+  <data name="BoosterDataEndpointSuccess" xml:space="preserve">
+    <value>Successly sent Booster Data</value>
+    <comment/>
+  </data>
+  <data name="InventoryHistoryFetchStopped" xml:space="preserve">
+    <value>Manually stopped before fetching Inventory History for Time &lt; {0} ({1} @ {2})</value>
+    <comment>{0} will be replaced by a unix timestamp, {1} will be replaced by a date, {2} will be replaced by a time</comment>
+  </data>
+  <data name="InventoryHistoryRateLimitExceeded" xml:space="preserve">
+    <value>Rate limit exceeded while attempting to fetch Inventory History. Will keep trying, but it could take up to 12 hours to continue. If you'd like to stop, use the 'logstop' command.</value>
+    <comment/>
+  </data>
+  <data name="InventoryHistoryFetchFailed" xml:space="preserve">
+    <value>Failed to fetch Inventory History for Time &lt; {0} ({1} @ {2})</value>
+    <comment>{0} will be replaced by a unix timestamp, {1} will be replaced by a date, {2} will be replaced by a time</comment>
+  </data>
+  <data name="InventoryHistoryEndpointFailed" xml:space="preserve">
+    <value>API failed to accept Inventory History for Time &lt; {0} ({1} @ {2})</value>
+    <comment>{0} will be replaced by a unix timestamp, {1} will be replaced by a date, {2} will be replaced by a time</comment>
+  </data>
+  <data name="InventoryHistoryEndpointSuccess" xml:space="preserve">
+    <value>Successfully sent Inventory History for Time &lt; {0} ({1} @ {2})</value>
+    <comment>{0} will be replaced by a unix timestamp, {1} will be replaced by a date, {2} will be replaced by a time</comment>
+  </data>
+  <data name="InventoryHistoryEnded" xml:space="preserve">
+    <value>Inventory History ended at the page starting on {0} @ {1}</value>
+    <comment>{0} will be replaced by a date, {1} will be replaced by a time</comment>
+  </data>
+  <data name="InventoryHistorySteamError" xml:space="preserve">
+    <value>Please verify that your history actually ends here, as there's a bug on Steam's end which can cause the history to end early. Refer to the README for more information.</value>
+    <comment/>
+  </data>
+  <data name="MarketListingsFetchFailed" xml:space="preserve">
+    <value>Failed to fetch Market Listings</value>
+    <comment/>
+  </data>
+  <data name="MarketListingsEndpointFailed" xml:space="preserve">
+    <value>API failed to accept Market Listings</value>
+    <comment/>
+  </data>
+  <data name="MarketListingsEndpointSuccess" xml:space="preserve">
+    <value>Successfully sent Market Listings</value>
+    <comment/>
+  </data>
+  <data name="MarketHistoryFetchStopped" xml:space="preserve">
+    <value>Manually stopped before fetching Market History (Page {0})</value>
+    <comment>{0} will be replaced by a page number</comment>
+  </data>
+  <data name="MarketHistoryFetchFailed" xml:space="preserve">
+    <value>Failed to fetch Market History (Page {0})</value>
+    <comment>{0} will be replaced by a page number</comment>
+  </data>
+  <data name="MarketHistoryEndpointFailed" xml:space="preserve">
+    <value>API failed to accept Market History (Page {0})</value>
+    <comment>{0} will be replaced by a page number</comment>
+  </data>
+  <data name="MarketHistoryEndpointSuccess" xml:space="preserve">
+    <value>Successfully sent Market History (Page {0})</value>
+    <comment>{0} will be replaced by a page number</comment>
+  </data>
+  <data name="ItemsCountTradable" xml:space="preserve">
+    <value>Tradable: {0}</value>
+    <comment>{0} will be replaced by a number</comment>
+  </data>
+  <data name="ItemsCountUntradable" xml:space="preserve">
+    <value>Untradable: {0}</value>
+    <comment>{0} will be replaced by a number</comment>
+  </data>
+  <data name="GemSacksCount" xml:space="preserve">
+    <value>{0} Sacks</value>
+    <comment>{0} will be replaced by a number</comment>
+  </data>
+  <data name="NoSacksFound" xml:space="preserve">
+    <value>No gems to unpack</value>
+    <comment/>
+  </data>
+  <data name="SendingQuantityOfItemsToBot" xml:space="preserve">
+    <value>Sending {0} of {1} to {2}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by an item string, {2} will be replaced by a bot name</comment>
+  </data>
+  <data name="SendingQuantityOfItemsToBotSuccess" xml:space="preserve">
+    <value>Sent {0} of {1} to {2}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by an item string, {2} will be replaced by a bot name</comment>
+  </data>
+  <data name="SendingQuantityOfItemsToBotFailed" xml:space="preserve">
+    <value>Failed to send {0} of {1} to {2}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by an item string, {2} will be replaced by a bot name</comment>
+  </data>
+  <data name="SendingNoItems" xml:space="preserve">
+    <value>Successfully sent nothing!</value>
+    <comment/>
+  </data>
+  <data name="SendingInsufficientQuantity" xml:space="preserve">
+    <value>Not enough to send!</value>
+    <comment/>
+  </data>
+  <data name="SendingItemsSuccess" xml:space="preserve">
+    <value>Sent items to {0}</value>
+    <comment>{0} will be replaced by a bot name</comment>
+  </data>
+  <data name="SendingItemsFailed" xml:space="preserve">
+    <value>Failed to send items to {0}</value>
+    <comment>{0} will be replaced by a bot name</comment>
+  </data>
+  <data name="SendingInsufficientQuantityOfItems" xml:space="preserve">
+    <value>Not enough of {0} to send!</value>
+    <comment>{0} will be replaced by an item string</comment>
+  </data>
+  <data name="SendingQuantityOfItemsSuccess" xml:space="preserve">
+    <value>Successfully sent {0} of {1}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by an item string</comment>
+  </data>
+  <data name="SendingQuantityOfItemsFailed" xml:space="preserve">
+    <value>Not enough available quantity to send, need {0}, but only {1} are available</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
+  </data>
+  <data name="ListingsValue" xml:space="preserve">
+    <value>Listings: {0} {1}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a currency name</comment>
+  </data>
+  <data name="AccountValueRemaining" xml:space="preserve">
+    <value>Remaining: {0} {1}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a currency name</comment>
+  </data>
+  <data name="AccountValue" xml:space="preserve">
+    <value>Value: {0} {1}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a currency name</comment>
+  </data>
+  <data name="ListingsNotFound" xml:space="preserve">
+    <value>No listings found</value>
+    <comment/>
+  </data>
+  <data name="ListingsFound" xml:space="preserve">
+    <value>{0} listings found for "{1}": {2}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by an item string, {2} will be replaced by a list of numbers</comment>
+  </data>
+  <data name="ListingsRemovedFailed" xml:space="preserve">
+    <value>Cancelled {0}/{1} listings, failed to cancel: {2}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a number, {2} will be replaced by a list of numbers</comment>
+  </data>
+  <data name="ListingsRemovedSuccess" xml:space="preserve">
+    <value>Removed {0} listings</value>
+    <comment>{0} will be replaced by a number</comment>
+  </data>
+  <data name="InventoryHistoryInvalidCursor" xml:space="preserve">
+    <value>When using 'timeFrac' or 's', all three parameters must be defined: 'startTime', 'timeFrac', and 's'</value>
+    <comment/>
+  </data>
+  <data name="RateLimitExceeded" xml:space="preserve">
+    <value>Rate limit exceeded</value>
+    <comment/>
+  </data>
+  <data name="BadgeInfoFetchFailed" xml:space="preserve">
+    <value>Failed to fetch badge info</value>
+    <comment/>
+  </data>
+  <data name="PriceHistoryFetchFailed" xml:space="preserve">
+    <value>Failed to fetch price history</value>
+    <comment/>
+  </data>
+  <data name="RepetitionCancelled" xml:space="preserve">
+    <value>Repetition cancelled</value>
+    <comment/>
+  </data>
+  <data name="RepetitionNotActive" xml:space="preserve">
+    <value>Repetition was not running</value>
+    <comment/>
+  </data>
+  <data name="RepetitionNotice" xml:space="preserve">
+    <value>This action will repeat again every {0} minutes. To cancel, send the command: {1}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a command</comment>
+  </data>
+  <data name="EligibleBoosterFetchFailed" xml:space="preserve">
+    <value>Failed to get eligible boosters</value>
+    <comment/>
+  </data>
+  <data name="EligibleBoosterCount" xml:space="preserve">
+    <value>Bot has {0} booster eligible games</value>
+    <comment>{0} will be replaced by a number</comment>
+  </data>
+  <data name="BoosterRateHours" xml:space="preserve">
+    <value>A level {0} account can get a booster drop every {1:0.##} hours</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
+  </data>
+  <data name="BoosterRateDays" xml:space="preserve">
+    <value>A level {0} account can get a booster drop every {1:0.##} days</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
+  </data>
+  <data name="InvalidItemIdentifier" xml:space="preserve">
+    <value>Invalid Item Identifier: {0}</value>
+    <comment>{0} will be replaced by an item string</comment>
+  </data>
+  <data name="BotCountDoesNotEqualAmountCount" xml:space="preserve">
+    <value>Number of recieving bots ({0}) does not match number of item amounts ({1})</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
+  </data>
+  <data name="ItemCountDoesNotEqualAmountCount" xml:space="preserve">
+    <value>Number of items ({0}) does not match number of item amounts ({1})</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
+  </data>
+  <data name="PluginError" xml:space="preserve">
+    <value>Plugin error, please report this</value>
+    <comment/>
+  </data>
+  <data name="HandlingIncomingTrades" xml:space="preserve">
+    <value>Attempting to handle any incoming trades</value>
+    <comment/>
+  </data>
+  <data name="IncomingTradeFetchFailed" xml:space="preserve">
+    <value>Failed to fetch incoming trades</value>
+    <comment/>
+  </data>
+  <data name="IncomingTradeFromInvalidUser" xml:space="preserve">
+    <value>'From' value is not a bot name or a SteamID: {0}</value>
+    <comment>{0} will be replaced by a string</comment>
+  </data>
+  <data name="IncomingTradeCountFromUser" xml:space="preserve">
+    <value>Bot has {0} incoming trades from: {1}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a bot name or a Steam ID</comment>
+  </data>
+  <data name="IncomingTradeCount" xml:space="preserve">
+    <value>Bot has {0} incoming trades</value>
+    <comment>{0} will be replaced by a number</comment>
+  </data>
+</root>

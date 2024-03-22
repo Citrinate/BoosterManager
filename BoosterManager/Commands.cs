@@ -4,10 +4,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Steam;
-using ArchiSteamFarm.Localization;
 using ArchiSteamFarm.Steam.Data;
 using System.ComponentModel;
 using System.Reflection;
+using BoosterManager.Localization;
 
 namespace BoosterManager {
 	internal static class Commands {
@@ -497,33 +497,33 @@ namespace BoosterManager {
 			}
 
 			if (!bot.IsConnectedAndLoggedOn) {
-				return FormatBotResponse(bot, Strings.BotNotConnected);
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
 			}
 
 			if (!bot.HasMobileAuthenticator) {
-				return FormatBotResponse(bot, Strings.BotNoASFAuthenticator);
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNoASFAuthenticator);
 			}
 
 			string? repeatMessage = null;
 			if (minutesAsText != null && acceptedType == Confirmation.EConfirmationType.Market) {
 				if (!uint.TryParse(minutesAsText, out uint minutes)) {
-					return String.Format(Strings.ErrorParsingObject, nameof(minutesAsText));
+					return String.Format(ArchiSteamFarm.Localization.Strings.ErrorParsingObject, nameof(minutesAsText));
 				}
 
 				if (minutes == 0) {
 					if (BoosterHandler.BoosterHandlers[bot.BotName].StopMarketTimer()) {
-						return FormatBotResponse(bot, "Repetition cancelled");
+						return FormatBotResponse(bot, Strings.RepetitionCancelled);
 					} else {
-						return FormatBotResponse(bot, "Repetition was not running");
+						return FormatBotResponse(bot, Strings.RepetitionNotActive);
 					}
 				} else {
 					BoosterHandler.BoosterHandlers[bot.BotName].StartMarketTimer(minutes);
-					repeatMessage = String.Format("This action will repeat again every {0} minutes.  To cancel, send the command: !m2faok {1} 0", minutes, bot.BotName);
+					repeatMessage = String.Format(Strings.RepetitionNotice, minutes, String.Format("!m2faok {1} 0", bot.BotName));
 				}
 			}
 			
 			(bool success, _, string message) = await bot.Actions.HandleTwoFactorAuthenticationConfirmations(true, acceptedType).ConfigureAwait(false);
-			string twofacMessage = success ? message : String.Format(Strings.WarningFailedWithError, message);
+			string twofacMessage = success ? message : String.Format(ArchiSteamFarm.Localization.Strings.WarningFailedWithError, message);
 
 			if (repeatMessage != null) {
 				return FormatBotResponse(bot, String.Format("{0}. {1}", twofacMessage, repeatMessage));
@@ -540,7 +540,7 @@ namespace BoosterManager {
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
 
 			if ((bots == null) || (bots.Count == 0)) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
 			}
 
 			IList<string?> results = await Utilities.InParallel(bots.Select(bot => Response2FAOK(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), acceptedType, minutesAsText))).ConfigureAwait(false);
@@ -560,20 +560,20 @@ namespace BoosterManager {
 			}
 
 			if (!bot.IsConnectedAndLoggedOn) {
-				return FormatBotResponse(bot, Strings.BotNotConnected);
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
 			}
 
 			string[] gameIDs = targetGameIDs.Split(",", StringSplitOptions.RemoveEmptyEntries);
 
 			if (gameIDs.Length == 0) {
-				return FormatBotResponse(bot, String.Format(Strings.ErrorIsEmpty, nameof(gameIDs)));
+				return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsEmpty, nameof(gameIDs)));
 			}
 
 			HashSet<uint> gamesToBooster = new HashSet<uint>();
 
 			foreach (string game in gameIDs) {
 				if (!uint.TryParse(game, out uint gameID) || (gameID == 0)) {
-					return FormatBotResponse(bot, String.Format(Strings.ErrorParsingObject, nameof(gameID)));
+					return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorParsingObject, nameof(gameID)));
 				}
 
 				gamesToBooster.Add(gameID);
@@ -590,7 +590,7 @@ namespace BoosterManager {
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
 
 			if ((bots == null) || (bots.Count == 0)) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
 			}
 
 			IEnumerable<string?> results = bots.Select(bot => ResponseBooster(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), steamID, targetGameIDs, respondingBot));
@@ -606,15 +606,15 @@ namespace BoosterManager {
 			}
 
 			if (!bot.IsConnectedAndLoggedOn) {
-				return FormatBotResponse(bot, Strings.BotNotConnected);
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
 			}
 
 			var eligibleBoosters = await bot.ArchiWebHandler.GetBoosterEligibility().ConfigureAwait(false);
 			if (eligibleBoosters == null) {
-				return FormatBotResponse(bot, "Failed to get eligible boosters");
+				return FormatBotResponse(bot, Strings.EligibleBoosterFetchFailed);
 			}
 
-			return FormatBotResponse(bot, String.Format("Bot has {0} booster eligible games", eligibleBoosters.Count));
+			return FormatBotResponse(bot, String.Format(Strings.EligibleBoosterCount, eligibleBoosters.Count));
 		}
 
 		private static async Task<string?> ResponseBoosterDrops(EAccess access, ulong steamID, string botNames) {
@@ -625,7 +625,7 @@ namespace BoosterManager {
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
 
 			if ((bots == null) || (bots.Count == 0)) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
 			}
 
 			IEnumerable<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseBoosterDrops(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)))).ConfigureAwait(false);
@@ -641,7 +641,7 @@ namespace BoosterManager {
 			}
 
 			if (!uint.TryParse(levelString, out uint level)) {
-				return String.Format(Strings.ErrorParsingObject, nameof(levelString));
+				return String.Format(ArchiSteamFarm.Localization.Strings.ErrorParsingObject, nameof(levelString));
 			}
 
 			// https://steamcommunity.com/groups/BadgesCollectors/discussions/0/630800444048297919/?ctp=19#c2686880925148364340
@@ -650,9 +650,9 @@ namespace BoosterManager {
 			double hoursPerBooster = (14*24) / (1 + (level / 50.0));
 
 			if (hoursPerBooster < 24) {
-				return String.Format("A level {0} account can get a booster drop every {1:0.##} hours", level, hoursPerBooster);
+				return String.Format(Strings.BoosterRateHours, level, String.Format("{0:0.##}", hoursPerBooster));
 			} else {
-				return String.Format("A level {0} account can get a booster drop every {1:0.##} days", level, hoursPerBooster / 24);
+				return String.Format(Strings.BoosterRateDays, level, String.Format("{0:0.##}", hoursPerBooster / 24));
 			}
 		}
 
@@ -662,7 +662,7 @@ namespace BoosterManager {
 			}
 
 			if (!bot.IsConnectedAndLoggedOn) {
-				return FormatBotResponse(bot, Strings.BotNotConnected);
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
 			}
 
 			return BoosterHandler.BoosterHandlers[bot.BotName].GetStatus(shortStatus);
@@ -676,7 +676,7 @@ namespace BoosterManager {
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
 
 			if ((bots == null) || (bots.Count == 0)) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
 			}
 
 			IEnumerable<string?> results = bots.Select(bot => ResponseBoosterStatus(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), shortStatus));
@@ -696,20 +696,20 @@ namespace BoosterManager {
 			}
 
 			if (!bot.IsConnectedAndLoggedOn) {
-				return FormatBotResponse(bot, Strings.BotNotConnected);
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
 			}
 
 			string[] gameIDs = targetGameIDs.Split(",", StringSplitOptions.RemoveEmptyEntries);
 
 			if (gameIDs.Length == 0) {
-				return FormatBotResponse(bot, String.Format(Strings.ErrorIsEmpty, nameof(gameIDs)));
+				return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsEmpty, nameof(gameIDs)));
 			}
 
 			HashSet<uint> gamesToStop = new HashSet<uint>();
 
 			foreach (string game in gameIDs) {
 				if (!uint.TryParse(game, out uint gameID) || (gameID == 0)) {
-					return FormatBotResponse(bot, String.Format(Strings.ErrorParsingObject, nameof(gameID)));
+					return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorParsingObject, nameof(gameID)));
 				}
 
 				gamesToStop.Add(gameID);
@@ -726,7 +726,7 @@ namespace BoosterManager {
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
 
 			if ((bots == null) || (bots.Count == 0)) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
 			}
 
 			IEnumerable<string?> results = bots.Select(bot => ResponseBoosterStop(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), targetGameIDs));
@@ -746,11 +746,11 @@ namespace BoosterManager {
 			}
 
 			if (!bot.IsConnectedAndLoggedOn) {
-				return FormatBotResponse(bot, Strings.BotNotConnected);
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
 			}
 
 			if (!uint.TryParse(timeLimit, out uint timeLimitHours)) {
-				return FormatBotResponse(bot, String.Format(Strings.ErrorIsInvalid, nameof(timeLimit)));
+				return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, nameof(timeLimit)));
 			}
 
 			return BoosterHandler.BoosterHandlers[bot.BotName].UnscheduleBoosters(timeLimitHours: (int) timeLimitHours);
@@ -764,7 +764,7 @@ namespace BoosterManager {
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
 
 			if ((bots == null) || (bots.Count == 0)) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
 			}
 
 			IEnumerable<string?> results = bots.Select(bot => ResponseBoosterStopTime(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), timeLimit));
@@ -794,7 +794,7 @@ namespace BoosterManager {
 			}
 
 			if (!bot.IsConnectedAndLoggedOn) {
-				return FormatBotResponse(bot, Strings.BotNotConnected);
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
 			}
 
 			if (!uint.TryParse(appIDAsText, out uint appID)) {
@@ -841,7 +841,7 @@ namespace BoosterManager {
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
 
 			if ((bots == null) || (bots.Count == 0)) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
 			}
 
 			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseCountItems(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), appIDAsText, contextIDAsText, itemIdentifiersAsText, marketable))).ConfigureAwait(false);
@@ -861,7 +861,7 @@ namespace BoosterManager {
 			}
 
 			if (!bot.IsConnectedAndLoggedOn) {
-				return FormatBotResponse(bot, Strings.BotNotConnected);
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
 			}
 
 			List<string> itemIdentifierStrings = itemIdentifiersAsText.Split(ItemIdentifier.Delimiter, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
@@ -870,7 +870,7 @@ namespace BoosterManager {
 				try {
 					itemIdentifiers.Add(new ItemIdentifier(itemIdentifierString));
 				} catch (Exception) {
-					return FormatBotResponse(bot, String.Format("Invalid Item Identifier: {0}", itemIdentifierString));
+					return FormatBotResponse(bot, String.Format(Strings.InvalidItemIdentifier, itemIdentifierString));
 				}
 			}
 
@@ -885,7 +885,7 @@ namespace BoosterManager {
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
 
 			if ((bots == null) || (bots.Count == 0)) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
 			}
 
 			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseFindListings(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), itemIdentifiersAsText))).ConfigureAwait(false);
@@ -905,7 +905,7 @@ namespace BoosterManager {
 			}
 
 			if (!bot.IsConnectedAndLoggedOn) {
-				return FormatBotResponse(bot, Strings.BotNotConnected);
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
 			}
 
 			List<string> itemIdentifierStrings = itemIdentifiersAsText.Split(ItemIdentifier.Delimiter, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
@@ -929,7 +929,7 @@ namespace BoosterManager {
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
 
 			if ((bots == null) || (bots.Count == 0)) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
 			}
 
 			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseFindAndRemoveListings(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), itemIdentifiersAsText))).ConfigureAwait(false);
@@ -945,7 +945,7 @@ namespace BoosterManager {
 			}
 
 			if (!bot.IsConnectedAndLoggedOn) {
-				return FormatBotResponse(bot, Strings.BotNotConnected);
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
 			}
 
 			return await GemHandler.GetGemCount(bot).ConfigureAwait(false);
@@ -959,7 +959,7 @@ namespace BoosterManager {
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
 
 			if ((bots == null) || (bots.Count == 0)) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
 			}
 
 			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseGems(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)))).ConfigureAwait(false);
@@ -975,7 +975,7 @@ namespace BoosterManager {
 			}
 
 			if (!bot.IsConnectedAndLoggedOn) {
-				return FormatBotResponse(bot, Strings.BotNotConnected);
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
 			}
 
 			return await MarketHandler.GetListings(bot).ConfigureAwait(false);
@@ -989,7 +989,7 @@ namespace BoosterManager {
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
 
 			if ((bots == null) || (bots.Count == 0)) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
 			}
 
 			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseListings(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)))).ConfigureAwait(false);
@@ -1005,7 +1005,7 @@ namespace BoosterManager {
 			}
 
 			if (!bot.IsConnectedAndLoggedOn) {
-				return FormatBotResponse(bot, Strings.BotNotConnected);
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
 			}
 
 			return await DataHandler.SendBoosterDataOnly(bot).ConfigureAwait(false);
@@ -1019,7 +1019,7 @@ namespace BoosterManager {
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
 
 			if ((bots == null) || (bots.Count == 0)) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
 			}
 
 			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseLogBoosterData(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)))).ConfigureAwait(false);
@@ -1035,7 +1035,7 @@ namespace BoosterManager {
 			}
 
 			if (!bot.IsConnectedAndLoggedOn) {
-				return FormatBotResponse(bot, Strings.BotNotConnected);
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
 			}
 
 			return await DataHandler.SendAllData(bot).ConfigureAwait(false);
@@ -1049,7 +1049,7 @@ namespace BoosterManager {
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
 
 			if ((bots == null) || (bots.Count == 0)) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
 			}
 
 			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseLogData(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)))).ConfigureAwait(false);
@@ -1065,7 +1065,7 @@ namespace BoosterManager {
 			}
 
 			if (!bot.IsConnectedAndLoggedOn) {
-				return FormatBotResponse(bot, Strings.BotNotConnected);
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
 			}
 
 			return DataHandler.StopSend(bot);
@@ -1079,7 +1079,7 @@ namespace BoosterManager {
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
 
 			if ((bots == null) || (bots.Count == 0)) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
 			}
 
 			IEnumerable<string?> results = bots.Select(bot => ResponseLogStop(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)));
@@ -1095,7 +1095,7 @@ namespace BoosterManager {
 			}
 
 			if (!bot.IsConnectedAndLoggedOn) {
-				return FormatBotResponse(bot, Strings.BotNotConnected);
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
 			}
 
 			uint? numPages = null;
@@ -1103,7 +1103,7 @@ namespace BoosterManager {
 				if (uint.TryParse(numPagesString, out uint outValue)) {
 					numPages = outValue;
 				} else {
-					return FormatStaticResponse(String.Format(Strings.ErrorIsInvalid, nameof(numPages)));
+					return FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, nameof(numPages)));
 				}
 			}
 
@@ -1112,7 +1112,7 @@ namespace BoosterManager {
 				if (uint.TryParse(startTimeString, out uint outValue)) {
 					startTime = outValue;
 				} else {
-					return FormatStaticResponse(String.Format(Strings.ErrorIsInvalid, nameof(startTime)));
+					return FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, nameof(startTime)));
 				}
 			}
 			
@@ -1121,7 +1121,7 @@ namespace BoosterManager {
 				if (uint.TryParse(timeFracString, out uint outValue)) {
 					timeFrac = outValue;
 				} else {
-					return FormatStaticResponse(String.Format(Strings.ErrorIsInvalid, nameof(timeFrac)));
+					return FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, nameof(timeFrac)));
 				}
 			}
 			
@@ -1130,7 +1130,7 @@ namespace BoosterManager {
 				if (ulong.TryParse(sString, out ulong outValue)) {
 					s = outValue.ToString();
 				} else {
-					return FormatStaticResponse(String.Format(Strings.ErrorIsInvalid, nameof(s)));
+					return FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, nameof(s)));
 				}
 			}
 
@@ -1145,7 +1145,7 @@ namespace BoosterManager {
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
 
 			if ((bots == null) || (bots.Count == 0)) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
 			}
 
 			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseLogInventoryHistory(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), steamID, numPagesString, startTimeString, timeFracString, sString, respondingBot))).ConfigureAwait(false);
@@ -1161,7 +1161,7 @@ namespace BoosterManager {
 			}
 
 			if (!bot.IsConnectedAndLoggedOn) {
-				return FormatBotResponse(bot, Strings.BotNotConnected);
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
 			}
 
 			uint? numPages = null;
@@ -1169,7 +1169,7 @@ namespace BoosterManager {
 				if (uint.TryParse(numPagesString, out uint outValue)) {
 					numPages = outValue;
 				} else {
-					return FormatStaticResponse(String.Format(Strings.ErrorIsInvalid, nameof(numPages)));
+					return FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, nameof(numPages)));
 				}
 			}
 
@@ -1177,12 +1177,12 @@ namespace BoosterManager {
 			if (startPageString != null) {
 				if (uint.TryParse(startPageString, out uint outValue)) {
 					if (outValue == 0) {
-						return FormatStaticResponse(String.Format(Strings.ErrorIsInvalid, nameof(startPage)));
+						return FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, nameof(startPage)));
 					}
 
 					startPage = outValue - 1;
 				} else {
-					return FormatStaticResponse(String.Format(Strings.ErrorIsInvalid, nameof(startPage)));
+					return FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, nameof(startPage)));
 				}
 			}
 
@@ -1197,7 +1197,7 @@ namespace BoosterManager {
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
 
 			if ((bots == null) || (bots.Count == 0)) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
 			}
 
 			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseLogMarketHistory(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), numPagesString, startPageString))).ConfigureAwait(false);
@@ -1213,7 +1213,7 @@ namespace BoosterManager {
 			}
 
 			if (!bot.IsConnectedAndLoggedOn) {
-				return FormatBotResponse(bot, Strings.BotNotConnected);
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
 			}
 
 			return await DataHandler.SendMarketListingsOnly(bot).ConfigureAwait(false);
@@ -1227,7 +1227,7 @@ namespace BoosterManager {
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
 
 			if ((bots == null) || (bots.Count == 0)) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
 			}
 
 			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseLogMarketListings(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)))).ConfigureAwait(false);
@@ -1243,20 +1243,20 @@ namespace BoosterManager {
 			}
 
 			if (!bot.IsConnectedAndLoggedOn) {
-				return FormatBotResponse(bot, Strings.BotNotConnected);
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
 			}
 
 			string[] listingIDsStringArray = listingIDsString.Split(",", StringSplitOptions.RemoveEmptyEntries);
 
 			if (listingIDsStringArray.Length == 0) {
-				return FormatBotResponse(bot, String.Format(Strings.ErrorIsEmpty, nameof(listingIDsStringArray)));
+				return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsEmpty, nameof(listingIDsStringArray)));
 			}
 
 			List<ulong> listingIDs = new List<ulong>();
 
 			foreach (string listingIDString in listingIDsStringArray) {
 				if (!ulong.TryParse(listingIDString, out ulong listingID)) {
-					return FormatBotResponse(bot, String.Format(Strings.ErrorParsingObject, nameof(listingID)));
+					return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorParsingObject, nameof(listingID)));
 				}
 
 				listingIDs.Add(listingID);
@@ -1273,7 +1273,7 @@ namespace BoosterManager {
 			Bot? bot = Bot.GetBot(botName);
 
 			if (bot == null) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botName)) : null;
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botName)) : null;
 			}
 
 			return await ResponseRemoveListings(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), listingIDs).ConfigureAwait(false);
@@ -1333,15 +1333,15 @@ namespace BoosterManager {
 			}
 
 			if (!bot.IsConnectedAndLoggedOn) {
-				return FormatBotResponse(bot, Strings.BotNotConnected);
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
 			}
 
 			if (!uint.TryParse(appIDAsText, out uint appID)) {
-				return FormatBotResponse(bot, String.Format(Strings.ErrorIsInvalid, nameof(appIDAsText)));
+				return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, nameof(appIDAsText)));
 			}
 
 			if (!ulong.TryParse(contextIDAsText, out ulong contextID)) {
-				return FormatBotResponse(bot, String.Format(Strings.ErrorIsInvalid, nameof(contextIDAsText)));
+				return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, nameof(contextIDAsText)));
 			}
 
 			if (String.IsNullOrEmpty(itemIdentifiersAsText)) {
@@ -1354,7 +1354,7 @@ namespace BoosterManager {
 				try {
 					itemIdentifiers.Add(new ItemIdentifier(itemIdentifierString, marketable));
 				} catch (Exception) {
-					return FormatBotResponse(bot, String.Format("Invalid Item Identifier: {0}", itemIdentifierString));
+					return FormatBotResponse(bot, String.Format(Strings.InvalidItemIdentifier, itemIdentifierString));
 				}
 			}
 
@@ -1363,17 +1363,17 @@ namespace BoosterManager {
 				Bot? reciever = Bot.GetBot(recieverBotName);
 
 				if (reciever == null) {
-					return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, recieverBotName)) : null;
+					return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, recieverBotName)) : null;
 				}
 
 				targetSteamID = reciever.SteamID;
 
 				if (!reciever.IsConnectedAndLoggedOn) {
-					return FormatStaticResponse(Strings.BotNotConnected);
+					return FormatStaticResponse(ArchiSteamFarm.Localization.Strings.BotNotConnected);
 				}
 
 				if (bot.SteamID == reciever.SteamID) {
-					return FormatBotResponse(bot, Strings.BotSendingTradeToYourself);
+					return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotSendingTradeToYourself);
 				}
 			}
 
@@ -1404,7 +1404,7 @@ namespace BoosterManager {
 			HashSet<Bot>? bots = Bot.GetBots(senderBotNames);
 
 			if ((bots == null) || (bots.Count == 0)) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, senderBotNames)) : null;
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, senderBotNames)) : null;
 			}
 
 			// Send All of Item X to Bot C from Bots E,F,...
@@ -1457,33 +1457,33 @@ namespace BoosterManager {
 			}
 
 			if (!bot.IsConnectedAndLoggedOn) {
-				return FormatBotResponse(bot, Strings.BotNotConnected);
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
 			}
 
 			if (!uint.TryParse(appIDAsText, out uint appID)) {
-				return FormatBotResponse(bot, String.Format(Strings.ErrorIsInvalid, nameof(appIDAsText)));
+				return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, nameof(appIDAsText)));
 			}
 
 			if (!ulong.TryParse(contextIDAsText, out ulong contextID)) {
-				return FormatBotResponse(bot, String.Format(Strings.ErrorIsInvalid, nameof(contextIDAsText)));
+				return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, nameof(contextIDAsText)));
 			}
 
 			ItemIdentifier itemIdentifier;
 			try {
 				itemIdentifier = new ItemIdentifier(itemIdentifierAsText, marketable);
 			} catch (Exception) {
-				return FormatBotResponse(bot, String.Format("Invalid Item Identifier: {0}", itemIdentifierAsText));
+				return FormatBotResponse(bot, String.Format(Strings.InvalidItemIdentifier, itemIdentifierAsText));
 			}
 
 			HashSet<Bot>? recieverBots = Bot.GetBots(recieverBotNames);
 			if ((recieverBots == null) || (recieverBots.Count == 0)) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, recieverBotNames)) : null;
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, recieverBotNames)) : null;
 			}
 
 			string[] amountStrings = amountsAsText.Split(",", StringSplitOptions.RemoveEmptyEntries);
 
 			if (amountStrings.Length == 0) {
-				return FormatBotResponse(bot, String.Format(Strings.ErrorIsEmpty, nameof(amountStrings)));
+				return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsEmpty, nameof(amountStrings)));
 			}
 
 			if (amountStrings.Length == 1 && recieverBots.Count > 1) {
@@ -1491,7 +1491,7 @@ namespace BoosterManager {
 			}
 			
 			if (amountStrings.Length != recieverBots.Count) {
-				return FormatBotResponse(bot, String.Format("Number of recieving bots ({0}) does not match number of gem amounts ({1})", recieverBots.Count, amountStrings.Length));
+				return FormatBotResponse(bot, String.Format(Strings.BotCountDoesNotEqualAmountCount, recieverBots.Count, amountStrings.Length));
 			}
 
 			List<uint> amounts = new List<uint>();
@@ -1501,7 +1501,7 @@ namespace BoosterManager {
 					if (itemIdentifier.ClassID == GemHandler.GemsClassID && (amount.ToUpperInvariant() == "QUEUE" || amount.ToUpperInvariant() == "Q")) {
 						amountNum = BoosterHandler.BoosterHandlers[recieverBots.ElementAt(botIndex).BotName].GetGemsNeeded();
 					} else {
-						return FormatBotResponse(bot, String.Format(Strings.ErrorParsingObject, nameof(amountNum)));
+						return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorParsingObject, nameof(amountNum)));
 					}
 				}
 
@@ -1536,7 +1536,7 @@ namespace BoosterManager {
 			Bot? sender = Bot.GetBot(senderBotName);
 
 			if (sender == null) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, senderBotName)) : null;
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, senderBotName)) : null;
 			}
 
 			return await ResponseSendItemToMultipleBots(sender, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(sender, access, steamID), recieverBotNames, amountsAsText, appIDAsText, contextIDAsText, itemIdentifierAsText, marketable).ConfigureAwait(false);
@@ -1568,21 +1568,21 @@ namespace BoosterManager {
 			}
 
 			if (!bot.IsConnectedAndLoggedOn) {
-				return FormatBotResponse(bot, Strings.BotNotConnected);
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
 			}
 
 			if (!uint.TryParse(appIDAsText, out uint appID)) {
-				return FormatBotResponse(bot, String.Format(Strings.ErrorIsInvalid, nameof(appIDAsText)));
+				return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, nameof(appIDAsText)));
 			}
 
 			if (!ulong.TryParse(contextIDAsText, out ulong contextID)) {
-				return FormatBotResponse(bot, String.Format(Strings.ErrorIsInvalid, nameof(contextIDAsText)));
+				return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, nameof(contextIDAsText)));
 			}
 
 			HashSet<Bot>? recieverBots = Bot.GetBots(recieverBotNames);
 
 			if ((recieverBots == null) || (recieverBots.Count == 0)) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, recieverBotNames)) : null;
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, recieverBotNames)) : null;
 			}
 
 			List<string> itemIdentifierStrings = itemIdentifiersAsText.Split(ItemIdentifier.Delimiter, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).ToList();
@@ -1591,14 +1591,14 @@ namespace BoosterManager {
 				try {
 					itemIdentifiers.Add(new ItemIdentifier(itemIdentifierString, marketable));
 				} catch (Exception) {
-					return FormatBotResponse(bot, String.Format("Invalid Item Identifier: {0}", itemIdentifierString));
+					return FormatBotResponse(bot, String.Format(Strings.InvalidItemIdentifier, itemIdentifierString));
 				}
 			}
 			
 			string[] amountStrings = amountsAsText.Split(",", StringSplitOptions.RemoveEmptyEntries);
 
 			if (amountStrings.Length == 0) {
-				return FormatBotResponse(bot, String.Format(Strings.ErrorIsEmpty, nameof(amountStrings)));
+				return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsEmpty, nameof(amountStrings)));
 			}
 
 			if (amountStrings.Length == 1 && itemIdentifierStrings.Count > 1) {
@@ -1606,13 +1606,13 @@ namespace BoosterManager {
 			}
 				
 			if (amountStrings.Length != itemIdentifierStrings.Count) {
-				return FormatBotResponse(bot, String.Format("Number of items ({0}) does not match number of item amounts ({1})", itemIdentifierStrings.Count, amountStrings.Length));
+				return FormatBotResponse(bot, String.Format(Strings.ItemCountDoesNotEqualAmountCount, itemIdentifierStrings.Count, amountStrings.Length));
 			}
 
 			List<uint> amounts = new List<uint>();
 			foreach (string amount in amountStrings) {
 				if (!uint.TryParse(amount, out uint amountNum)) {
-					return FormatBotResponse(bot, String.Format(Strings.ErrorParsingObject, nameof(amountNum)));
+					return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorParsingObject, nameof(amountNum)));
 				}
 
 				amounts.Add(amountNum);
@@ -1631,7 +1631,7 @@ namespace BoosterManager {
 			Bot? sender = Bot.GetBot(senderBotName);
 
 			if (sender == null) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, senderBotName)) : null;
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, senderBotName)) : null;
 			}
 
 			return await ResponseSendMultipleItemsToMultipleBots(sender, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(sender, access, steamID), recieverBotNames, amountsAsText, appIDAsText, contextIDAsText, itemIdentifiersAsText, marketable).ConfigureAwait(false);
@@ -1643,18 +1643,18 @@ namespace BoosterManager {
 			}
 
 			if (!bot.IsConnectedAndLoggedOn) {
-				return FormatBotResponse(bot, Strings.BotNotConnected);
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
 			}
 
 			MethodInfo? OnTradeCheckTimer = typeof(Bot).GetMethods(BindingFlags.NonPublic|BindingFlags.Public|BindingFlags.Instance).FirstOrDefault(x => x.Name == "OnTradeCheckTimer");
 
 			if (OnTradeCheckTimer == null) {
-				return FormatBotResponse(bot, "Plugin failed to find OnTradeCheckTimer method");
+				return FormatBotResponse(bot, Strings.PluginError);
 			}
 
 			OnTradeCheckTimer.Invoke(bot, new object[] { Type.Missing });
 
-			return FormatBotResponse(bot, "Attempting to handle any incoming trades");
+			return FormatBotResponse(bot, Strings.HandlingIncomingTrades);
 		}
 
 		private static string? ResponseTradeCheck(EAccess access, ulong steamID, string botNames) {
@@ -1665,7 +1665,7 @@ namespace BoosterManager {
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
 
 			if ((bots == null) || (bots.Count == 0)) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
 			}
 
 			IEnumerable<string?> results = bots.Select(bot => ResponseTradeCheck(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)));
@@ -1681,13 +1681,13 @@ namespace BoosterManager {
 			}
 
 			if (!bot.IsConnectedAndLoggedOn) {
-				return FormatBotResponse(bot, Strings.BotNotConnected);
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
 			}
 
 			HashSet<TradeOffer>? tradeOffers = await bot.ArchiWebHandler.GetTradeOffers(true, true, false, true).ConfigureAwait(false);
 
 			if (tradeOffers == null) {
-				return FormatBotResponse(bot, "Failed to fetch incoming trades");
+				return FormatBotResponse(bot, Strings.IncomingTradeFetchFailed);
 			}
 
 			if (fromBotNamesAndIDs != null) {
@@ -1703,14 +1703,14 @@ namespace BoosterManager {
 					} else if (ulong.TryParse(botNameOrID, out ulong steamID)) {
 						steamIDs.Add(steamID);
 					} else {
-						return FormatBotResponse(bot, String.Format("'From' value is not a bot name or a SteamID: {0}", botNameOrID));
+						return FormatBotResponse(bot, String.Format(Strings.IncomingTradeFromInvalidUser, botNameOrID));
 					}
 				}
 
-				return FormatBotResponse(bot, String.Format("Bot has {0} incoming trades from: {1}", tradeOffers.Where(offer => steamIDs.Contains(offer.OtherSteamID64)).Count(), fromBotNamesAndIDs));
+				return FormatBotResponse(bot, String.Format(Strings.IncomingTradeCountFromUser, tradeOffers.Where(offer => steamIDs.Contains(offer.OtherSteamID64)).Count(), fromBotNamesAndIDs));
 			}
 
-			return FormatBotResponse(bot, String.Format("Bot has {0} incoming trades", tradeOffers.Count));
+			return FormatBotResponse(bot, String.Format(Strings.IncomingTradeCount, tradeOffers.Count));
 		}
 
 		private static async Task<string?> ResponseTradeCount(EAccess access, ulong steamID, string botNames, string? fromBotNamesAndIDs = null) {
@@ -1721,7 +1721,7 @@ namespace BoosterManager {
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
 
 			if ((bots == null) || (bots.Count == 0)) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
 			}
 
 			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseTradeCount(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), fromBotNamesAndIDs))).ConfigureAwait(false);
@@ -1737,7 +1737,7 @@ namespace BoosterManager {
 			}
 
 			if (!bot.IsConnectedAndLoggedOn) {
-				return FormatBotResponse(bot, Strings.BotNotConnected);
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
 			}
 
 			return await GemHandler.UnpackGems(bot).ConfigureAwait(false);
@@ -1751,7 +1751,7 @@ namespace BoosterManager {
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
 
 			if ((bots == null) || (bots.Count == 0)) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
 			}
 
 			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseUnpackGems(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)))).ConfigureAwait(false);
@@ -1767,13 +1767,13 @@ namespace BoosterManager {
 			}
 
 			if (!bot.IsConnectedAndLoggedOn) {
-				return FormatBotResponse(bot, Strings.BotNotConnected);
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
 			}
 
 			uint subtractFrom = 0;
 			if (subtractFromAsText != null) {
 				if (!uint.TryParse(subtractFromAsText, out subtractFrom)) {
-					return FormatBotResponse(bot, String.Format(Strings.ErrorParsingObject, nameof(subtractFrom)));
+					return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorParsingObject, nameof(subtractFrom)));
 				}
 			}
 
@@ -1788,7 +1788,7 @@ namespace BoosterManager {
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
 
 			if ((bots == null) || (bots.Count == 0)) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botNames)) : null;
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
 			}
 
 			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseValue(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), subtractFromAsText))).ConfigureAwait(false);

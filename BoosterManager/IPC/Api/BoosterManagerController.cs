@@ -6,8 +6,8 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using ArchiSteamFarm.IPC.Controllers.Api;
 using ArchiSteamFarm.IPC.Responses;
-using ArchiSteamFarm.Localization;
 using ArchiSteamFarm.Steam;
+using BoosterManager.Localization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -28,16 +28,16 @@ namespace BoosterManager {
 			
 			Bot? bot = Bot.GetBot(botName);
 			if (bot == null) {
-				return BadRequest(new GenericResponse(false, string.Format(Strings.BotNotFound, botName)));
+				return BadRequest(new GenericResponse(false, string.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botName)));
 			}
 
 			if (!bot.IsConnectedAndLoggedOn) {
-				return BadRequest(new GenericResponse(false, Strings.BotNotConnected));
+				return BadRequest(new GenericResponse(false, ArchiSteamFarm.Localization.Strings.BotNotConnected));
 			}
 
 			(BoosterPageResponse? boosterPage, Uri source) = await WebRequest.GetBoosterPage(bot).ConfigureAwait(false);
 			if (boosterPage == null) {
-				return BadRequest(new GenericResponse(false, "Failed to fetch Booster Data"));
+				return BadRequest(new GenericResponse(false, Strings.BoosterDataFetchFailed));
 			}
 
 			return Ok(new GenericResponse<SteamData<IEnumerable<Steam.BoosterInfo>>>(true, new SteamData<IEnumerable<Steam.BoosterInfo>>(bot, boosterPage.BoosterInfos, source, null, null)));
@@ -57,16 +57,16 @@ namespace BoosterManager {
 
 			Bot? bot = Bot.GetBot(botName);
 			if (bot == null) {
-				return BadRequest(new GenericResponse(false, string.Format(Strings.BotNotFound, botName)));
+				return BadRequest(new GenericResponse(false, string.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botName)));
 			}
 
 			if (!bot.IsConnectedAndLoggedOn) {
-				return BadRequest(new GenericResponse(false, Strings.BotNotConnected));
+				return BadRequest(new GenericResponse(false, ArchiSteamFarm.Localization.Strings.BotNotConnected));
 			}
 
 			(Steam.MarketListingsResponse? marketListings, Uri source) = await WebRequest.GetMarketListings(bot).ConfigureAwait(false);
 			if (marketListings == null || !marketListings.Success) {
-				return BadRequest(new GenericResponse(false, "Failed to fetch Market Listings"));
+				return BadRequest(new GenericResponse(false, Strings.MarketListingsFetchFailed));
 			}
 
 			return Ok(new GenericResponse<SteamData<Steam.MarketListingsResponse>>(true, new SteamData<Steam.MarketListingsResponse>(bot, marketListings, source, null, null)));
@@ -86,18 +86,18 @@ namespace BoosterManager {
 
 			Bot? bot = Bot.GetBot(botName);
 			if (bot == null) {
-				return BadRequest(new GenericResponse(false, string.Format(Strings.BotNotFound, botName)));
+				return BadRequest(new GenericResponse(false, string.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botName)));
 			}
 			
 			if (!bot.IsConnectedAndLoggedOn) {
-				return BadRequest(new GenericResponse(false, Strings.BotNotConnected));
+				return BadRequest(new GenericResponse(false, ArchiSteamFarm.Localization.Strings.BotNotConnected));
 			}
 
 			uint count = 500;
 			uint start = (page - 1) * count;
 			(Steam.MarketHistoryResponse? marketHistory, Uri source) = await WebRequest.GetMarketHistory(bot, start, count).ConfigureAwait(false);
 			if (marketHistory == null || !marketHistory.Success) {
-				return BadRequest(new GenericResponse(false, "Failed to fetch Market Listings"));
+				return BadRequest(new GenericResponse(false, Strings.MarketListingsFetchFailed));
 			}
 
 			return Ok(new GenericResponse<SteamData<Steam.MarketHistoryResponse>>(true, new SteamData<Steam.MarketHistoryResponse>(bot, marketHistory, source, page, null)));
@@ -117,18 +117,18 @@ namespace BoosterManager {
 
 			Bot? bot = Bot.GetBot(botName);
 			if (bot == null) {
-				return BadRequest(new GenericResponse(false, string.Format(Strings.BotNotFound, botName)));
+				return BadRequest(new GenericResponse(false, string.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botName)));
 			}
 			
 			if (!bot.IsConnectedAndLoggedOn) {
-				return BadRequest(new GenericResponse(false, Strings.BotNotConnected));
+				return BadRequest(new GenericResponse(false, ArchiSteamFarm.Localization.Strings.BotNotConnected));
 			}
 
 			Steam.InventoryHistoryCursor? cursor = null;
 			if (startTime != null && timeFrac != null && s != null) {
 				cursor = new Steam.InventoryHistoryCursor(startTime.Value, timeFrac.Value, s);
 			} else if (timeFrac != null || s != null) {
-				return BadRequest(new GenericResponse(false, "When using 'timeFrac' or 's', all three parameters must be defined: 'startTime', 'timeFrac', and 's'"));
+				return BadRequest(new GenericResponse(false, Strings.InventoryHistoryInvalidCursor));
 			}
 
 			Steam.InventoryHistoryResponse? inventoryHistory = null; 
@@ -136,10 +136,10 @@ namespace BoosterManager {
 			try {
 				(inventoryHistory, source) = await WebRequest.GetInventoryHistory(bot, DataHandler.InventoryHistoryAppFilter, cursor, startTime).ConfigureAwait(false);
 			} catch (InventoryHistoryException) {
-				return BadRequest(new GenericResponse(false, "Rate limit exceeded"));
+				return BadRequest(new GenericResponse(false, Strings.RateLimitExceeded));
 			}
 			if (inventoryHistory == null || !inventoryHistory.Success) {
-				return BadRequest(new GenericResponse(false, "Failed to fetch Inventory History"));
+				return BadRequest(new GenericResponse(false, Strings.InventoryHistoryFetchFailed));
 			}
 
 			return Ok(new GenericResponse<SteamData<Steam.InventoryHistoryResponse>>(true, new SteamData<Steam.InventoryHistoryResponse>(bot, inventoryHistory, source!, startTime, cursor)));
@@ -159,16 +159,16 @@ namespace BoosterManager {
 
 			Bot? bot = Bot.GetBot(botName);
 			if (bot == null) {
-				return BadRequest(new GenericResponse(false, string.Format(Strings.BotNotFound, botName)));
+				return BadRequest(new GenericResponse(false, string.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botName)));
 			}
 			
 			if (!bot.IsConnectedAndLoggedOn) {
-				return BadRequest(new GenericResponse(false, Strings.BotNotConnected));
+				return BadRequest(new GenericResponse(false, ArchiSteamFarm.Localization.Strings.BotNotConnected));
 			}
 
 			JsonDocument? badgeInfo = await WebRequest.GetBadgeInfo(bot, appID, border).ConfigureAwait(false);
 			if (badgeInfo == null) {
-				return BadRequest(new GenericResponse(false, "Failed to fetch badge info"));
+				return BadRequest(new GenericResponse(false, Strings.BadgeInfoFetchFailed));
 			}
 
 			return Ok(new GenericResponse<JsonDocument>(true, badgeInfo));
@@ -188,21 +188,21 @@ namespace BoosterManager {
 
 			HashSet<Bot>? bots = Bot.GetBots(botNames);
 			if ((bots == null) || (bots.Count == 0)) {
-				return BadRequest(new GenericResponse(false, string.Format(Strings.BotNotFound, botNames)));
+				return BadRequest(new GenericResponse(false, string.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)));
 			}
 
 			Bot? bot = bots.FirstOrDefault(static bot => bot.IsConnectedAndLoggedOn);
 			if (bot == null) {
-				return BadRequest(new GenericResponse(false, Strings.BotNotConnected));
+				return BadRequest(new GenericResponse(false, ArchiSteamFarm.Localization.Strings.BotNotConnected));
 			}
 			
 			if (!bot.IsConnectedAndLoggedOn) {
-				return BadRequest(new GenericResponse(false, Strings.BotNotConnected));
+				return BadRequest(new GenericResponse(false, ArchiSteamFarm.Localization.Strings.BotNotConnected));
 			}
 
 			JsonDocument? priceHistory = await WebRequest.GetPriceHistory(bot, appID, hashName).ConfigureAwait(false);
 			if (priceHistory == null) {
-				return BadRequest(new GenericResponse(false, "Failed to fetch price history"));
+				return BadRequest(new GenericResponse(false, Strings.PriceHistoryFetchFailed));
 			}
 
 			return Ok(new GenericResponse<JsonDocument>(true, priceHistory));

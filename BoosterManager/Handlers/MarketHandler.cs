@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text.Json.Nodes;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Helpers.Json;
-using ArchiSteamFarm.Localization;
 using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Steam.Data;
+using BoosterManager.Localization;
 
 namespace BoosterManager {
 	internal static class MarketHandler {
@@ -14,24 +14,24 @@ namespace BoosterManager {
 			uint? listingsValue = await GetMarketListingsValue(bot).ConfigureAwait(false);
 
 			if (listingsValue == null) {
-				return "Failed to load Market Listings";
+				return Strings.MarketListingsFetchFailed;
 			}
 
-			return Commands.FormatBotResponse(bot, String.Format("Listings: {0:#,#0.00} {1}", listingsValue / 100.0, bot.WalletCurrency.ToString()));
+			return Commands.FormatBotResponse(bot, String.Format(Strings.ListingsValue, String.Format("{0:#,#0.00}", listingsValue / 100.0), bot.WalletCurrency.ToString()));
 		}
 
 		internal static async Task<string> GetValue(Bot bot, uint subtractFrom = 0) {
 			uint? listingsValue = await GetMarketListingsValue(bot).ConfigureAwait(false);
 
 			if (listingsValue == null) {
-				return "Failed to load Market Listings";
+				return Strings.MarketListingsFetchFailed;
 			}
 
 			if (subtractFrom != 0) {
-				return Commands.FormatBotResponse(bot, String.Format("Remaining: {0:#,#0.00} {1}", subtractFrom - ((listingsValue + bot.WalletBalance) / 100.0), bot.WalletCurrency.ToString()));
+				return Commands.FormatBotResponse(bot, String.Format(Strings.AccountValueRemaining, String.Format("{0:#,#0.00}", subtractFrom - ((listingsValue + bot.WalletBalance) / 100.0)), bot.WalletCurrency.ToString()));
 			}
 
-			return Commands.FormatBotResponse(bot, String.Format("Value: {0:#,#0.00} {1}", (listingsValue + bot.WalletBalance) / 100.0, bot.WalletCurrency.ToString()));
+			return Commands.FormatBotResponse(bot, String.Format(Strings.AccountValue, String.Format("{0:#,#0.00}", (listingsValue + bot.WalletBalance) / 100.0), bot.WalletCurrency.ToString()));
 		}
 
 		private static async Task<uint?> GetMarketListingsValue(Bot bot) {
@@ -60,16 +60,16 @@ namespace BoosterManager {
 			Dictionary<string, List<ulong>>? filteredListings = await GetListingIDsFromIdentifiers(bot, itemIdentifiers).ConfigureAwait(false);
 
 			if (filteredListings == null) {
-				return Commands.FormatBotResponse(bot, "Failed to load Market Listings");
+				return Commands.FormatBotResponse(bot, Strings.MarketListingsFetchFailed);
 			}
 
 			if (filteredListings.Count == 0) {
-				return Commands.FormatBotResponse(bot, "No listings found");
+				return Commands.FormatBotResponse(bot, Strings.ListingsNotFound);
 			}
 
 			List<string> responses = new List<string>();
 			foreach ((string itemName, List<ulong> listingIDs) in filteredListings) {
-				responses.Add(String.Format("{0} listings found for \"{1}\": {2}", listingIDs.Count, itemName, String.Join(", ", listingIDs)));
+				responses.Add(String.Format(Strings.ListingsFound, listingIDs.Count, itemName, String.Join(", ", listingIDs)));
 			}
 
 			return Commands.FormatBotResponse(bot, String.Join(Environment.NewLine, responses));
@@ -85,10 +85,10 @@ namespace BoosterManager {
 			}
 			
 			if (failedListingIDs.Count != 0) {
-				return Commands.FormatBotResponse(bot, String.Format("Cancelled {0}/{1} listings, failed to cancel: {2}", listingIDs.Count - failedListingIDs.Count, listingIDs.Count, String.Join(", ", failedListingIDs)));
+				return Commands.FormatBotResponse(bot, String.Format(Strings.ListingsRemovedFailed, listingIDs.Count - failedListingIDs.Count, listingIDs.Count, String.Join(", ", failedListingIDs)));
 			}
 
-			return Commands.FormatBotResponse(bot, String.Format("Removed {0} listings", listingIDs.Count));
+			return Commands.FormatBotResponse(bot, String.Format(Strings.ListingsRemovedSuccess, listingIDs.Count));
 		}
 		
 		internal static async Task<string> RemovePendingListings(Bot bot) {
@@ -141,11 +141,11 @@ namespace BoosterManager {
 			Dictionary<string, List<ulong>>? filteredListings = await GetListingIDsFromIdentifiers(bot, itemIdentifiers).ConfigureAwait(false);
 
 			if (filteredListings == null) {
-				return Commands.FormatBotResponse(bot, "Failed to load Market Listings");
+				return Commands.FormatBotResponse(bot, Strings.MarketListingsFetchFailed);
 			}
 
 			if (filteredListings.Count == 0) {
-				return Commands.FormatBotResponse(bot, "No listings found");
+				return Commands.FormatBotResponse(bot, Strings.ListingsNotFound);
 			}
 
 			List<ulong> listingIDs = filteredListings.Values.SelectMany(x => x).Distinct().ToList();
@@ -238,7 +238,7 @@ namespace BoosterManager {
 
 		internal static async Task AcceptMarketConfirmations(Bot bot) {
 			(bool success, _, string message) = await bot.Actions.HandleTwoFactorAuthenticationConfirmations(true, Confirmation.EConfirmationType.Market).ConfigureAwait(false);
-			bot.ArchiLogger.LogGenericInfo(success ? message : String.Format(Strings.WarningFailedWithError, message));
+			bot.ArchiLogger.LogGenericInfo(success ? message : String.Format(ArchiSteamFarm.Localization.Strings.WarningFailedWithError, message));
 		}
 	}
 }
