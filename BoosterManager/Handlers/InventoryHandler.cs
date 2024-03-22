@@ -206,7 +206,7 @@ namespace BoosterManager {
 				inventory = await bot.ArchiWebHandler.GetInventoryAsync(appID: appID, contextID: contextID).Where(item => itemIdentifier.IsItemMatch(item)).ToHashSetAsync().ConfigureAwait(false);
 			} catch (Exception e) {
 				bot.ArchiLogger.LogGenericException(e);
-				return Commands.FormatBotResponse(bot, Strings.WarningFailed);
+				return Commands.FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.WarningFailed);
 			}
 
 			(uint tradable, uint untradable) items = (0,0);
@@ -219,9 +219,13 @@ namespace BoosterManager {
 				}
 			}
 
-			return Commands.FormatBotResponse(bot, String.Format("Tradable: {0:N0}{1}", items.tradable,
-				(items.untradable) == 0 ? "" : String.Format("; Untradable: {0:N0}", items.untradable))
-			);
+			string response = String.Format(Strings.ItemsCountTradable, String.Format("{0:N0}", items.tradable));
+
+			if (items.untradable > 0) {
+				response += String.Format("; {0}", String.Format(Strings.ItemsCountUntradable, String.Format("{0:N0}", items.untradable)));
+			}
+
+			return Commands.FormatBotResponse(bot, response);
 		}
 	}
 }

@@ -798,11 +798,11 @@ namespace BoosterManager {
 			}
 
 			if (!uint.TryParse(appIDAsText, out uint appID)) {
-				return FormatBotResponse(bot, String.Format(Strings.ErrorIsInvalid, nameof(appIDAsText)));
+				return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, nameof(appIDAsText)));
 			}
 
 			if (!ulong.TryParse(contextIDAsText, out ulong contextID)) {
-				return FormatBotResponse(bot, String.Format(Strings.ErrorIsInvalid, nameof(contextIDAsText)));
+				return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, nameof(contextIDAsText)));
 			}
 
 			if (String.IsNullOrEmpty(itemIdentifierAsText)) {
@@ -1285,7 +1285,7 @@ namespace BoosterManager {
 			}
 
 			if (!bot.IsConnectedAndLoggedOn) {
-				return FormatBotResponse(bot, Strings.BotNotConnected);
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
 			}
 
 			return await MarketHandler.RemovePendingListings(bot).ConfigureAwait(false);
@@ -1299,7 +1299,7 @@ namespace BoosterManager {
 			Bot? bot = Bot.GetBot(botName);
 
 			if (bot == null) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(Strings.BotNotFound, botName)) : null;
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botName)) : null;
 			}
 
 			return await ResponseRemovePendingListings(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)).ConfigureAwait(false);
@@ -1379,7 +1379,7 @@ namespace BoosterManager {
 
 			(bool success, string message) = await bot.Actions.SendInventory(appID: appID, contextID: contextID, targetSteamID: targetSteamID, filterFunction: item => itemIdentifiers.Any(itemIdentifier => itemIdentifier.IsItemMatch(item))).ConfigureAwait(false);
 
-			return FormatBotResponse(bot, success ? message : String.Format(Strings.WarningFailedWithError, message));
+			return FormatBotResponse(bot, success ? message : String.Format(ArchiSteamFarm.Localization.Strings.WarningFailedWithError, message));
 		}
 
 		private static async Task<string?> ResponseSendItemToBot(EAccess access, ulong steamID, string senderBotNames, ItemIdentifier itemIdentifier, bool? marketable = null, string? recieverBotName = null) {

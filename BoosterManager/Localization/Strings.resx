@@ -509,4 +509,20 @@
     <value>Bot has {0} incoming trades</value>
     <comment>{0} will be replaced by a number</comment>
   </data>
+  <data name="PendingListingsNotFound" xml:space="preserve">
+    <value>No pending market listings found</value>
+    <comment/>
+  </data>
+  <data name="PendingListingsRemovedFailed" xml:space="preserve">
+    <value>Successfully removed {0} pending market listings, failed to remove {1} listings</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
+  </data>
+  <data name="PendingListingsRemovedSuccess" xml:space="preserve">
+    <value>Successfully removed {0} pending market listings</value>
+    <comment>{0} will be replaced by a number</comment>
+  </data>
+  <data name="BoosterUnmarketable" xml:space="preserve">
+    <value>Won't craft unmarketable boosters for {0}</value>
+    <comment>{0} will be replaced by an appID</comment>
+  </data>
 </root>

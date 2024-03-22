@@ -95,11 +95,11 @@ namespace BoosterManager {
 			(Steam.MarketListingsResponse? marketListings, _) = await WebRequest.GetMarketListings(bot).ConfigureAwait(false);
 
 			if (marketListings == null || marketListings.ListingsToConfirm == null || !marketListings.Success) {
-				return "Failed to load Market Listings";
+				return Strings.MarketListingsFetchFailed;
 			}
 
 			if (marketListings.ListingsToConfirm.Count == 0) {
-				return "No pending market listings found";
+				return Strings.PendingListingsNotFound;
 			}
 
 			HashSet<ulong> pendingListingIDs = new();
@@ -108,14 +108,14 @@ namespace BoosterManager {
 				if (listing == null) {
 					bot.ArchiLogger.LogNullError(listing);
 						
-					return "Failed to load Market Listings";
+					return Strings.MarketListingsFetchFailed;
 				}
 
 				ulong? listingid = listing["listingid"]?.ToString().ToJsonObject<ulong>();
 				if (listingid == null) {
 					bot.ArchiLogger.LogNullError(listingid);
 						
-					return "Failed to load Market Listings";
+					return Strings.MarketListingsFetchFailed;
 				}
 					
 				pendingListingIDs.Add(listingid.Value);
@@ -131,10 +131,10 @@ namespace BoosterManager {
 			}
 
 			if (failedToRemove != 0) {
-				return String.Format("Successfully removed {0} pending market listings, failed to remove {1} listings", pendingListingIDs.Count - failedToRemove, failedToRemove);
+				return String.Format(Strings.PendingListingsRemovedFailed, pendingListingIDs.Count - failedToRemove, failedToRemove);
 			}
 
-			return String.Format("Successfully removed {0} pending market listings", pendingListingIDs.Count);
+			return String.Format(Strings.PendingListingsRemovedSuccess, pendingListingIDs.Count);
 		}
 
 		internal static async Task<string> FindAndRemoveListings(Bot bot, List<ItemIdentifier> itemIdentifiers) {

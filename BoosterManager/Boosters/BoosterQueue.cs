@@ -105,7 +105,7 @@ namespace BoosterManager {
 			void handler() {
 				try {
 					if (!BoosterInfos.TryGetValue(gameID, out Steam.BoosterInfo? boosterInfo)) {
-						Bot.ArchiLogger.LogGenericError(String.Format("Can't craft boosters for {0}", gameID));
+						Bot.ArchiLogger.LogGenericError(String.Format(Strings.BoosterUncraftable, gameID));
 
 						return;
 					}
@@ -118,7 +118,7 @@ namespace BoosterManager {
 					}
 
 					if (!BoosterHandler.AllowCraftUnmarketableBoosters && !MarketableApps.AppIDs.Contains(gameID)) {
-						Bot.ArchiLogger.LogGenericError(String.Format("Won't craft unmarketable boosters for {0}", gameID));
+						Bot.ArchiLogger.LogGenericError(String.Format(Strings.BoosterUnmarketable, gameID));
 
 						return;
 					}
@@ -203,11 +203,11 @@ namespace BoosterManager {
 			// For any error we get, we'll need to refresh the booster page and see if the AvailableAtTime has changed to determine if we really failed to craft
 			void handler() {
 				try {
-					Bot.ArchiLogger.LogGenericInfo(String.Format("An error was encountered when trying to craft a booster from {0}, trying to resolve it now", booster.GameID));
+					Bot.ArchiLogger.LogGenericInfo(String.Format(Strings.BoosterCreationError, booster.GameID));
 
 					if (!BoosterInfos.TryGetValue(booster.GameID, out Steam.BoosterInfo? newBoosterInfo)) {
 						// No longer have access to craft boosters for this game (game removed from account, or sometimes due to very rare Steam bugs)
-						BoosterHandler.PerpareStatusReport(String.Format("No longer able to craft boosters from {0} ({1})", booster.Info.Name, booster.GameID));
+						BoosterHandler.PerpareStatusReport(String.Format(Strings.BoosterUnexpectedlyUncraftable, booster.Info.Name, booster.GameID));
 						RemoveBooster(booster.GameID);
 						CheckIfFinished(booster.Type);
 
@@ -228,7 +228,7 @@ namespace BoosterManager {
 						return;
 					}
 
-					Bot.ArchiLogger.LogGenericInfo(String.Format("Booster from {0} was not created, retrying", booster.GameID));
+					Bot.ArchiLogger.LogGenericInfo(String.Format(Strings.BoosterCreationRetry, booster.GameID));
 				} finally {
 					OnBoosterInfosUpdated -= handler;
 				}
