@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using ArchiSteamFarm.Localization;
 using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Steam.Data;
+using BoosterManager.Localization;
 
 namespace BoosterManager {
 	internal static class KeyHandler {
@@ -18,7 +18,7 @@ namespace BoosterManager {
 				inventory = await bot.ArchiHandler.GetMyInventoryAsync(appID: KeyAppID, contextID: KeyContextID).Where(item => ItemIdentifier.KeyIdentifier.IsItemMatch(item)).ToHashSetAsync().ConfigureAwait(false);
 			} catch (Exception e) {
 				bot.ArchiLogger.LogGenericException(e);
-				return Commands.FormatBotResponse(bot, Strings.WarningFailed);
+				return Commands.FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.WarningFailed);
 			}
 
 			(uint tradable, uint untradable) keys = (0,0);
@@ -31,9 +31,13 @@ namespace BoosterManager {
 				}
 			}
 
-			return Commands.FormatBotResponse(bot, String.Format("Tradable: {0:N0}{1}", keys.tradable,
-				(keys.untradable) == 0 ? "" : String.Format("; Untradable: {0:N0}", keys.untradable))
-			);
+			string response = String.Format(Strings.ItemsCountTradable, String.Format("{0:N0}", keys.tradable));
+
+			if (keys.untradable > 0) {
+				response += String.Format("; {0}", String.Format(Strings.ItemsCountUntradable, String.Format("{0:N0}", keys.untradable)));
+			}
+
+			return Commands.FormatBotResponse(bot, response);
 		}
 	}
 }

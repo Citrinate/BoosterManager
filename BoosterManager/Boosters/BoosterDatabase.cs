@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Helpers;
 using ArchiSteamFarm.Helpers.Json;
-using ArchiSteamFarm.Localization;
 
 namespace BoosterManager {
 	internal sealed class BoosterDatabase : SerializableFile {
@@ -41,7 +40,7 @@ namespace BoosterManager {
 				string json = File.ReadAllText(filePath);
 
 				if (string.IsNullOrEmpty(json)) {
-					ASF.ArchiLogger.LogGenericError(string.Format(Strings.ErrorIsEmpty, nameof(json)));
+					ASF.ArchiLogger.LogGenericError(string.Format(ArchiSteamFarm.Localization.Strings.ErrorIsEmpty, nameof(json)));
 
 					return null;
 				}
