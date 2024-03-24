@@ -445,7 +445,7 @@ namespace BoosterManager {
 					}
 				} else {
 					BoosterHandler.BoosterHandlers[bot.BotName].StartMarketTimer(minutes);
-					repeatMessage = String.Format(Strings.RepetitionNotice, minutes, String.Format("!m2faok {1} 0", bot.BotName));
+					repeatMessage = String.Format(Strings.RepetitionNotice, minutes, String.Format("!m2faok {0} 0", bot.BotName));
 				}
 			}
 			
