@@ -21,6 +21,7 @@ namespace BoosterManager {
 		internal int BoosterDelay = 0; // Delay, in seconds, added to all booster crafts
 		private readonly BoosterDatabase? BoosterDatabase;
 		internal event Action? OnBoosterInfosUpdated;
+		private float BoosterInfosUpdateBackOffMultiplier = 1.0F;
 
 		internal BoosterQueue(Bot bot, BoosterHandler boosterHandler) {
 			Bot = bot;
@@ -57,13 +58,16 @@ namespace BoosterManager {
 
 			if (!await UpdateBoosterInfos().ConfigureAwait(false)) {
 				Bot.ArchiLogger.LogGenericError(Strings.BoosterInfoUpdateFailed);
-				UpdateTimer(DateTime.Now.AddMinutes(1));
+				UpdateTimer(DateTime.Now.AddMinutes(Math.Min(15, 1 * BoosterInfosUpdateBackOffMultiplier)));
+				BoosterInfosUpdateBackOffMultiplier += 0.5F;
 
 				return;
 			}
 
 			Booster? booster = GetNextCraftableBooster(BoosterType.Any);
 			if (booster == null) {
+				BoosterInfosUpdateBackOffMultiplier = 1.0F;
+
 				return;
 			}
 			
@@ -71,10 +75,13 @@ namespace BoosterManager {
 				if (booster.Info.Price > GetAvailableGems()) {
 					BoosterHandler.PerpareStatusReport(String.Format(Strings.NotEnoughGems, String.Format("{0:N0}", GetGemsNeeded(BoosterType.Any, wasCrafted: false) - GetAvailableGems())), suppressDuplicateMessages: true);
 					OnBoosterInfosUpdated += ForceUpdateBoosterInfos;
-					UpdateTimer(DateTime.Now.AddMinutes(GetNumBoosters(BoosterType.OneTime) > 0 ? 1 : 15));
+					UpdateTimer(DateTime.Now.AddMinutes(Math.Min(15, (GetNumBoosters(BoosterType.OneTime) > 0 ? 1 : 15) * BoosterInfosUpdateBackOffMultiplier)));
+					BoosterInfosUpdateBackOffMultiplier += 0.5F;
 
 					return;
 				}
+
+				BoosterInfosUpdateBackOffMultiplier = 1.0F;
 
 				if (!await CraftBooster(booster).ConfigureAwait(false)) {
 					Bot.ArchiLogger.LogGenericError(String.Format(Strings.BoosterCreationFailed, booster.GameID));
@@ -92,6 +99,8 @@ namespace BoosterManager {
 					return;
 				}
 			}
+
+			BoosterInfosUpdateBackOffMultiplier = 1.0F;
 
 			DateTime nextBoosterTime = booster.GetAvailableAtTime(BoosterDelay);
 			if (nextBoosterTime < DateTime.Now.AddSeconds(MinDelayBetweenBoosters)) {
