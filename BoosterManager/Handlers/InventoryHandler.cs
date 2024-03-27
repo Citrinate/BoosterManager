@@ -203,7 +203,7 @@ namespace BoosterManager {
 		internal static async Task<string> GetItemCount(Bot bot, uint appID, ulong contextID, ItemIdentifier itemIdentifier) {
 			HashSet<Asset> inventory;
 			try {
-				inventory = await bot.ArchiWebHandler.GetInventoryAsync(appID: appID, contextID: contextID).Where(item => itemIdentifier.IsItemMatch(item)).ToHashSetAsync().ConfigureAwait(false);
+				inventory = await bot.ArchiHandler.GetMyInventoryAsync(appID: appID, contextID: contextID).Where(item => itemIdentifier.IsItemMatch(item)).ToHashSetAsync().ConfigureAwait(false);
 			} catch (Exception e) {
 				bot.ArchiLogger.LogGenericException(e);
 				return Commands.FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.WarningFailed);
