@@ -15,7 +15,7 @@ namespace BoosterManager {
 
 			HashSet<Asset> itemStacks;
 			try {
-				itemStacks = await sender.ArchiWebHandler.GetInventoryAsync(appID: appID, contextID: contextID).Where(item => item.Tradable && itemIdentifier.IsItemMatch(item)).ToHashSetAsync().ConfigureAwait(false);
+				itemStacks = await sender.ArchiHandler.GetMyInventoryAsync(appID: appID, contextID: contextID).Where(item => item.Tradable && itemIdentifier.IsItemMatch(item)).ToHashSetAsync().ConfigureAwait(false);
 			} catch (Exception e) {
 				sender.ArchiLogger.LogGenericException(e);
 				return Commands.FormatBotResponse(sender, ArchiSteamFarm.Localization.Strings.WarningFailed);
@@ -80,7 +80,7 @@ namespace BoosterManager {
 
 			HashSet<Asset> inventory;
 			try {
-				inventory = await sender.ArchiWebHandler.GetInventoryAsync(appID: appID, contextID: contextID).ToHashSetAsync().ConfigureAwait(false);
+				inventory = await sender.ArchiHandler.GetMyInventoryAsync(appID: appID, contextID: contextID).ToHashSetAsync().ConfigureAwait(false);
 			} catch (Exception e) {
 				sender.ArchiLogger.LogGenericException(e);
 				return Commands.FormatBotResponse(sender, ArchiSteamFarm.Localization.Strings.WarningFailed);
