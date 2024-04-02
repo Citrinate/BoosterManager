@@ -1,5 +1,6 @@
 using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Steam;
+using BoosterManager.Localization;
 using SteamKit2;
 using System;
 using System.Collections.Concurrent;
@@ -20,6 +21,7 @@ namespace BoosterManager {
 		internal static ConcurrentDictionary<string, BoosterHandler> BoosterHandlers = new();
 		private static int DelayBetweenBots = 0; // Delay, in minutes, between when bots will craft boosters
 		internal static bool AllowCraftUntradableBoosters = true;
+		internal static bool AllowCraftUnmarketableBoosters = true;
 		private Timer? MarketRepeatTimer = null;
 
 		private BoosterHandler(Bot bot) {
@@ -76,14 +78,14 @@ namespace BoosterManager {
 			BoosterQueue.OnBoosterInfosUpdated += ScheduleBoostersResponse;
 			BoosterQueue.Start();
 
-			return Commands.FormatBotResponse(Bot, String.Format("Attempting to craft {0} boosters...", gameIDs.Count));
+			return Commands.FormatBotResponse(Bot, String.Format(Strings.BoosterCreationStarting, gameIDs.Count));
 		}
 
 		private void ScheduleBoostersResponse() {
 			BoosterQueue.OnBoosterInfosUpdated -= ScheduleBoostersResponse;
 			string? message = BoosterQueue.GetShortStatus();
 			if (message == null) {
-				PerpareStatusReport("Bot cannot craft boosters for the requested games");
+				PerpareStatusReport(Strings.BoostersUncraftable);
 
 				return;
 			}
@@ -103,14 +105,14 @@ namespace BoosterManager {
 
 			if (removedGameIDs.Count == 0) {
 				if (timeLimitHours == null) {
-					return Commands.FormatBotResponse(Bot, "Bot was not attempting to craft any of those boosters.  If you're trying to remove boosters from your \"GamesToBooster\" config setting, you'll need to remove them from your config file.");
+					return Commands.FormatBotResponse(Bot, Strings.QueueRemovalByAppFail);
 				}
 				
-				return Commands.FormatBotResponse(Bot, "Didn't find any boosters that could be removed.");
+				return Commands.FormatBotResponse(Bot, Strings.QueueRemovalByTimeFail);
 
 			}
 
-			return Commands.FormatBotResponse(Bot, String.Format("Will no longer craft these {0} boosters: {1}", removedGameIDs.Count, String.Join(", ", removedGameIDs)));
+			return Commands.FormatBotResponse(Bot, String.Format(Strings.QueueRemovalSuccess, removedGameIDs.Count, String.Join(", ", removedGameIDs)));
 		}
 
 		internal string GetStatus(bool shortStatus = false) {
@@ -212,6 +214,10 @@ namespace BoosterManager {
 				TimeSpan.FromMinutes(minutes), 
 				TimeSpan.FromMinutes(minutes)
 			);
+		}
+
+		internal static bool IsCraftingOneTimeBoosters() {
+			return BoosterHandlers.Any(handler => handler.Value.BoosterQueue.GetNumBoosters(BoosterType.OneTime, wasCrafted: false) > 0);
 		}
 
 		private static int GetMillisecondsFromNow(DateTime then) => Math.Max(0, (int) (then - DateTime.Now).TotalMilliseconds);

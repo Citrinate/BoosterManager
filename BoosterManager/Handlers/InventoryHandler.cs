@@ -2,9 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using ArchiSteamFarm.Localization;
 using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Steam.Data;
+using BoosterManager.Localization;
 
 namespace BoosterManager {
 	internal static class InventoryHandler {
@@ -15,25 +15,25 @@ namespace BoosterManager {
 
 			HashSet<Asset> itemStacks;
 			try {
-				itemStacks = await sender.ArchiWebHandler.GetInventoryAsync(appID: appID, contextID: contextID).Where(item => item.Tradable && itemIdentifier.IsItemMatch(item)).ToHashSetAsync().ConfigureAwait(false);
+				itemStacks = await sender.ArchiHandler.GetMyInventoryAsync(appID: appID, contextID: contextID).Where(item => item.Tradable && itemIdentifier.IsItemMatch(item)).ToHashSetAsync().ConfigureAwait(false);
 			} catch (Exception e) {
 				sender.ArchiLogger.LogGenericException(e);
-				return Commands.FormatBotResponse(sender, Strings.WarningFailed);
+				return Commands.FormatBotResponse(sender, ArchiSteamFarm.Localization.Strings.WarningFailed);
 			}
 
 			HashSet<string> responses = new HashSet<string>();
 			uint totalAmountSent = 0;
 
 			foreach ((Bot reciever, uint amount) in recievers) {
-				sender.ArchiLogger.LogGenericInfo(String.Format("Sending {0} of {1} to {2}", amount, itemIdentifier.ToString(), reciever.BotName));
+				sender.ArchiLogger.LogGenericInfo(String.Format(Strings.SendingQuantityOfItemsToBot, amount, itemIdentifier.ToString(), reciever.BotName));
 				(bool success, string response) = await SendItem(sender, itemStacks, reciever, amount, totalAmountSent).ConfigureAwait(false);
 				responses.Add(Commands.FormatBotResponse(reciever, response));
 
 				if (success) {
-					sender.ArchiLogger.LogGenericInfo(String.Format("Sent {0} of {1} to {2}", amount, itemIdentifier.ToString(), reciever.BotName));
+					sender.ArchiLogger.LogGenericInfo(String.Format(Strings.SendingQuantityOfItemsToBotSuccess, amount, itemIdentifier.ToString(), reciever.BotName));
 					totalAmountSent += amount;
 				} else {
-					sender.ArchiLogger.LogGenericError(String.Format("Failed to send {0} of {1} to {2}", amount, itemIdentifier.ToString(), reciever.BotName));
+					sender.ArchiLogger.LogGenericError(String.Format(Strings.SendingQuantityOfItemsToBotFailed, amount, itemIdentifier.ToString(), reciever.BotName));
 				}
 			}
 
@@ -42,20 +42,20 @@ namespace BoosterManager {
 
 		private static async Task<(bool, String)> SendItem(Bot sender, HashSet<Asset> itemStacks, Bot reciever, uint amountToSend, uint amountToSkip = 0) {
 			if (!reciever.IsConnectedAndLoggedOn) {
-				return (false, Strings.BotNotConnected);
+				return (false, ArchiSteamFarm.Localization.Strings.BotNotConnected);
 			}
 
 			if (sender.SteamID == reciever.SteamID) {
-				return (false, Strings.BotSendingTradeToYourself);
+				return (false, ArchiSteamFarm.Localization.Strings.BotSendingTradeToYourself);
 			}
 
 			if (amountToSend == 0) {
-				return (true, "Successfully sent nothing!");
+				return (true, Strings.SendingNoItems);
 			}
 
 			HashSet<Asset>? itemsToGive = GetItemsFromStacks(sender, itemStacks, amountToSend, amountToSkip);
 			if (itemsToGive == null) {
-				return (false, "Not enough to send!");
+				return (false, Strings.SendingInsufficientQuantity);
 			}
 
 			(bool success, _, HashSet<ulong>? mobileTradeOfferIDs) = await sender.ArchiWebHandler.SendTradeOffer(reciever.SteamID, itemsToGive).ConfigureAwait(false);
@@ -64,11 +64,11 @@ namespace BoosterManager {
 
 				if (!twoFactorSuccess) {
 					sender.ArchiLogger.LogGenericError(message);
-					return (success, Strings.BotLootingFailed);
+					return (success, ArchiSteamFarm.Localization.Strings.BotLootingFailed);
 				}
 			}
 
-			return (success, success ? Strings.BotLootingSuccess : Strings.BotLootingFailed);
+			return (success, success ? ArchiSteamFarm.Localization.Strings.BotLootingSuccess : ArchiSteamFarm.Localization.Strings.BotLootingFailed);
 		}
 
 		internal static async Task<string> SendMultipleItemsToMultipleBots(Bot sender, HashSet<Bot> recievers, uint appID, ulong contextID, List<(ItemIdentifier itemIdentifier, uint amount)> items) {
@@ -80,10 +80,10 @@ namespace BoosterManager {
 
 			HashSet<Asset> inventory;
 			try {
-				inventory = await sender.ArchiWebHandler.GetInventoryAsync(appID: appID, contextID: contextID).ToHashSetAsync().ConfigureAwait(false);
+				inventory = await sender.ArchiHandler.GetMyInventoryAsync(appID: appID, contextID: contextID).ToHashSetAsync().ConfigureAwait(false);
 			} catch (Exception e) {
 				sender.ArchiLogger.LogGenericException(e);
-				return Commands.FormatBotResponse(sender, Strings.WarningFailed);
+				return Commands.FormatBotResponse(sender, ArchiSteamFarm.Localization.Strings.WarningFailed);
 			}
 
 			// Link each inventory Asset to a matching ItemIdentifier
@@ -106,10 +106,10 @@ namespace BoosterManager {
 				responses.Add(Commands.FormatBotResponse(reciever, response));
 
 				if (success) {
-					sender.ArchiLogger.LogGenericInfo(String.Format("Sent items to {0}", reciever.BotName));
+					sender.ArchiLogger.LogGenericInfo(String.Format(Strings.SendingItemsSuccess, reciever.BotName));
 					numRecieversProcessed++;
 				} else {
-					sender.ArchiLogger.LogGenericError(String.Format("Failed to send items to {0}", reciever.BotName));
+					sender.ArchiLogger.LogGenericError(String.Format(Strings.SendingItemsFailed, reciever.BotName));
 				}
 			}
 
@@ -118,11 +118,11 @@ namespace BoosterManager {
 
 		private static async Task<(bool, String)> SendMultipleItems(Bot sender, Bot reciever, List<(HashSet<Asset> itemStacks, ItemIdentifier itemIdentifier, uint amount)> itemStacksWithAmounts, uint numRecieversProcessed = 0) {
 			if (!reciever.IsConnectedAndLoggedOn) {
-				return (false, Strings.BotNotConnected);
+				return (false, ArchiSteamFarm.Localization.Strings.BotNotConnected);
 			}
 
 			if (sender.SteamID == reciever.SteamID) {
-				return (false, Strings.BotSendingTradeToYourself);
+				return (false, ArchiSteamFarm.Localization.Strings.BotSendingTradeToYourself);
 			}
 
 			HashSet<Asset> totalItemsToGive = new HashSet<Asset>();
@@ -134,13 +134,13 @@ namespace BoosterManager {
 			foreach ((HashSet<Asset> itemStacks, ItemIdentifier itemIdentifier, uint amount) in itemStacksWithAmounts) {
 				HashSet<Asset>? itemsToGive = GetItemsFromStacks(sender, itemStacks, amount, amount * numRecieversProcessed);
 				if (itemsToGive == null) {
-					sender.ArchiLogger.LogGenericInfo(String.Format("Not enough of {0} to send!", itemIdentifier.ToString()));
-					responses.Add(String.Format("Not enough of {0} to send :steamthumbsdown:", itemIdentifier.ToString()));
+					sender.ArchiLogger.LogGenericInfo(String.Format(Strings.SendingInsufficientQuantityOfItems, itemIdentifier.ToString()));
+					responses.Add(String.Format("{0} :steamthumbsdown:", String.Format(Strings.SendingInsufficientQuantityOfItems, itemIdentifier.ToString())));
 					completeSuccess = false;
 					continue;
 				}
 
-				responses.Add(String.Format("Successfully sent {0} of {1} :steamthumbsup:", amount, itemIdentifier.ToString()));
+				responses.Add(String.Format("{0} :steamthumbsup:", String.Format(Strings.SendingQuantityOfItemsSuccess, amount, itemIdentifier.ToString())));
 				totalItemsToGive.UnionWith(itemsToGive);
 			}
 
@@ -154,19 +154,19 @@ namespace BoosterManager {
 
 				if (!twoFactorSuccess) {
 					sender.ArchiLogger.LogGenericError(message);
-					return (success, Strings.BotLootingFailed);
+					return (success, ArchiSteamFarm.Localization.Strings.BotLootingFailed);
 				}
 			}
 
 			if (!success) {
-				return (success, Strings.BotLootingFailed);
+				return (success, ArchiSteamFarm.Localization.Strings.BotLootingFailed);
 			}
 
 			if (!completeSuccess) {
 				return (success, String.Join(Environment.NewLine, responses));
 			}
 
-			return (success, Strings.BotLootingSuccess);
+			return (success, ArchiSteamFarm.Localization.Strings.BotLootingSuccess);
 		}
 
 		private static HashSet<Asset>? GetItemsFromStacks(Bot bot, HashSet<Asset> itemStacks, uint amountToTake, uint amountToSkip) {
@@ -192,12 +192,40 @@ namespace BoosterManager {
 			}
 
 			if (items.Count == 0 || amountTaken != amountToTake) {
-				bot.ArchiLogger.LogGenericError(String.Format("Not enough available quantity to complete trade, need {0}, but only {1} are available", amountToTake, amountTaken));
+				bot.ArchiLogger.LogGenericError(String.Format(Strings.SendingQuantityOfItemsFailed, amountToTake, amountTaken));
 
 				return null;
 			}
 
 			return items;
+		}
+
+		internal static async Task<string> GetItemCount(Bot bot, uint appID, ulong contextID, ItemIdentifier itemIdentifier) {
+			HashSet<Asset> inventory;
+			try {
+				inventory = await bot.ArchiHandler.GetMyInventoryAsync(appID: appID, contextID: contextID).Where(item => itemIdentifier.IsItemMatch(item)).ToHashSetAsync().ConfigureAwait(false);
+			} catch (Exception e) {
+				bot.ArchiLogger.LogGenericException(e);
+				return Commands.FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.WarningFailed);
+			}
+
+			(uint tradable, uint untradable) items = (0,0);
+
+			foreach (Asset item in inventory) {
+				if (item.Tradable) {
+					items.tradable += item.Amount;
+				} else {
+					items.untradable += item.Amount;
+				}
+			}
+
+			string response = String.Format(Strings.ItemsCountTradable, String.Format("{0:N0}", items.tradable));
+
+			if (items.untradable > 0) {
+				response += String.Format("; {0}", String.Format(Strings.ItemsCountUntradable, String.Format("{0:N0}", items.untradable)));
+			}
+
+			return Commands.FormatBotResponse(bot, response);
 		}
 	}
 }

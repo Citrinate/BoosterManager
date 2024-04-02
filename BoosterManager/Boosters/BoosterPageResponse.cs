@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using AngleSharp.Dom;
-using ArchiSteamFarm.Localization;
 using ArchiSteamFarm.Steam;
 
 namespace BoosterManager {
@@ -25,8 +24,9 @@ namespace BoosterManager {
 
 			MatchCollection gooAmounts = Regex.Matches(boosterPage.Source.Text, "(?<=parseFloat\\( \")[0-9]+");
 			Match info = Regex.Match(boosterPage.Source.Text, "\\[\\{\"[\\s\\S]*\"}]");
+
 			if (!info.Success || (gooAmounts.Count != 3)) {
-				Bot.ArchiLogger.LogGenericError(string.Format(Strings.ErrorParsingObject, boosterPage));
+				Bot.ArchiLogger.LogGenericError(string.Format(ArchiSteamFarm.Localization.Strings.ErrorParsingObject, boosterPage));
 
 				throw new Exception();
 			}
@@ -38,11 +38,10 @@ namespace BoosterManager {
 			IEnumerable<Steam.BoosterInfo>? enumerableBoosters;
 			try {
 				enumerableBoosters = JsonSerializer.Deserialize<IEnumerable<Steam.BoosterInfo>>(info.Value);
-			} catch (JsonException ex) {
-				Bot.ArchiLogger.LogGenericError(ex.Message);
-
-				throw new Exception();
+			} catch (JsonException) {
+				throw;
 			}
+
 			if (enumerableBoosters == null) {
 				Bot.ArchiLogger.LogNullError(enumerableBoosters);
 
