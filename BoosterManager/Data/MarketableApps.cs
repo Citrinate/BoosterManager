@@ -103,7 +103,7 @@ namespace BoosterManager {
 
 			LastSteamUpdate = DateTime.Now;
 
-			if (AppIDs.Count - newerAppIDs.Count > 10000) {
+			if (AppIDs.Count - newerAppIDs.Count > 1000) {
 				// Bad data from Steam, ignore it
 				return;
 			}
