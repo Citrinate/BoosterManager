@@ -33,6 +33,9 @@ Command | Access | Description
 `brate [Level]`|`Master`|Prints the optimal booster drop rate for an account at `Level`
 `bdrops [Bots]`|`Master`|Prints the number of booster eligible games for the given bots
 
+> [!NOTE]
+> Any `booster` commands that haven't completed when ASF is closed will not automatically restart the next time ASF is run.  If you allow ASF to update this plugin, then these updates will be paused until all `booster` commands have finished.
+
 ### Inventory Commands
 
 #### Gems
