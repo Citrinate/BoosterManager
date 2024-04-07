@@ -10,7 +10,6 @@ using BoosterManager.Localization;
 namespace BoosterManager {
 	internal sealed class BoosterQueue : IDisposable {
 		private readonly Bot Bot;
-		private readonly BoosterHandler BoosterHandler;
 		private readonly Timer Timer;
 		private readonly ConcurrentDictionary<uint, Booster> Boosters = new();
 		private Dictionary<uint, Steam.BoosterInfo> BoosterInfos = new();
@@ -23,9 +22,8 @@ namespace BoosterManager {
 		internal event Action? OnBoosterInfosUpdated;
 		private float BoosterInfosUpdateBackOffMultiplier = 1.0F;
 
-		internal BoosterQueue(Bot bot, BoosterHandler boosterHandler) {
+		internal BoosterQueue(Bot bot) {
 			Bot = bot;
-			BoosterHandler = boosterHandler;
 			Timer = new Timer(
 				async e => await Run().ConfigureAwait(false),
 				null, 
@@ -73,7 +71,7 @@ namespace BoosterManager {
 			
 			if (DateTime.Now >= booster.GetAvailableAtTime(BoosterDelay)) {
 				if (booster.Info.Price > GetAvailableGems()) {
-					BoosterHandler.PerpareStatusReport(String.Format(Strings.NotEnoughGems, String.Format("{0:N0}", GetGemsNeeded(BoosterType.Any, wasCrafted: false) - GetAvailableGems())), suppressDuplicateMessages: true);
+					BoosterHandler.GeneralReporter.Report(Bot, String.Format(Strings.NotEnoughGems, String.Format("{0:N0}", GetGemsNeeded(BoosterType.Any, wasCrafted: false) - GetAvailableGems())), suppressDuplicateMessages: true);
 					OnBoosterInfosUpdated += ForceUpdateBoosterInfos;
 					UpdateTimer(DateTime.Now.AddMinutes(Math.Min(15, (GetNumBoosters(BoosterType.OneTime) > 0 ? 1 : 15) * BoosterInfosUpdateBackOffMultiplier)));
 					BoosterInfosUpdateBackOffMultiplier += 0.5F;
@@ -216,7 +214,7 @@ namespace BoosterManager {
 
 					if (!BoosterInfos.TryGetValue(booster.GameID, out Steam.BoosterInfo? newBoosterInfo)) {
 						// No longer have access to craft boosters for this game (game removed from account, or sometimes due to very rare Steam bugs)
-						BoosterHandler.PerpareStatusReport(String.Format(Strings.BoosterUnexpectedlyUncraftable, booster.Info.Name, booster.GameID));
+						BoosterHandler.GeneralReporter.Report(Bot, String.Format(Strings.BoosterUnexpectedlyUncraftable, booster.Info.Name, booster.GameID));
 						RemoveBooster(booster.GameID);
 						CheckIfFinished(booster.Type);
 
@@ -267,7 +265,7 @@ namespace BoosterManager {
 			}
 
 			if (type == BoosterType.OneTime) {
-				BoosterHandler.PerpareStatusReport(String.Format(Strings.BoosterCreationFinished, GetNumBoosters(BoosterType.OneTime)));
+				BoosterHandler.GeneralReporter.Report(Bot, String.Format(Strings.BoosterCreationFinished, GetNumBoosters(BoosterType.OneTime)));
 			}
 			ClearCraftedBoosters(type);
 

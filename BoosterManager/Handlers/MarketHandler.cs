@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Nodes;
+using System.Threading;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Helpers.Json;
 using ArchiSteamFarm.Steam;
@@ -10,6 +12,8 @@ using BoosterManager.Localization;
 
 namespace BoosterManager {
 	internal static class MarketHandler {
+		private static ConcurrentDictionary<Bot, Timer> MarketRepeatTimers = new();
+
 		internal static async Task<string> GetListings(Bot bot) {
 			uint? listingsValue = await GetMarketListingsValue(bot).ConfigureAwait(false);
 
@@ -236,7 +240,33 @@ namespace BoosterManager {
 			return filteredListings;
 		}
 
-		internal static async Task AcceptMarketConfirmations(Bot bot) {
+		internal static bool StopMarketRepeatTimer(Bot bot) {
+			if (!MarketRepeatTimers.ContainsKey(bot)) {
+				return false;
+			}
+
+			if (MarketRepeatTimers.TryRemove(bot, out Timer? oldTimer)) {
+				if (oldTimer != null) {
+					oldTimer.Change(Timeout.Infinite, Timeout.Infinite);
+					oldTimer.Dispose();
+				}
+			}
+
+			return true;
+		}
+
+		internal static void StartMarketRepeatTimer(Bot bot, uint minutes) {
+			StopMarketRepeatTimer(bot);
+
+			Timer newTimer = new Timer(async _ => await MarketHandler.AcceptMarketConfirmations(bot).ConfigureAwait(false), null, Timeout.Infinite, Timeout.Infinite);
+			if (MarketRepeatTimers.TryAdd(bot, newTimer)) {
+				newTimer.Change(TimeSpan.FromMinutes(minutes), TimeSpan.FromMinutes(minutes));
+			} else {
+				newTimer.Dispose();
+			}
+		}
+
+		private static async Task AcceptMarketConfirmations(Bot bot) {
 			(bool success, _, string message) = await bot.Actions.HandleTwoFactorAuthenticationConfirmations(true, Confirmation.EConfirmationType.Market).ConfigureAwait(false);
 			bot.ArchiLogger.LogGenericInfo(success ? message : String.Format(ArchiSteamFarm.Localization.Strings.WarningFailedWithError, message));
 		}

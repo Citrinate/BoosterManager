@@ -1,39 +1,28 @@
-using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Steam;
 using BoosterManager.Localization;
-using SteamKit2;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace BoosterManager {
 	internal sealed class BoosterHandler : IDisposable {
 		private readonly Bot Bot;
 		private readonly BoosterQueue BoosterQueue;
-		private Bot RespondingBot; // When we send status alerts, they'll come from this bot
-		private ulong RecipientSteamID; // When we send status alerts, they'll go to this SteamID
-		internal static ConcurrentDictionary<string, Timer> ResponseTimers = new();
-		internal List<string> StoredResponses = new();
-		private string LastResponse = "";
 		internal static ConcurrentDictionary<string, BoosterHandler> BoosterHandlers = new();
+		internal static StatusReporter GeneralReporter = new(); // Used to report when an unexpected booster error has occured, or when booster crafting is finished
 		private static int DelayBetweenBots = 0; // Delay, in minutes, between when bots will craft boosters
 		internal static bool AllowCraftUntradableBoosters = true;
 		internal static bool AllowCraftUnmarketableBoosters = true;
-		private Timer? MarketRepeatTimer = null;
 
 		private BoosterHandler(Bot bot) {
 			Bot = bot;
-			BoosterQueue = new BoosterQueue(Bot, this);
-			RespondingBot = bot;
-			RecipientSteamID = Bot.Actions.GetFirstSteamMasterID();
+			BoosterQueue = new BoosterQueue(Bot);
+			GeneralReporter.Update(bot, bot.Actions.GetFirstSteamMasterID());
 		}
 
 		public void Dispose() {
 			BoosterQueue.Dispose();
-			MarketRepeatTimer?.Dispose();
 		}
 
 		internal static void AddHandler(Bot bot) {
@@ -48,10 +37,12 @@ namespace BoosterManager {
 		}
 
 		internal static void UpdateBotDelays(int? delayInSeconds = null) {
-			if (DelayBetweenBots <= 0 && (delayInSeconds == null || delayInSeconds <= 0)) {
+			if (DelayBetweenBots == 0 && (delayInSeconds == null || delayInSeconds == 0)) {
 				return;
 			}
 
+			// This feature only exists because it existed in Outzzz's BoosterCreator plugin.  I don't think it's all that useful.
+			
 			// This assumes that the same bots will be used all of the time, with the same names, and all boosters will be 
 			// crafted when they're scheduled to be crafted (no unexpected delays due to Steam downtime or insufficient gems).  
 			// If all of these things are true then BoosterDelayBetweenBots should work as it's described in the README.  If these 
@@ -62,41 +53,45 @@ namespace BoosterManager {
 			DelayBetweenBots = delayInSeconds ?? DelayBetweenBots;
 			List<string> botNames = BoosterHandlers.Keys.ToList<string>();
 			botNames.Sort();
+
 			foreach (KeyValuePair<string, BoosterHandler> kvp in BoosterHandlers) {
 				int index = botNames.IndexOf(kvp.Key);
 				kvp.Value.BoosterQueue.BoosterDelay = DelayBetweenBots * index;
 			}
 		}
 
-		internal string ScheduleBoosters(HashSet<uint> gameIDs, Bot respondingBot, ulong recipientSteamID) {
-			RespondingBot = respondingBot;
-			RecipientSteamID = recipientSteamID;
+		internal string ScheduleBoosters(HashSet<uint> gameIDs, StatusReporter craftingReporter) {
 			foreach (uint gameID in gameIDs) {
 				BoosterQueue.AddBooster(gameID, BoosterType.OneTime);
 			}
-			BoosterQueue.OnBoosterInfosUpdated -= ScheduleBoostersResponse;
-			BoosterQueue.OnBoosterInfosUpdated += ScheduleBoostersResponse;
+
+			void handler() {
+				try {
+					string? message = BoosterQueue.GetShortStatus();
+					if (message == null) {
+						craftingReporter.Report(Bot, Strings.BoostersUncraftable);
+
+						return;
+					}
+
+					craftingReporter.Report(Bot, message);
+				} finally {
+					BoosterQueue.OnBoosterInfosUpdated -= handler;
+				}
+			}
+
+			GeneralReporter.Update(craftingReporter);
+			BoosterQueue.OnBoosterInfosUpdated += handler;
 			BoosterQueue.Start();
 
 			return Commands.FormatBotResponse(Bot, String.Format(Strings.BoosterCreationStarting, gameIDs.Count));
-		}
-
-		private void ScheduleBoostersResponse() {
-			BoosterQueue.OnBoosterInfosUpdated -= ScheduleBoostersResponse;
-			string? message = BoosterQueue.GetShortStatus();
-			if (message == null) {
-				PerpareStatusReport(Strings.BoostersUncraftable);
-
-				return;
-			}
-
-			PerpareStatusReport(message);
 		}
 
 		internal void SchedulePermanentBoosters(HashSet<uint> gameIDs) {
 			foreach (uint gameID in gameIDs) {
 				BoosterQueue.AddBooster(gameID, BoosterType.Permanent);
 			}
+
 			BoosterQueue.Start();
 		}
 
@@ -122,60 +117,6 @@ namespace BoosterManager {
 
 			return Commands.FormatBotResponse(Bot, BoosterQueue.GetStatus());
 		}
-
-		internal void PerpareStatusReport(string message, bool suppressDuplicateMessages = false) {
-			if (suppressDuplicateMessages && LastResponse == message) {
-				return;
-			}
-
-			LastResponse = message;
-			// Could be that multiple bots will try to respond all at once individually.  Start a timer, during which all messages will be logged and sent all together when the timer triggers.
-			if (StoredResponses.Count == 0) {
-				message = Commands.FormatBotResponse(Bot, message);
-			}
-			StoredResponses.Add(message);
-			if (!ResponseTimers.ContainsKey(RespondingBot.BotName)) {
-				ResponseTimers[RespondingBot.BotName] = new Timer(
-					async e => await SendStatusReport(RespondingBot, RecipientSteamID).ConfigureAwait(false),
-					null,
-					GetMillisecondsFromNow(DateTime.Now.AddSeconds(5)),
-					Timeout.Infinite
-				);
-			}
-		}
-
-		private static async Task SendStatusReport(Bot respondingBot, ulong recipientSteamID) {
-			if (!respondingBot.IsConnectedAndLoggedOn) {
-				ResponseTimers[respondingBot.BotName].Change(BoosterHandler.GetMillisecondsFromNow(DateTime.Now.AddSeconds(1)), Timeout.Infinite);
-
-				return;
-			}
-
-			ResponseTimers.TryRemove(respondingBot.BotName, out Timer? _);
-			List<string> messages = new List<string>();
-			List<string> botNames = BoosterHandlers.Keys.ToList<string>();
-			botNames.Sort();
-			foreach (string botName in botNames) {
-				if (BoosterHandlers[botName].StoredResponses.Count == 0 
-					|| BoosterHandlers[botName].RespondingBot.BotName != respondingBot.BotName) {
-					continue;
-				}
-
-				messages.Add(String.Join(Environment.NewLine, BoosterHandlers[botName].StoredResponses));
-				if (BoosterHandlers[botName].StoredResponses.Count > 1) {
-					messages.Add("");
-				}
-				BoosterHandlers[botName].StoredResponses.Clear();
-			}
-			
-			string message = String.Join(Environment.NewLine, messages);
-
-			if (recipientSteamID == 0 || !new SteamID(recipientSteamID).IsIndividualAccount) {
-				ASF.ArchiLogger.LogGenericInfo(message);
-			} else {
-				await respondingBot.SendMessage(recipientSteamID, message).ConfigureAwait(false);
-			}
-		}
 		
 		internal uint GetGemsNeeded() {
 			if (BoosterQueue.GetAvailableGems() > BoosterQueue.GetGemsNeeded(BoosterType.Any, wasCrafted: false)) {
@@ -193,27 +134,6 @@ namespace BoosterManager {
 			// Refresh gems count
 			BoosterQueue.OnBoosterInfosUpdated += BoosterQueue.ForceUpdateBoosterInfos;
 			BoosterQueue.Start();
-		}
-
-		internal bool StopMarketTimer() {
-			if (MarketRepeatTimer == null) {
-				return false;
-			}
-
-			MarketRepeatTimer.Change(Timeout.Infinite, Timeout.Infinite);
-			MarketRepeatTimer.Dispose();
-			MarketRepeatTimer = null;
-
-			return true;
-		}
-
-		internal void StartMarketTimer(uint minutes) {
-			StopMarketTimer();
-			MarketRepeatTimer = new Timer(async e => await MarketHandler.AcceptMarketConfirmations(Bot).ConfigureAwait(false),
-				null, 
-				TimeSpan.FromMinutes(minutes), 
-				TimeSpan.FromMinutes(minutes)
-			);
 		}
 
 		internal static bool IsCraftingOneTimeBoosters() {
