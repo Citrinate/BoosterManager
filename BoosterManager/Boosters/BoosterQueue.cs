@@ -346,8 +346,8 @@ namespace BoosterManager {
 			if (GetNumBoosters(BoosterType.OneTime) > 0) {
 				Booster? lastOneTimeBooster = GetNextCraftableBooster(BoosterType.OneTime, getLast: true);
 				if (lastOneTimeBooster != null) {
-					responses.Add(String.Format(Strings.QueueStatusOneTimeBoosters, GetNumBoosters(BoosterType.OneTime, wasCrafted: true), GetNumBoosters(BoosterType.OneTime), String.Format("~{0:t}", lastOneTimeBooster.GetAvailableAtTime(BoosterDelay)), String.Format("{0:N0}", GetGemsNeeded(BoosterType.OneTime, wasCrafted: false))));
-					responses.Add(String.Format(Strings.QueueStatusOneTimeBoosterList, String.Join(", ", GetBoosterIDs(BoosterType.OneTime, wasCrafted: false))));
+					responses.Add(String.Format(Strings.QueueStatusLimitedBoosters, GetNumBoosters(BoosterType.OneTime, wasCrafted: true), GetNumBoosters(BoosterType.OneTime), String.Format("~{0:t}", lastOneTimeBooster.GetAvailableAtTime(BoosterDelay)), String.Format("{0:N0}", GetGemsNeeded(BoosterType.OneTime, wasCrafted: false))));
+					responses.Add(String.Format(Strings.QueueStatusLimitedBoosterList, String.Join(", ", GetBoosterIDs(BoosterType.OneTime, wasCrafted: false))));
 				}
 			}
 			if (GetNumBoosters(BoosterType.Permanent) > 0) {
