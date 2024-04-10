@@ -65,9 +65,9 @@ namespace BoosterManager {
 				BoosterQueue.AddBooster(gameID, BoosterType.OneTime);
 			}
 
-			void handler() {
+			void infoHandler() {
 				try {
-					string? message = BoosterQueue.GetShortStatus();
+					string? message = BoosterQueue.GetShortStatus(gameIDs);
 					if (message == null) {
 						craftingReporter.Report(Bot, Strings.BoostersUncraftable);
 
@@ -76,12 +76,20 @@ namespace BoosterManager {
 
 					craftingReporter.Report(Bot, message);
 				} finally {
-					BoosterQueue.OnBoosterInfosUpdated -= handler;
+					BoosterQueue.OnBoosterInfosUpdated -= infoHandler;
+				}
+			}
+
+			void finishedHandler() {
+				if (BoosterQueue.IsFinishedCrafting(BoosterType.OneTime, gameIDs)) {
+					craftingReporter.Report(Bot, String.Format(Strings.BoosterCreationFinished, BoosterQueue.GetNumBoosters(BoosterType.OneTime, filterGameIDs: gameIDs)));
+					BoosterQueue.OnBoosterFinishedCheck -= finishedHandler;
 				}
 			}
 
 			GeneralReporter.Update(craftingReporter);
-			BoosterQueue.OnBoosterInfosUpdated += handler;
+			BoosterQueue.OnBoosterInfosUpdated += infoHandler;
+			BoosterQueue.OnBoosterFinishedCheck += finishedHandler;
 			BoosterQueue.Start();
 
 			return Commands.FormatBotResponse(Bot, String.Format(Strings.BoosterCreationStarting, gameIDs.Count));
