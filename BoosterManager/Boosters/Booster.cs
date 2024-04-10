@@ -14,14 +14,14 @@ namespace BoosterManager {
 		private readonly BoosterLastCraft? LastCraft;
 		internal bool WasCrafted = false;
 
-		internal Booster(Bot bot, uint gameID, BoosterType type, Steam.BoosterInfo info, BoosterQueue boosterQueue, BoosterLastCraft? lastCraft) {
+		internal Booster(Bot bot, uint gameID, BoosterType type, Steam.BoosterInfo info, BoosterQueue boosterQueue) {
 			Bot = bot;
 			GameID = gameID;
 			Type = type;
 			Info = info;
 			InitTime = DateTime.Now;
 			BoosterQueue = boosterQueue;
-			LastCraft = lastCraft;
+			LastCraft = boosterQueue.BoosterDatabase?.GetLastCraft(gameID);
 		}
 
 		internal async Task<Steam.BoostersResponse?> Craft(TradabilityPreference nTp) {
@@ -35,7 +35,7 @@ namespace BoosterManager {
 		}
 
 		internal void SetWasCrafted() {
-			BoosterQueue.UpdateLastCraft(GameID, DateTime.Now);
+			BoosterQueue.BoosterDatabase?.SetLastCraft(GameID, DateTime.Now, BoosterQueue.BoosterDelay);
 			WasCrafted = true;
 		}
 

@@ -16,9 +16,10 @@ namespace BoosterManager {
 		private uint GooAmount = 0;
 		private uint TradableGooAmount = 0;
 		private uint UntradableGooAmount = 0;
+		internal uint AvailableGems => BoosterHandler.AllowCraftUntradableBoosters ? GooAmount : TradableGooAmount;
 		private const int MinDelayBetweenBoosters = 5; // Minimum delay, in seconds, between booster crafts
 		internal int BoosterDelay = 0; // Delay, in seconds, added to all booster crafts
-		private readonly BoosterDatabase? BoosterDatabase;
+		internal readonly BoosterDatabase? BoosterDatabase;
 		internal event Action? OnBoosterInfosUpdated;
 		internal event Action? OnBoosterFinishedCheck;
 		private float BoosterInfosUpdateBackOffMultiplier = 1.0F;
@@ -55,7 +56,9 @@ namespace BoosterManager {
 				return;
 			}
 
+			// Reload the booster creator page
 			if (!await UpdateBoosterInfos().ConfigureAwait(false)) {
+				// Reload failed, try again later
 				Bot.ArchiLogger.LogGenericError(Strings.BoosterInfoUpdateFailed);
 				UpdateTimer(DateTime.Now.AddMinutes(Math.Min(15, 1 * BoosterInfosUpdateBackOffMultiplier)));
 				BoosterInfosUpdateBackOffMultiplier += 0.5F;
@@ -65,14 +68,17 @@ namespace BoosterManager {
 
 			Booster? booster = GetNextCraftableBooster(BoosterType.Any);
 			if (booster == null) {
+				// Booster queue is empty
 				BoosterInfosUpdateBackOffMultiplier = 1.0F;
 
 				return;
 			}
 			
 			if (DateTime.Now >= booster.GetAvailableAtTime(BoosterDelay)) {
-				if (booster.Info.Price > GetAvailableGems()) {
-					BoosterHandler.GeneralReporter.Report(Bot, String.Format(Strings.NotEnoughGems, String.Format("{0:N0}", GetGemsNeeded(BoosterType.Any, wasCrafted: false) - GetAvailableGems())), suppressDuplicateMessages: true);
+				// Attempt to craft the next booster in the queue
+				if (booster.Info.Price > AvailableGems) {
+					// Not enough gems, wait until we get more gems
+					BoosterHandler.GeneralReporter.Report(Bot, String.Format(Strings.NotEnoughGems, String.Format("{0:N0}", GetGemsNeeded(BoosterType.Any, wasCrafted: false) - AvailableGems)), suppressDuplicateMessages: true);
 					OnBoosterInfosUpdated += ForceUpdateBoosterInfos;
 					UpdateTimer(DateTime.Now.AddMinutes(Math.Min(15, (GetNumBoosters(BoosterType.OneTime) > 0 ? 1 : 15) * BoosterInfosUpdateBackOffMultiplier)));
 					BoosterInfosUpdateBackOffMultiplier += 0.5F;
@@ -83,6 +89,7 @@ namespace BoosterManager {
 				BoosterInfosUpdateBackOffMultiplier = 1.0F;
 
 				if (!await CraftBooster(booster).ConfigureAwait(false)) {
+					// Craft failed, decide whether or not to remove this booster from the queue
 					Bot.ArchiLogger.LogGenericError(String.Format(Strings.BoosterCreationFailed, booster.GameID));
 					VerifyCraftBoosterError(booster);
 					UpdateTimer(DateTime.Now);
@@ -95,16 +102,19 @@ namespace BoosterManager {
 
 				booster = GetNextCraftableBooster(BoosterType.Any);
 				if (booster == null) {
+					// Queue has no more boosters in it
 					return;
 				}
 			}
 
 			BoosterInfosUpdateBackOffMultiplier = 1.0F;
 
+			// Wait until the next booster is ready to craft
 			DateTime nextBoosterTime = booster.GetAvailableAtTime(BoosterDelay);
 			if (nextBoosterTime < DateTime.Now.AddSeconds(MinDelayBetweenBoosters)) {
 				nextBoosterTime = DateTime.Now.AddSeconds(MinDelayBetweenBoosters);
 			}
+
 			UpdateTimer(nextBoosterTime);
 			Bot.ArchiLogger.LogGenericInfo(String.Format(Strings.NextBoosterCraft, String.Format("{0:T}", nextBoosterTime)));
 		}
@@ -131,7 +141,7 @@ namespace BoosterManager {
 						return;
 					}
 
-					Booster newBooster = new Booster(Bot, gameID, type, boosterInfo, this, GetLastCraft(gameID));
+					Booster newBooster = new Booster(Bot, gameID, type, boosterInfo, this);
 					if (Boosters.TryAdd(gameID, newBooster)) {
 						Bot.ArchiLogger.LogGenericInfo(String.Format(Strings.BoosterQueued, gameID));
 					}
@@ -159,6 +169,28 @@ namespace BoosterManager {
 
 			return false;
 		}
+
+		private HashSet<Booster> GetBoosters(BoosterType type, bool? wasCrafted = null, HashSet<uint>? filterGameIDs = null) {
+			return Boosters.Values.Where(booster => 
+				(type == BoosterType.Any || booster.Type == type)
+				&& (wasCrafted == null || booster.WasCrafted == wasCrafted) 
+				&& (filterGameIDs == null || filterGameIDs.Contains(booster.GameID)) 
+			).ToHashSet<Booster>();
+		}
+
+		private HashSet<uint> GetBoosterIDs(BoosterType type, bool? wasCrafted = null, HashSet<uint>? filterGameIDs = null) {
+			return GetBoosters(type, wasCrafted, filterGameIDs).Select(booster => booster.GameID).ToHashSet<uint>();
+		}
+
+		internal int GetNumBoosters(BoosterType type, bool? wasCrafted = null, HashSet<uint>? filterGameIDs = null) {
+			return GetBoosters(type, wasCrafted, filterGameIDs).Count;
+		}
+
+		internal int GetGemsNeeded(BoosterType type, bool? wasCrafted = null, HashSet<uint>? filterGameIDs = null) {
+			return GetBoosters(type, wasCrafted, filterGameIDs).Sum(booster => (int) booster.Info.Price);
+		}
+
+		internal void ForceUpdateBoosterInfos() => OnBoosterInfosUpdated -= ForceUpdateBoosterInfos;
 
 		private async Task<Boolean> UpdateBoosterInfos() {
 			if (OnBoosterInfosUpdated == null) {
@@ -198,6 +230,7 @@ namespace BoosterManager {
 			}
 			
 			Steam.BoostersResponse? result = await booster.Craft(nTp).ConfigureAwait(false);
+
 			GooAmount = result?.GooAmount ?? GooAmount;
 			TradableGooAmount = result?.TradableGooAmount ?? TradableGooAmount;
 			UntradableGooAmount = result?.UntradableGooAmount ?? UntradableGooAmount;
@@ -259,6 +292,10 @@ namespace BoosterManager {
 			return orderedUncraftedBoosters.First();
 		}
 
+		internal bool IsFinishedCrafting(BoosterType type, HashSet<uint>? filterGameIDs = null) {
+			return GetNumBoosters(type, wasCrafted: true, filterGameIDs) > 0 && GetNumBoosters(type, wasCrafted: false, filterGameIDs) == 0;
+		}
+
 		internal bool CheckIfFinished(BoosterType type, HashSet<uint>? filterGameIDs = null) {
 			OnBoosterFinishedCheck?.Invoke();
 
@@ -282,9 +319,11 @@ namespace BoosterManager {
 			if (gameIDs == null) {
 				gameIDs = new HashSet<uint>();
 			}
+
 			if (timeLimitHours != null) {
+				// Remove everything that will take more than a certain number of hours to craft
 				if (timeLimitHours == 0) {
-					// Cancel everything
+					// Cancel everything, as everything takes more than 0 hours to craft
 					gameIDs.UnionWith(GetBoosterIDs(BoosterType.OneTime));
 				} else {
 					DateTime timeLimit = DateTime.Now.AddHours(timeLimitHours.Value);
@@ -292,6 +331,7 @@ namespace BoosterManager {
 					gameIDs.UnionWith(timeFilteredGameIDs);
 				}
 			}
+
 			HashSet<uint> removedGameIDs = new HashSet<uint>();
 			foreach (uint gameID in gameIDs) {
 				if (Boosters.TryGetValue(gameID, out Booster? booster)) {
@@ -305,6 +345,7 @@ namespace BoosterManager {
 					}
 				}
 			}
+
 			CheckIfFinished(BoosterType.OneTime);
 			CheckIfFinished(BoosterType.Permanent);
 
@@ -333,15 +374,15 @@ namespace BoosterManager {
 			HashSet<string> responses = new HashSet<string>();
 
 			// Not enough gems
-			if (GetGemsNeeded(BoosterType.Any, wasCrafted: false) > GetAvailableGems()) {
+			if (GetGemsNeeded(BoosterType.Any, wasCrafted: false) > AvailableGems) {
 				responses.Add(String.Format("{0} :steamsad:", Strings.QueueStatusNotEnoughGems));
 
-				if (nextBooster.Info.Price > GetAvailableGems()) {
-					responses.Add(String.Format(Strings.QueueStatusGemsNeeded, String.Format("{0:N0}", nextBooster.Info.Price - GetAvailableGems())));
+				if (nextBooster.Info.Price > AvailableGems) {
+					responses.Add(String.Format(Strings.QueueStatusGemsNeeded, String.Format("{0:N0}", nextBooster.Info.Price - AvailableGems)));
 				}
 
 				if (GetNumBoosters(BoosterType.Any, wasCrafted: false) > 1) {
-					responses.Add(String.Format(Strings.QueueStatusTotalGemsNeeded, String.Format("{0:N0}", GetGemsNeeded(BoosterType.Any, wasCrafted: false) - GetAvailableGems())));
+					responses.Add(String.Format(Strings.QueueStatusTotalGemsNeeded, String.Format("{0:N0}", GetGemsNeeded(BoosterType.Any, wasCrafted: false) - AvailableGems)));
 				}
 			}
 
@@ -371,17 +412,7 @@ namespace BoosterManager {
 			return String.Join(Environment.NewLine, responses);
 		}
 
-		private bool FilterBoosterByType(Booster booster, BoosterType type) => type == BoosterType.Any || booster.Type == type;
-		private HashSet<Booster> GetBoosters(BoosterType type, bool? wasCrafted = null, HashSet<uint>? filterGameIDs = null) => Boosters.Values.Where(booster => (filterGameIDs == null || filterGameIDs.Contains(booster.GameID)) && (wasCrafted == null || booster.WasCrafted == wasCrafted) && FilterBoosterByType(booster, type)).ToHashSet<Booster>();
-		private HashSet<uint> GetBoosterIDs(BoosterType type, bool? wasCrafted = null, HashSet<uint>? filterGameIDs = null) => GetBoosters(type, wasCrafted, filterGameIDs).Select(booster => booster.GameID).ToHashSet<uint>();
-		internal int GetNumBoosters(BoosterType type, bool? wasCrafted = null, HashSet<uint>? filterGameIDs = null) => GetBoosters(type, wasCrafted, filterGameIDs).Count;
-		internal int GetGemsNeeded(BoosterType type, bool? wasCrafted = null, HashSet<uint>? filterGameIDs = null) => GetBoosters(type, wasCrafted, filterGameIDs).Sum(booster => (int) booster.Info.Price);
-		internal bool IsFinishedCrafting(BoosterType type, HashSet<uint>? filterGameIDs = null) => GetNumBoosters(type, wasCrafted: true, filterGameIDs) > 0 && GetNumBoosters(type, wasCrafted: false, filterGameIDs) == 0;
-		internal void ForceUpdateBoosterInfos() => OnBoosterInfosUpdated -= ForceUpdateBoosterInfos;
-		private static int GetMillisecondsFromNow(DateTime then) => Math.Max(0, (int) (then - DateTime.Now).TotalMilliseconds);
 		private void UpdateTimer(DateTime then) => Timer.Change(GetMillisecondsFromNow(then), Timeout.Infinite);
-		internal uint GetAvailableGems() => BoosterHandler.AllowCraftUntradableBoosters ? GooAmount : TradableGooAmount;
-		internal BoosterLastCraft? GetLastCraft(uint appID) => BoosterDatabase?.GetLastCraft(appID);
-		internal void UpdateLastCraft(uint appID, DateTime craftTime) => BoosterDatabase?.SetLastCraft(appID, craftTime, BoosterDelay);
+		private static int GetMillisecondsFromNow(DateTime then) => Math.Max(0, (int) (then - DateTime.Now).TotalMilliseconds);
 	}
 }

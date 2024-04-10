@@ -127,11 +127,11 @@ namespace BoosterManager {
 		}
 		
 		internal uint GetGemsNeeded() {
-			if (BoosterQueue.GetAvailableGems() > BoosterQueue.GetGemsNeeded(BoosterType.Any, wasCrafted: false)) {
+			if (BoosterQueue.AvailableGems > BoosterQueue.GetGemsNeeded(BoosterType.Any, wasCrafted: false)) {
 				return 0;
 			}
 
-			return (uint) (BoosterQueue.GetGemsNeeded(BoosterType.Any, wasCrafted: false) - BoosterQueue.GetAvailableGems());
+			return (uint) (BoosterQueue.GetGemsNeeded(BoosterType.Any, wasCrafted: false) - BoosterQueue.AvailableGems);
 		}
 
 		internal void OnGemsRecieved() {
