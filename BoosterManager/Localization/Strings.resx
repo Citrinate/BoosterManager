@@ -130,7 +130,7 @@
     <comment>{0} will be replaced by an appID</comment>
   </data>
   <data name="BoosterCreationSuccess" xml:space="preserve">
-    <value>Successfuly created booster from {0}</value>
+    <value>Successfuly created booster for {0}</value>
     <comment>{0} will be replaced by an appID</comment>
   </data>
   <data name="NextBoosterCraft" xml:space="preserve">
@@ -142,15 +142,15 @@
     <comment>{0} will be replaced by an appID</comment>
   </data>
   <data name="BoosterQueued" xml:space="preserve">
-    <value>Added {0} to booster queue.</value>
+    <value>Added {0} to booster queue</value>
     <comment>{0} will be replaced by an appID</comment>
   </data>
   <data name="BoosterUnqueued" xml:space="preserve">
-    <value>Removed {0} from booster queue.</value>
+    <value>Removed {0} from booster queue</value>
     <comment>{0} will be replaced by an appID</comment>
   </data>
   <data name="PermanentBoosterRequeued" xml:space="preserve">
-    <value>Re-adding permanent {0} to booster queue.</value>
+    <value>Re-adding permanent {0} to booster queue</value>
     <comment>{0} will be replaced by an appID</comment>
   </data>
   <data name="BoosterInfoUpdateSuccess" xml:space="preserve">
@@ -178,7 +178,7 @@
     <comment>{0} will be replaced by a number of boosters</comment>
   </data>
   <data name="BoosterUnqueuedByUser" xml:space="preserve">
-    <value>User removed {0} from booster queue.</value>
+    <value>User wants to remove {0} from booster queue</value>
     <comment>{0} will be replaced by an appID</comment>
   </data>
   <data name="BoosterInfoUpdating" xml:space="preserve">
@@ -190,7 +190,7 @@
     <comment>{0} will be replaced by a number of boosters, {1} will be replaced by a number of gems, {2} will be replaced by a time</comment>
   </data>
   <data name="QueueEmpty" xml:space="preserve">
-    <value>Bot is not crafting any boosters.</value>
+    <value>Bot is not crafting any boosters</value>
     <comment/>
   </data>
   <data name="QueueStatusNotEnoughGems" xml:space="preserve">
@@ -238,7 +238,7 @@
     <comment/>
   </data>
   <data name="QueueRemovalByTimeFail" xml:space="preserve">
-    <value>Didn't find any boosters that could be removed.</value>
+    <value>Didn't find any boosters that could be removed</value>
     <comment/>
   </data>
   <data name="QueueRemovalSuccess" xml:space="preserve">
