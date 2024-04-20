@@ -79,15 +79,14 @@ namespace BoosterManager {
 			return null;
 		}
 
-		internal void SetLastCraft(uint appID, DateTime craftTime, int boosterDelay) {
-			BoosterLastCraft newCraft = new BoosterLastCraft(craftTime, boosterDelay);
+		internal void SetLastCraft(uint appID, DateTime craftTime) {
+			BoosterLastCraft newCraft = new BoosterLastCraft(craftTime);
 			BoosterLastCrafts.AddOrUpdate(appID, newCraft, (key, oldCraft) => {
 				oldCraft.CraftTime = craftTime;
-				// boosterDelay might change, but the old delay will still be there, the real delay will be the bigger of the two
-				oldCraft.BoosterDelay = Math.Max(oldCraft.BoosterDelay, boosterDelay);
 
 				return oldCraft;
 			});
+			
 			Utilities.InBackground(Save);
 		}
 	}

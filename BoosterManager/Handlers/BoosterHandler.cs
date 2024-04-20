@@ -12,7 +12,6 @@ namespace BoosterManager {
 		internal readonly BoosterQueue BoosterQueue;
 		internal static ConcurrentDictionary<string, BoosterHandler> BoosterHandlers = new();
 		internal readonly List<BoosterJob> Jobs = new();
-		private static int DelayBetweenBots = 0; // Delay, in minutes, between when bots will craft boosters
 		internal static bool AllowCraftUntradableBoosters = true;
 		internal static bool AllowCraftUnmarketableBoosters = true;
 
@@ -37,33 +36,7 @@ namespace BoosterManager {
 				BoosterHandlers.TryRemove(bot.BotName, out BoosterHandler? _);
 			}
 
-			if (BoosterHandlers.TryAdd(bot.BotName, new BoosterHandler(bot))) {
-				UpdateBotDelays();
-			}
-		}
-
-		internal static void UpdateBotDelays(int? delayInSeconds = null) {
-			if (DelayBetweenBots == 0 && (delayInSeconds == null || delayInSeconds == 0)) {
-				return;
-			}
-
-			// This feature only exists because it existed in Outzzz's BoosterCreator plugin.  I don't think it's all that useful.
-			
-			// This assumes that the same bots will be used all of the time, with the same names, and all boosters will be 
-			// crafted when they're scheduled to be crafted (no unexpected delays due to Steam downtime or insufficient gems).  
-			// If all of these things are true then BoosterDelayBetweenBots should work as it's described in the README.  If these 
-			// assumptions are not met, then the delay between bots might become lower than intended, but it should never be higher
-			// I don't intend to fix this.
-			// A workaround for users caught in an undesirable state is to let the 24-hour cooldown on all of their boosters expire.
-
-			DelayBetweenBots = delayInSeconds ?? DelayBetweenBots;
-			List<string> botNames = BoosterHandlers.Keys.ToList<string>();
-			botNames.Sort();
-
-			foreach (KeyValuePair<string, BoosterHandler> kvp in BoosterHandlers) {
-				int index = botNames.IndexOf(kvp.Key);
-				kvp.Value.BoosterQueue.BoosterDelay = DelayBetweenBots * index;
-			}
+			BoosterHandlers.TryAdd(bot.BotName, new BoosterHandler(bot));
 		}
 
 		internal string ScheduleBoosters(BoosterJobType jobType, HashSet<uint> gameIDs, StatusReporter craftingReporter) {
@@ -106,7 +79,7 @@ namespace BoosterManager {
 			int limitedNumBoosters = Jobs.Limited().NumBoosters();
 			int limitedGemsNeeded = Jobs.Limited().GemsNeeded();
 			if (shortStatus) {
-				return String.Format(Strings.QueueStatusShort, limitedNumBoosters, String.Format("{0:N0}", limitedGemsNeeded), String.Format("~{0:t}", limitedLastBooster.GetAvailableAtTime(BoosterQueue.BoosterDelay)));
+				return String.Format(Strings.QueueStatusShort, limitedNumBoosters, String.Format("{0:N0}", limitedGemsNeeded), String.Format("~{0:t}", limitedLastBooster.GetAvailableAtTime()));
 			}
 
 			// Long status
@@ -128,7 +101,7 @@ namespace BoosterManager {
 
 			// One-time booster status
 			if (limitedNumBoosters > 0) {
-				responses.Add(String.Format(Strings.QueueStatusOneTimeBoosters, Jobs.Limited().NumCrafted(), limitedNumBoosters, String.Format("~{0:t}", limitedLastBooster.GetAvailableAtTime(BoosterQueue.BoosterDelay)), String.Format("{0:N0}", limitedGemsNeeded)));
+				responses.Add(String.Format(Strings.QueueStatusOneTimeBoosters, Jobs.Limited().NumCrafted(), limitedNumBoosters, String.Format("~{0:t}", limitedLastBooster.GetAvailableAtTime()), String.Format("{0:N0}", limitedGemsNeeded)));
 				responses.Add(String.Format(Strings.QueueStatusOneTimeBoosterList, String.Join(", ", Jobs.Limited().UncraftedGameIDs())));
 			}
 
@@ -138,10 +111,10 @@ namespace BoosterManager {
 			}
 
 			// Next booster to be crafted
-			if (DateTime.Now > nextBooster.GetAvailableAtTime(BoosterQueue.BoosterDelay)) {
+			if (DateTime.Now > nextBooster.GetAvailableAtTime()) {
 				responses.Add(String.Format(Strings.QueueStatusNextBoosterCraftingNow, nextBooster.Info.Name, nextBooster.GameID));
 			} else {
-				responses.Add(String.Format(Strings.QueueStatusNextBoosterCraftingLater, String.Format("{0:t}", nextBooster.GetAvailableAtTime(BoosterQueue.BoosterDelay)), nextBooster.Info.Name, nextBooster.GameID));
+				responses.Add(String.Format(Strings.QueueStatusNextBoosterCraftingLater, String.Format("{0:t}", nextBooster.GetAvailableAtTime()), nextBooster.Info.Name, nextBooster.GameID));
 			}
 
 			responses.Add("");

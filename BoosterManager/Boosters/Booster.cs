@@ -6,7 +6,6 @@ using System.Threading.Tasks;
 namespace BoosterManager {
 	internal sealed class Booster {
 		private readonly Bot Bot;
-		private BoosterQueue BoosterQueue => BoosterHandler.BoosterHandlers[Bot.BotName].BoosterQueue;
 		private BoosterDatabase? BoosterDatabase => BoosterHandler.BoosterHandlers[Bot.BotName].BoosterDatabase;
 		internal readonly BoosterJob BoosterJob;
 		internal readonly uint GameID;
@@ -35,19 +34,12 @@ namespace BoosterManager {
 		}
 
 		internal void SetWasCrafted() {
-			BoosterDatabase?.SetLastCraft(GameID, DateTime.Now, BoosterQueue.BoosterDelay);
+			BoosterDatabase?.SetLastCraft(GameID, DateTime.Now);
 			WasCrafted = true;
 		}
 
-		internal DateTime GetAvailableAtTime(int delayInSeconds = 0) {
+		internal DateTime GetAvailableAtTime() {
 			if (Info.Unavailable && Info.AvailableAtTime != null) {
-				if (LastCraft != null) {
-					// If this booster had a delay the last time it was crafted then, because of the 24 hour 
-					// cooldown, that delay still exists, and doesn't need to be added in again.  If the new delay 
-					// is bigger then the old one, then we'll still need to delay some more.
-					delayInSeconds = Math.Max(0, delayInSeconds - LastCraft.BoosterDelay);
-				}
-
 				if (LastCraft == null 
 					|| LastCraft.CraftTime.AddDays(1) > Info.AvailableAtTime.Value.AddMinutes(1)
 					|| (Info.AvailableAtTime.Value.AddMinutes(1) - LastCraft.CraftTime.AddDays(1)).TotalMinutes > 2 // LastCraft time is too old to be used
@@ -55,13 +47,13 @@ namespace BoosterManager {
 					// Unavailable boosters become available exactly 24 hours after being crafted, down to the second, but Steam 
 					// doesn't tell us which second that is.  To get around this, we try to save the exact craft time.  If that 
 					// fails, then we use Steam's time and round up a minute get a time we know the booster will be available at.
-					return Info.AvailableAtTime.Value.AddMinutes(1).AddSeconds(delayInSeconds);
+					return Info.AvailableAtTime.Value.AddMinutes(1);
 				}
 
-				return LastCraft.CraftTime.AddDays(1).AddSeconds(delayInSeconds);
+				return LastCraft.CraftTime.AddDays(1);
 			}
 
-			return InitTime.AddSeconds(delayInSeconds);
+			return InitTime;
 		}
 	}
 }

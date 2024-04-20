@@ -233,21 +233,6 @@ Example:
 
 ---
 
-### BoosterDelayBetweenBots
-
-`uint` type with default value of `0`.  This configuration setting can be added to your `ASF.json` config file.  It will add a `Seconds` delay between each of your bot's booster crafts.  For example: when crafting a booster at 12:00 using a 60 second delay; Bot 1 will craft at 12:00, Bot 2 will  craft at 12:01, Bot 3 will craft at 12:02, and so on.
-
-Example:
-
-```json
-"BoosterDelayBetweenBots": 60,
-```
-
-> [!NOTE]
-> This is not recommended to be used except in the most extreme cases.
-
----
-
 ### BoosterDataAPI
 
 `string` type with no default value.  This configuration setting can be added to your `ASF.json` config file.  When the `logboosterdata` command is used, booster data will be gathered and sent to the API located at the specified url.

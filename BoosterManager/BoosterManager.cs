@@ -45,11 +45,6 @@ namespace BoosterManager {
 						BoosterHandler.AllowCraftUnmarketableBoosters = configProperty.Value.GetBoolean();
 						break;
 					}
-					case "BoosterDelayBetweenBots" when configProperty.Value.ValueKind == JsonValueKind.Number: {
-						ASF.ArchiLogger.LogGenericInfo("Booster Delay Between Bots : " + configProperty.Value);
-						BoosterHandler.UpdateBotDelays(configProperty.Value.GetInt32());
-						break;
-					}
 					case "BoosterDataAPI" when configProperty.Value.ValueKind == JsonValueKind.String: {
 						ASF.ArchiLogger.LogGenericInfo("Booster Data API : " + configProperty.Value);
 						DataHandler.BoosterDataAPI = new Uri(configProperty.Value.GetString()!);

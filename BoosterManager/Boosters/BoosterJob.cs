@@ -51,7 +51,7 @@ namespace BoosterManager {
 						return;
 					}
 
-					StatusReporter.Report(Bot, String.Format(Strings.QueueStatusShort, NumBoosters, String.Format("{0:N0}", GemsNeeded), String.Format("~{0:t}", lastBooster.GetAvailableAtTime(BoosterQueue.BoosterDelay))));
+					StatusReporter.Report(Bot, String.Format(Strings.QueueStatusShort, NumBoosters, String.Format("{0:N0}", GemsNeeded), String.Format("~{0:t}", lastBooster.GetAvailableAtTime())));
 				} finally {
 					BoosterQueue.OnBoosterInfosUpdated -= handler;
 				}

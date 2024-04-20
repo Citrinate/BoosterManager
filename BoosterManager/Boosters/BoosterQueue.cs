@@ -18,7 +18,6 @@ namespace BoosterManager {
 		private uint UntradableGooAmount = 0;
 		internal uint AvailableGems => BoosterHandler.AllowCraftUntradableBoosters ? GooAmount : TradableGooAmount;
 		private const int MinDelayBetweenBoosters = 5; // Minimum delay, in seconds, between booster crafts
-		internal int BoosterDelay = 0; // Delay, in seconds, added to all booster crafts
 		internal event Action? OnBoosterInfosUpdated;
 		private const float BoosterInfosUpdateBackOffMultiplierDefault = 1.0F;
 		private const float BoosterInfosUpdateBackOffMultiplierStep = 0.5F;
@@ -69,7 +68,7 @@ namespace BoosterManager {
 				return;
 			}
 			
-			if (DateTime.Now >= booster.GetAvailableAtTime(BoosterDelay)) {
+			if (DateTime.Now >= booster.GetAvailableAtTime()) {
 				// Attempt to craft the next booster in the queue
 				if (booster.Info.Price > AvailableGems) {
 					// Not enough gems, wait until we get more gems
@@ -105,7 +104,7 @@ namespace BoosterManager {
 			BoosterInfosUpdateBackOffMultiplier = BoosterInfosUpdateBackOffMultiplierDefault;
 
 			// Wait until the next booster is ready to craft
-			DateTime nextBoosterTime = booster.GetAvailableAtTime(BoosterDelay);
+			DateTime nextBoosterTime = booster.GetAvailableAtTime();
 			if (nextBoosterTime < DateTime.Now.AddSeconds(MinDelayBetweenBoosters)) {
 				nextBoosterTime = DateTime.Now.AddSeconds(MinDelayBetweenBoosters);
 			}

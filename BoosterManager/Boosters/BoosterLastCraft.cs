@@ -7,16 +7,11 @@ namespace BoosterManager {
 		[JsonRequired]
 		internal DateTime CraftTime { get; set; }
 
-		[JsonInclude]
-		[JsonRequired]
-		internal int BoosterDelay { get; set; }
-
 		[JsonConstructor]
 		private BoosterLastCraft() { }
 
-		internal BoosterLastCraft(DateTime craftTime, int boosterDelay) {
+		internal BoosterLastCraft(DateTime craftTime) {
 			CraftTime = craftTime;
-			BoosterDelay = boosterDelay;
 		}
 	}
 }
