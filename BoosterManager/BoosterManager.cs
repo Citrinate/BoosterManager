@@ -106,7 +106,7 @@ namespace BoosterManager {
 						if (gameIDs == null) {
 							bot.ArchiLogger.LogNullError(gameIDs);
 						} else {
-							BoosterHandler.BoosterHandlers[bot.BotName].SchedulePermanentBoosters(gameIDs);
+							BoosterHandler.BoosterHandlers[bot.BotName].ScheduleBoosters(BoosterJobType.Permanent, gameIDs, new StatusReporter());
 						}
 						break;
 					}

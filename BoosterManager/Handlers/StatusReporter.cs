@@ -27,15 +27,6 @@ namespace BoosterManager {
 			ReportTimer = new Timer(async _ => await Send().ConfigureAwait(false), null, Timeout.Infinite, Timeout.Infinite);
 		}
 
-		internal void Update(Bot? sender, ulong recipientSteamID) {
-			Sender = sender;
-			RecipientSteamID = recipientSteamID;
-		}
-
-		internal void Update(StatusReporter reporter) {
-			Update(reporter.Sender, reporter.RecipientSteamID);
-		}
-
 		internal void Report(Bot reportingBot, string report, bool suppressDuplicateMessages = false) {
 			if (suppressDuplicateMessages) {
 				bool existsInReports = Reports.TryGetValue(reportingBot, out var reports) && reports.Contains(report);
@@ -67,7 +58,7 @@ namespace BoosterManager {
 				messages.Add(Commands.FormatBotResponse(bot, String.Join(Environment.NewLine, Reports[bot])));
 				if (Reports[bot].Count > 1) {
 					// Add an extra line if there's more than 1 message from a bot
-					messages.Add(Environment.NewLine);
+					messages.Add("");
 				}
 
 				if (Reports.TryRemove(bot, out List<string>? previousReports)) {

@@ -6,25 +6,25 @@ using System.Threading.Tasks;
 namespace BoosterManager {
 	internal sealed class Booster {
 		private readonly Bot Bot;
-		private readonly BoosterQueue BoosterQueue;
+		private BoosterQueue BoosterQueue => BoosterHandler.BoosterHandlers[Bot.BotName].BoosterQueue;
+		private BoosterDatabase? BoosterDatabase => BoosterHandler.BoosterHandlers[Bot.BotName].BoosterDatabase;
+		internal readonly BoosterJob BoosterJob;
 		internal readonly uint GameID;
-		internal readonly BoosterType Type;
 		internal readonly Steam.BoosterInfo Info;
 		private readonly DateTime InitTime;
 		private readonly BoosterLastCraft? LastCraft;
 		internal bool WasCrafted = false;
 
-		internal Booster(Bot bot, uint gameID, BoosterType type, Steam.BoosterInfo info, BoosterQueue boosterQueue) {
+		internal Booster(Bot bot, uint gameID, Steam.BoosterInfo info, BoosterJob boosterJob) {
 			Bot = bot;
 			GameID = gameID;
-			Type = type;
 			Info = info;
 			InitTime = DateTime.Now;
-			BoosterQueue = boosterQueue;
-			LastCraft = boosterQueue.BoosterDatabase?.GetLastCraft(gameID);
+			BoosterJob = boosterJob;
+			LastCraft = BoosterDatabase?.GetLastCraft(gameID);
 		}
 
-		internal async Task<Steam.BoostersResponse?> Craft(TradabilityPreference nTp) {
+		internal async Task<Steam.BoostersResponse?> Craft(Steam.TradabilityPreference nTp) {
 			Steam.BoostersResponse? result = await WebRequest.CreateBooster(Bot, Info.AppID, Info.Series, nTp).ConfigureAwait(false);
 
 			if (result?.Result?.Result == EResult.OK) {
@@ -35,7 +35,7 @@ namespace BoosterManager {
 		}
 
 		internal void SetWasCrafted() {
-			BoosterQueue.BoosterDatabase?.SetLastCraft(GameID, DateTime.Now, BoosterQueue.BoosterDelay);
+			BoosterDatabase?.SetLastCraft(GameID, DateTime.Now, BoosterQueue.BoosterDelay);
 			WasCrafted = true;
 		}
 

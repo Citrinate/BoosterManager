@@ -122,11 +122,11 @@
     <comment/>
   </data>
   <data name="NotEnoughGems" xml:space="preserve">
-    <value>{0} more gems are needed to finish crafting boosters. Crafting will resume when more gems are available.</value>
+    <value>{0} more gems are needed to continue crafting boosters. Crafting will resume when more gems are available.</value>
     <comment>{0} will be replaced by a number of gems</comment>
   </data>
   <data name="BoosterCreationFailed" xml:space="preserve">
-    <value>Failed to create booster from {0}</value>
+    <value>Failed to create booster for {0}</value>
     <comment>{0} will be replaced by an appID</comment>
   </data>
   <data name="BoosterCreationSuccess" xml:space="preserve">

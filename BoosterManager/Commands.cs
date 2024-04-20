@@ -579,7 +579,7 @@ namespace BoosterManager {
 				gamesToBooster.Add(gameID);
 			}
 
-			return BoosterHandler.BoosterHandlers[bot.BotName].ScheduleBoosters(gamesToBooster, craftingReporter);
+			return BoosterHandler.BoosterHandlers[bot.BotName].ScheduleBoosters(BoosterJobType.Limited, gamesToBooster, craftingReporter);
 		}
 
 		private static string? ResponseBooster(EAccess access, ulong steamID, StatusReporter craftingReporter, string botNames, string targetGameIDs) {

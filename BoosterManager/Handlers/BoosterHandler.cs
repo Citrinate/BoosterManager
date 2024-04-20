@@ -8,17 +8,23 @@ using System.Linq;
 namespace BoosterManager {
 	internal sealed class BoosterHandler : IDisposable {
 		private readonly Bot Bot;
-		private readonly BoosterQueue BoosterQueue;
+		internal readonly BoosterDatabase? BoosterDatabase;
+		internal readonly BoosterQueue BoosterQueue;
 		internal static ConcurrentDictionary<string, BoosterHandler> BoosterHandlers = new();
-		internal static StatusReporter GeneralReporter = new(); // Used to report when an unexpected booster error has occured, or when booster crafting is finished
+		internal readonly List<BoosterJob> Jobs = new();
 		private static int DelayBetweenBots = 0; // Delay, in minutes, between when bots will craft boosters
 		internal static bool AllowCraftUntradableBoosters = true;
 		internal static bool AllowCraftUnmarketableBoosters = true;
 
 		private BoosterHandler(Bot bot) {
 			Bot = bot;
+			string databaseFilePath = Bot.GetFilePath(String.Format("{0}_{1}", bot.BotName, nameof(BoosterManager)), Bot.EFileType.Database);
+			BoosterDatabase = BoosterDatabase.CreateOrLoad(databaseFilePath);
 			BoosterQueue = new BoosterQueue(Bot);
-			GeneralReporter.Update(bot, bot.Actions.GetFirstSteamMasterID());
+
+			if (BoosterDatabase == null) {
+				bot.ArchiLogger.LogGenericError(String.Format(ArchiSteamFarm.Localization.Strings.ErrorDatabaseInvalid, databaseFilePath));
+			}
 		}
 
 		public void Dispose() {
@@ -60,78 +66,96 @@ namespace BoosterManager {
 			}
 		}
 
-		internal string ScheduleBoosters(HashSet<uint> gameIDs, StatusReporter craftingReporter) {
-			foreach (uint gameID in gameIDs) {
-				BoosterQueue.AddBooster(gameID, BoosterType.OneTime);
-			}
-
-			void infoHandler() {
-				try {
-					string? message = BoosterQueue.GetShortStatus(gameIDs);
-					if (message == null) {
-						craftingReporter.Report(Bot, Strings.BoostersUncraftable);
-
-						return;
-					}
-
-					craftingReporter.Report(Bot, message);
-				} finally {
-					BoosterQueue.OnBoosterInfosUpdated -= infoHandler;
-				}
-			}
-
-			void finishedHandler() {
-				if (BoosterQueue.IsFinishedCrafting(BoosterType.OneTime, gameIDs)) {
-					craftingReporter.Report(Bot, String.Format(Strings.BoosterCreationFinished, BoosterQueue.GetNumBoosters(BoosterType.OneTime, filterGameIDs: gameIDs)));
-					BoosterQueue.OnBoosterFinishedCheck -= finishedHandler;
-				}
-			}
-
-			GeneralReporter.Update(craftingReporter);
-			BoosterQueue.OnBoosterInfosUpdated += infoHandler;
-			BoosterQueue.OnBoosterFinishedCheck += finishedHandler;
-			BoosterQueue.Start();
+		internal string ScheduleBoosters(BoosterJobType jobType, HashSet<uint> gameIDs, StatusReporter craftingReporter) {
+			Jobs.Add(new BoosterJob(Bot, jobType, gameIDs, craftingReporter));
 
 			return Commands.FormatBotResponse(Bot, String.Format(Strings.BoosterCreationStarting, gameIDs.Count));
 		}
 
-		internal void SchedulePermanentBoosters(HashSet<uint> gameIDs) {
-			foreach (uint gameID in gameIDs) {
-				BoosterQueue.AddBooster(gameID, BoosterType.Permanent);
-			}
-
-			BoosterQueue.Start();
-		}
-
 		internal string UnscheduleBoosters(HashSet<uint>? gameIDs = null, int? timeLimitHours = null) {
-			HashSet<uint> removedGameIDs = BoosterQueue.RemoveBoosters(gameIDs, timeLimitHours);
+			HashSet<uint> removedGameIDs = Jobs.RemoveBoosters(gameIDs, timeLimitHours);
 
 			if (removedGameIDs.Count == 0) {
-				if (timeLimitHours == null) {
-					return Commands.FormatBotResponse(Bot, Strings.QueueRemovalByAppFail);
+				if (timeLimitHours != null) {
+					return Commands.FormatBotResponse(Bot, Strings.QueueRemovalByTimeFail);
 				}
-				
-				return Commands.FormatBotResponse(Bot, Strings.QueueRemovalByTimeFail);
 
+				return Commands.FormatBotResponse(Bot, Strings.QueueRemovalByAppFail);
 			}
 
 			return Commands.FormatBotResponse(Bot, String.Format(Strings.QueueRemovalSuccess, removedGameIDs.Count, String.Join(", ", removedGameIDs)));
 		}
 
+		internal void UpdateJobs() {
+			Jobs.RemoveAll(job => job.IsFinished);
+		}
+
 		internal string GetStatus(bool shortStatus = false) {
-			if (shortStatus) {
-				return Commands.FormatBotResponse(Bot, BoosterQueue.GetShortStatus() ?? BoosterQueue.GetStatus());
+			// Queue empty
+			Booster? nextBooster = Jobs.NextBooster();
+			Booster? limitedLastBooster = Jobs.Limited().LastBooster();
+			if (nextBooster == null || limitedLastBooster == null) {
+				if (BoosterQueue.IsUpdatingBoosterInfos()) {
+					return Strings.BoosterInfoUpdating;
+				}
+
+				return Strings.QueueEmpty;
 			}
 
-			return Commands.FormatBotResponse(Bot, BoosterQueue.GetStatus());
+			// Short status
+			int limitedNumBoosters = Jobs.Limited().NumBoosters();
+			int limitedGemsNeeded = Jobs.Limited().GemsNeeded();
+			if (shortStatus) {
+				return String.Format(Strings.QueueStatusShort, limitedNumBoosters, String.Format("{0:N0}", limitedGemsNeeded), String.Format("~{0:t}", limitedLastBooster.GetAvailableAtTime(BoosterQueue.BoosterDelay)));
+			}
+
+			// Long status
+			List<string> responses = new List<string>();
+
+			// Not enough gems
+			int gemsNeeded = Jobs.GemsNeeded();
+			if (gemsNeeded > BoosterQueue.AvailableGems) {
+				responses.Add(String.Format("{0} :steamsad:", Strings.QueueStatusNotEnoughGems));
+
+				if (nextBooster.Info.Price > BoosterQueue.AvailableGems) {
+					responses.Add(String.Format(Strings.QueueStatusGemsNeeded, String.Format("{0:N0}", nextBooster.Info.Price - BoosterQueue.AvailableGems)));
+				}
+
+				if (Jobs.NumUncrafted() > 1) {
+					responses.Add(String.Format(Strings.QueueStatusTotalGemsNeeded, String.Format("{0:N0}", gemsNeeded - BoosterQueue.AvailableGems)));
+				}
+			}
+
+			// One-time booster status
+			if (limitedNumBoosters > 0) {
+				responses.Add(String.Format(Strings.QueueStatusOneTimeBoosters, Jobs.Limited().NumCrafted(), limitedNumBoosters, String.Format("~{0:t}", limitedLastBooster.GetAvailableAtTime(BoosterQueue.BoosterDelay)), String.Format("{0:N0}", limitedGemsNeeded)));
+				responses.Add(String.Format(Strings.QueueStatusOneTimeBoosterList, String.Join(", ", Jobs.Limited().UncraftedGameIDs())));
+			}
+
+			// Permanent booster status
+			if (Jobs.Permanent().NumBoosters() > 0) {
+				responses.Add(String.Format(Strings.QueueStatusPermanentBoosters, String.Format("{0:N0}", Jobs.Permanent().GemsNeeded()), String.Join(", ", Jobs.Permanent().GameIDs())));
+			}
+
+			// Next booster to be crafted
+			if (DateTime.Now > nextBooster.GetAvailableAtTime(BoosterQueue.BoosterDelay)) {
+				responses.Add(String.Format(Strings.QueueStatusNextBoosterCraftingNow, nextBooster.Info.Name, nextBooster.GameID));
+			} else {
+				responses.Add(String.Format(Strings.QueueStatusNextBoosterCraftingLater, String.Format("{0:t}", nextBooster.GetAvailableAtTime(BoosterQueue.BoosterDelay)), nextBooster.Info.Name, nextBooster.GameID));
+			}
+
+			responses.Add("");
+
+			return String.Join(Environment.NewLine, responses);
 		}
 		
 		internal uint GetGemsNeeded() {
-			if (BoosterQueue.AvailableGems > BoosterQueue.GetGemsNeeded(BoosterType.Any, wasCrafted: false)) {
+			int gemsNeeded = Jobs.GemsNeeded();
+			if (BoosterQueue.AvailableGems > gemsNeeded) {
 				return 0;
 			}
 
-			return (uint) (BoosterQueue.GetGemsNeeded(BoosterType.Any, wasCrafted: false) - BoosterQueue.AvailableGems);
+			return (uint) (gemsNeeded - BoosterQueue.AvailableGems);
 		}
 
 		internal void OnGemsRecieved() {
@@ -145,9 +169,7 @@ namespace BoosterManager {
 		}
 
 		internal static bool IsCraftingOneTimeBoosters() {
-			return BoosterHandlers.Any(handler => handler.Value.BoosterQueue.GetNumBoosters(BoosterType.OneTime, wasCrafted: false) > 0);
+			return BoosterHandlers.Values.Any(handler => handler.Jobs.Limited().GemsNeeded() > 0);
 		}
-
-		private static int GetMillisecondsFromNow(DateTime then) => Math.Max(0, (int) (then - DateTime.Now).TotalMilliseconds);
 	}
 }
