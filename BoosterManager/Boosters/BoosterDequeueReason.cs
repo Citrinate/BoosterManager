@@ -1,7 +1,10 @@
 namespace BoosterManager {
 	internal enum BoosterDequeueReason {
+		AlreadyQueued,
 		Crafted,
 		RemovedByUser,
-		UnexpectedlyUncraftable
+		Uncraftable,
+		UnexpectedlyUncraftable,
+		Unmarketable
 	}
 }

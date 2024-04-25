@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
@@ -11,6 +12,9 @@ namespace BoosterManager {
 	internal sealed class BoosterDatabase : SerializableFile {
 		[JsonInclude]
 		private ConcurrentDictionary<uint, BoosterLastCraft> BoosterLastCrafts { get; init; } = new();
+
+		[JsonInclude]
+		internal List<BoosterJobState> BoosterJobs { get; private set; } = new();
 
 		[JsonConstructor]
 		private BoosterDatabase() { }
@@ -25,7 +29,7 @@ namespace BoosterManager {
 
 		protected override Task Save() => Save(this);
 
-		internal static BoosterDatabase? CreateOrLoad(string filePath) {
+		internal static BoosterDatabase CreateOrLoad(string filePath) {
 			if (string.IsNullOrEmpty(filePath)) {
 				throw new ArgumentNullException(nameof(filePath));
 			}
@@ -42,20 +46,20 @@ namespace BoosterManager {
 				if (string.IsNullOrEmpty(json)) {
 					ASF.ArchiLogger.LogGenericError(string.Format(ArchiSteamFarm.Localization.Strings.ErrorIsEmpty, nameof(json)));
 
-					return null;
+					return new BoosterDatabase(filePath);
 				}
 
 				boosterDatabase = json.ToJsonObject<BoosterDatabase>();
 			} catch (Exception e) {
 				ASF.ArchiLogger.LogGenericException(e);
 
-				return null;
+				return new BoosterDatabase(filePath);
 			}
 
 			if (boosterDatabase == null) {
 				ASF.ArchiLogger.LogNullError(boosterDatabase);
 
-				return null;
+				return new BoosterDatabase(filePath);
 			}
 
 			boosterDatabase.FilePath = filePath;
@@ -87,6 +91,12 @@ namespace BoosterManager {
 				return oldCraft;
 			});
 			
+			Utilities.InBackground(Save);
+		}
+
+		internal void UpdateBoosterJobs(List<BoosterJobState> boosterJobs) {
+			BoosterJobs = boosterJobs;
+
 			Utilities.InBackground(Save);
 		}
 	}

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Core;
@@ -13,66 +14,112 @@ using SteamKit2;
 
 namespace BoosterManager {
 	internal sealed class StatusReporter {
-		private Bot? Sender; // When we send status alerts, they'll come from this bot
-		private ulong RecipientSteamID; // When we send status alerts, they'll go to this SteamID
+		[JsonInclude]
+		[JsonRequired]
+		private ulong SenderSteamID; // When we send status reports, they'll come from this SteamID
+
+		[JsonInclude]
+		[JsonRequired]
+		private ulong RecipientSteamID; // When we send status reports, they'll go to this SteamID
+
 		private ConcurrentDictionary<Bot, List<string>> Reports = new();
 		private ConcurrentDictionary<Bot, List<string>> PreviousReports = new();
 		private const uint ReportDelaySeconds = 5;
 
-		private Timer ReportTimer;
+		private Timer? ReportTimer;
+		private SemaphoreSlim ReportSemaphore = new SemaphoreSlim(1, 1);
 
 		internal StatusReporter(Bot? sender = null, ulong recipientSteamID = 0) {
-			Sender = sender;
+			SenderSteamID = sender?.SteamID ?? 0;
 			RecipientSteamID = recipientSteamID;
-			ReportTimer = new Timer(async _ => await Send().ConfigureAwait(false), null, Timeout.Infinite, Timeout.Infinite);
 		}
 
-		internal void Report(Bot reportingBot, string report, bool suppressDuplicateMessages = false) {
-			if (suppressDuplicateMessages) {
-				bool existsInReports = Reports.TryGetValue(reportingBot, out var reports) && reports.Contains(report);
-				bool existsInPreviousReports = PreviousReports.TryGetValue(reportingBot, out var previousReports) && previousReports.Contains(report);
-
-				if (existsInReports || existsInPreviousReports) {
-					return;
-				}
-			}
-
-			Reports.AddOrUpdate(reportingBot, new List<string>() { report }, (_, reports) => { reports.Add(report); return reports; });
-
-			// I prefer to send all reports in as few messages as possible
-			// As long as reports continue to come in, we wait
-			ReportTimer.Change(TimeSpan.FromSeconds(ReportDelaySeconds), Timeout.InfiniteTimeSpan);
+		[JsonConstructor]
+		internal StatusReporter(ulong senderSteamID = 0, ulong recipientSteamID = 0) {
+			SenderSteamID = senderSteamID;
+			RecipientSteamID = recipientSteamID;
 		}
 
-		private async Task Send() {
-			if (Sender != null && !Sender.IsConnectedAndLoggedOn) {
-				ReportTimer.Change(TimeSpan.FromMinutes(1), Timeout.InfiniteTimeSpan);
+		internal static StatusReporter StatusLogger() {
+			// Create a status reporter that doesn't send messages through chat, it just logs everything
+			return new StatusReporter(0, 0);
+		}
 
+		internal void Report(Bot reportingBot, string report, bool suppressDuplicateMessages = false, bool log = false) {
+			if (log || SenderSteamID == 0 || RecipientSteamID == 0) {
+				reportingBot.ArchiLogger.LogGenericInfo(report);
+					
 				return;
 			}
 
-			List<string> messages = new List<string>();
-			List<Bot> bots = Reports.Keys.OrderBy(bot => bot.BotName).ToList();
+			ReportSemaphore.Wait();
+			try {
+				if (suppressDuplicateMessages) {
+					bool existsInReports = Reports.TryGetValue(reportingBot, out var reports) && reports.Contains(report);
+					bool existsInPreviousReports = PreviousReports.TryGetValue(reportingBot, out var previousReports) && previousReports.Contains(report);
 
-			foreach (Bot bot in bots) {
-				messages.Add(Commands.FormatBotResponse(bot, String.Join(Environment.NewLine, Reports[bot])));
-				if (Reports[bot].Count > 1) {
-					// Add an extra line if there's more than 1 message from a bot
-					messages.Add("");
-				}
-
-				if (Reports.TryRemove(bot, out List<string>? previousReports)) {
-					if (previousReports != null) {
-						PreviousReports.AddOrUpdate(bot, previousReports, (_, _) => previousReports);
+					if (existsInReports || existsInPreviousReports) {
+						return;
 					}
 				}
-			}
 
-			if (Sender == null || RecipientSteamID == 0 || !new SteamID(RecipientSteamID).IsIndividualAccount || Sender.SteamFriends.GetFriendRelationship(RecipientSteamID) != EFriendRelationship.Friend) {
-				// Command was sent outside of Steam chat, or can't send a Steam message
-				ASF.ArchiLogger.LogGenericInfo(String.Join(Environment.NewLine, messages));
-			} else {
-				await Sender.SendMessage(RecipientSteamID, String.Join(Environment.NewLine, messages)).ConfigureAwait(false);
+				Reports.AddOrUpdate(reportingBot, new List<string>() { report }, (_, reports) => { reports.Add(report); return reports; });
+
+				// I prefer to send all reports in as few messages as possible
+				// As long as reports continue to come in, we wait
+				if (ReportTimer != null) {
+					ReportTimer.Change(Timeout.Infinite, Timeout.Infinite);
+					ReportTimer.Dispose();
+				}
+
+				ReportTimer = new Timer(async _ => await Send().ConfigureAwait(false), null, TimeSpan.FromSeconds(ReportDelaySeconds), Timeout.InfiniteTimeSpan);
+			} finally {
+				ReportSemaphore.Release();
+			}
+		}
+
+		private async Task Send() {
+			await ReportSemaphore.WaitAsync().ConfigureAwait(false);
+			try {
+				ReportTimer?.Dispose();
+				List<string> messages = new List<string>();
+				List<Bot> bots = Reports.Keys.OrderBy(bot => bot.BotName).ToList();
+
+				foreach (Bot bot in bots) {
+					messages.Add(Commands.FormatBotResponse(bot, String.Join(Environment.NewLine, Reports[bot])));
+					if (Reports[bot].Count > 1) {
+						// Add an extra line if there's more than 1 message from a bot
+						messages.Add("");
+					}
+
+					if (Reports.TryRemove(bot, out List<string>? previousReports)) {
+						if (previousReports != null) {
+							PreviousReports.AddOrUpdate(bot, previousReports, (_, _) => previousReports);
+						}
+					}
+				}
+
+				Bot? sender = SenderSteamID == 0 ? null : Bot.BotsReadOnly?.Values.FirstOrDefault(bot => bot.SteamID == SenderSteamID);
+				if (sender == null 
+					|| RecipientSteamID == 0 
+					|| !new SteamID(RecipientSteamID).IsIndividualAccount 
+					|| sender.SteamFriends.GetFriendRelationship(RecipientSteamID) != EFriendRelationship.Friend
+				) {
+					// Can't send a chat message through Steam, just log the report
+					ASF.ArchiLogger.LogGenericInfo(String.Join(Environment.NewLine, messages));
+
+					return;
+				}
+				
+				try {
+					if (!await sender.SendMessage(RecipientSteamID, String.Join(Environment.NewLine, messages)).ConfigureAwait(false)) {
+						ASF.ArchiLogger.LogGenericInfo(String.Join(Environment.NewLine, messages));
+					}
+				} catch (Exception) {
+					ASF.ArchiLogger.LogGenericInfo(String.Join(Environment.NewLine, messages));
+				}
+			} finally {
+				ReportSemaphore.Release();
 			}
 		}
 	}

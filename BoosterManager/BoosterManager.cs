@@ -9,13 +9,13 @@ using ArchiSteamFarm.Plugins.Interfaces;
 using ArchiSteamFarm.Steam.Exchange;
 using System.Text.Json;
 using ArchiSteamFarm.Helpers.Json;
+using ArchiSteamFarm.Collections;
 
 namespace BoosterManager {
 	[Export(typeof(IPlugin))]
 	public sealed class BoosterManager : IASF, IBotModules, IBotCommand2, IBotTradeOfferResults, IGitHubPluginUpdates {
 		public string Name => nameof(BoosterManager);
 		public string RepositoryName => "Citrinate/BoosterManager";
-		public bool CanUpdate => !BoosterHandler.IsCraftingOneTimeBoosters();
 		public Version Version => typeof(BoosterManager).Assembly.GetName().Version ?? new Version("0");
 
 		public Task OnLoaded() {
@@ -87,7 +87,8 @@ namespace BoosterManager {
 		}
 
 		public Task OnBotInitModules(Bot bot, IReadOnlyDictionary<string, JsonElement>? additionalConfigProperties = null) {
-			BoosterHandler.AddHandler(bot);
+			string databaseFilePath = Bot.GetFilePath(String.Format("{0}_{1}", bot.BotName, nameof(BoosterManager)), Bot.EFileType.Database);
+			BoosterHandler.AddHandler(bot, BoosterDatabase.CreateOrLoad(databaseFilePath));
 
 			if (additionalConfigProperties == null) {
 				return Task.FromResult(0);
@@ -101,7 +102,7 @@ namespace BoosterManager {
 						if (gameIDs == null) {
 							bot.ArchiLogger.LogNullError(gameIDs);
 						} else {
-							BoosterHandler.BoosterHandlers[bot.BotName].ScheduleBoosters(BoosterJobType.Permanent, gameIDs, new StatusReporter());
+							BoosterHandler.BoosterHandlers[bot.BotName].ScheduleBoosters(BoosterJobType.Permanent, gameIDs, StatusReporter.StatusLogger());
 						}
 						break;
 					}

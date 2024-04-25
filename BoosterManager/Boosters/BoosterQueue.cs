@@ -1,9 +1,9 @@
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using ArchiSteamFarm.Collections;
 using ArchiSteamFarm.Steam;
 using BoosterManager.Localization;
 
@@ -11,14 +11,13 @@ namespace BoosterManager {
 	internal sealed class BoosterQueue : IDisposable {
 		private readonly Bot Bot;
 		private readonly Timer Timer;
-		private readonly ConcurrentDictionary<uint, Booster> Boosters = new();
-		private Dictionary<uint, Steam.BoosterInfo> BoosterInfos = new();
+		private readonly ConcurrentHashSet<Booster> Boosters = new(new BoosterComparer());
 		private uint GooAmount = 0;
 		private uint TradableGooAmount = 0;
 		private uint UntradableGooAmount = 0;
 		internal uint AvailableGems => BoosterHandler.AllowCraftUntradableBoosters ? GooAmount : TradableGooAmount;
+		internal event Action<Dictionary<uint, Steam.BoosterInfo>>? OnBoosterInfosUpdated;
 		private const int MinDelayBetweenBoosters = 5; // Minimum delay, in seconds, between booster crafts
-		internal event Action? OnBoosterInfosUpdated;
 		private const float BoosterInfosUpdateBackOffMultiplierDefault = 1.0F;
 		private const float BoosterInfosUpdateBackOffMultiplierStep = 0.5F;
 		private const int BoosterInfosUpdateBackOffMinMinutes = 1;
@@ -114,12 +113,12 @@ namespace BoosterManager {
 		}
 
 		internal void AddBooster(uint gameID, BoosterJob boosterJob) {
-			void handler() {
+			void handler(Dictionary<uint, Steam.BoosterInfo> boosterInfos) {
 				try {
-					if (!BoosterInfos.TryGetValue(gameID, out Steam.BoosterInfo? boosterInfo)) {
+					if (!boosterInfos.TryGetValue(gameID, out Steam.BoosterInfo? boosterInfo)) {
 						// Bot cannot craft this booster
 						Bot.ArchiLogger.LogGenericError(String.Format(Strings.BoosterUncraftable, gameID));
-						boosterJob.OnBoosterUnqueueable(gameID);
+						boosterJob.OnBoosterUnqueueable(gameID, BoosterDequeueReason.Uncraftable);
 
 						return;
 					}
@@ -127,17 +126,17 @@ namespace BoosterManager {
 					if (!BoosterHandler.AllowCraftUnmarketableBoosters && !MarketableApps.AppIDs.Contains(gameID)) {
 						// This booster is unmarketable and the plugin was configured to not craft marketable boosters
 						Bot.ArchiLogger.LogGenericError(String.Format(Strings.BoosterUnmarketable, gameID));
-						boosterJob.OnBoosterUnqueueable(gameID);
+						boosterJob.OnBoosterUnqueueable(gameID, BoosterDequeueReason.Unmarketable);
 
 						return;
 					}
 
 					Booster booster = new Booster(Bot, gameID, boosterInfo, boosterJob);
-					if (Boosters.TryAdd(gameID, booster)) {
+					if (Boosters.Add(booster)) {
 						Bot.ArchiLogger.LogGenericInfo(String.Format(Strings.BoosterQueued, gameID));
 						boosterJob.OnBoosterQueued(booster);
 					} else {
-						boosterJob.OnBoosterUnqueueable(gameID);
+						boosterJob.OnBoosterUnqueueable(gameID, BoosterDequeueReason.AlreadyQueued);
 					}
 				} finally {
 					OnBoosterInfosUpdated -= handler;
@@ -148,7 +147,12 @@ namespace BoosterManager {
 		}
 
 		internal bool RemoveBooster(uint gameID, BoosterDequeueReason reason) {
-			if (Boosters.TryRemove(gameID, out Booster? booster)) {
+			Booster? booster = Boosters.FirstOrDefault(booster => booster.GameID == gameID);
+			if (booster == null) {
+				return false;
+			}
+
+			if (Boosters.Remove(booster)) {
 				Bot.ArchiLogger.LogGenericInfo(String.Format(Strings.BoosterUnqueued, booster.GameID));
 				booster.BoosterJob.OnBoosterDequeued(booster, reason);
 
@@ -159,7 +163,7 @@ namespace BoosterManager {
 		}
 
 		internal Booster? GetNextCraftableBooster() {
-			HashSet<Booster> uncraftedBoosters = Boosters.Values.Where(booster => !booster.WasCrafted).ToHashSet<Booster>();
+			HashSet<Booster> uncraftedBoosters = Boosters.Where(booster => !booster.WasCrafted).ToHashSet<Booster>();
 			if (uncraftedBoosters.Count == 0) {
 				return null;
 			}
@@ -167,7 +171,7 @@ namespace BoosterManager {
 			return uncraftedBoosters.OrderBy<Booster, DateTime>(booster => booster.GetAvailableAtTime()).First();
 		}
 
-		internal void ForceUpdateBoosterInfos() => OnBoosterInfosUpdated -= ForceUpdateBoosterInfos;
+		internal void ForceUpdateBoosterInfos(Dictionary<uint, Steam.BoosterInfo> _) => OnBoosterInfosUpdated -= ForceUpdateBoosterInfos;
 		internal bool IsUpdatingBoosterInfos() => OnBoosterInfosUpdated != null;
 
 		private async Task<Boolean> UpdateBoosterInfos() {
@@ -189,10 +193,9 @@ namespace BoosterManager {
 			GooAmount = boosterPage.GooAmount;
 			TradableGooAmount = boosterPage.TradableGooAmount;
 			UntradableGooAmount = boosterPage.UntradableGooAmount;
-			BoosterInfos = boosterPage.BoosterInfos.ToDictionary(boosterInfo => boosterInfo.AppID);
+			OnBoosterInfosUpdated?.Invoke(boosterPage.BoosterInfos.ToDictionary(boosterInfo => boosterInfo.AppID));
 
 			Bot.ArchiLogger.LogGenericInfo(Strings.BoosterInfoUpdateSuccess);
-			OnBoosterInfosUpdated?.Invoke();
 
 			return true;
 		}
@@ -220,11 +223,11 @@ namespace BoosterManager {
 			// Most errors we'll get when we try to create a booster will never go away. Retrying on an error will usually put us in an infinite loop.
 			// Sometimes Steam will falsely report that an attempt to craft a booster failed, when it really didn't. It could also happen that the user crafted the booster on their own.
 			// For any error we get, we'll need to refresh the booster page and see if the AvailableAtTime has changed to determine if we really failed to craft
-			void handler() {
+			void handler(Dictionary<uint, Steam.BoosterInfo> boosterInfos) {
 				try {
 					Bot.ArchiLogger.LogGenericInfo(String.Format(Strings.BoosterCreationError, booster.GameID));
 
-					if (!BoosterInfos.TryGetValue(booster.GameID, out Steam.BoosterInfo? newBoosterInfo)) {
+					if (!boosterInfos.TryGetValue(booster.GameID, out Steam.BoosterInfo? newBoosterInfo)) {
 						// No longer have access to craft boosters for this game (game removed from account, or sometimes due to very rare Steam bugs)
 						RemoveBooster(booster.GameID, BoosterDequeueReason.UnexpectedlyUncraftable);
 

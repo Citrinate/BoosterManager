@@ -11,6 +11,18 @@ namespace BoosterManager {
 			return jobs.Where(job => job.JobType == BoosterJobType.Permanent);
 		}
 
+		internal static IEnumerable<BoosterJob> Finished(this IEnumerable<BoosterJob> jobs) {
+			return jobs.Where(job => job.IsFinished);
+		}
+
+		internal static IEnumerable<BoosterJob> Unfinised(this IEnumerable<BoosterJob> jobs) {
+			return jobs.Where(job => !job.IsFinished);
+		}
+
+		internal static List<BoosterJobState> SaveState (this IEnumerable<BoosterJob> jobs) {
+			return jobs.Select(job => new BoosterJobState(job)).ToList();
+		}
+
 		internal static HashSet<uint> GameIDs (this IEnumerable<BoosterJob> jobs) {
 			HashSet<uint> gameIDs = new();
 			foreach (HashSet<uint> gameIDsFromJob in jobs.Select(job => job.GameIDs)) {
@@ -65,7 +77,7 @@ namespace BoosterManager {
 
 		internal static HashSet<uint> RemoveBoosters (this IEnumerable<BoosterJob> jobs, HashSet<uint>? gameIDs = null, int? timeLimitHours = null) {
 			HashSet<uint> removedBoosters = new();
-			foreach (HashSet<uint> removedFromJob in jobs.Select(job => job.RemoveBoosters(gameIDs, timeLimitHours)).ToList()) {
+			foreach (HashSet<uint> removedFromJob in jobs.ToList().Select(job => job.RemoveBoosters(gameIDs, timeLimitHours))) {
 				removedBoosters.UnionWith(removedFromJob);
 			}
 

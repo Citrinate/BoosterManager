@@ -1,3 +1,4 @@
+using ArchiSteamFarm.Collections;
 using ArchiSteamFarm.Steam;
 using BoosterManager.Localization;
 using System;
@@ -8,35 +9,35 @@ using System.Linq;
 namespace BoosterManager {
 	internal sealed class BoosterHandler : IDisposable {
 		private readonly Bot Bot;
-		internal readonly BoosterDatabase? BoosterDatabase;
+		internal readonly BoosterDatabase BoosterDatabase;
 		internal readonly BoosterQueue BoosterQueue;
 		internal static ConcurrentDictionary<string, BoosterHandler> BoosterHandlers = new();
-		internal readonly List<BoosterJob> Jobs = new();
+		private ConcurrentList<BoosterJob> Jobs = new();
 		internal static bool AllowCraftUntradableBoosters = true;
 		internal static bool AllowCraftUnmarketableBoosters = true;
 
-		private BoosterHandler(Bot bot) {
-			Bot = bot;
-			string databaseFilePath = Bot.GetFilePath(String.Format("{0}_{1}", bot.BotName, nameof(BoosterManager)), Bot.EFileType.Database);
-			BoosterDatabase = BoosterDatabase.CreateOrLoad(databaseFilePath);
-			BoosterQueue = new BoosterQueue(Bot);
+		private BoosterHandler(Bot bot, BoosterDatabase boosterDatabase) {
+			ArgumentNullException.ThrowIfNull(boosterDatabase);
 
-			if (BoosterDatabase == null) {
-				bot.ArchiLogger.LogGenericError(String.Format(ArchiSteamFarm.Localization.Strings.ErrorDatabaseInvalid, databaseFilePath));
-			}
+			Bot = bot;
+			BoosterDatabase = boosterDatabase;
+			BoosterQueue = new BoosterQueue(Bot);
 		}
 
 		public void Dispose() {
 			BoosterQueue.Dispose();
 		}
 
-		internal static void AddHandler(Bot bot) {
+		internal static void AddHandler(Bot bot, BoosterDatabase boosterDatabase) {
 			if (BoosterHandlers.ContainsKey(bot.BotName)) {
 				BoosterHandlers[bot.BotName].Dispose();
 				BoosterHandlers.TryRemove(bot.BotName, out BoosterHandler? _);
 			}
 
-			BoosterHandlers.TryAdd(bot.BotName, new BoosterHandler(bot));
+			BoosterHandler handler = new BoosterHandler(bot, boosterDatabase);
+			if (BoosterHandlers.TryAdd(bot.BotName, handler)) {
+				handler.RestoreBoosterJobs();
+			}
 		}
 
 		internal string ScheduleBoosters(BoosterJobType jobType, HashSet<uint> gameIDs, StatusReporter craftingReporter) {
@@ -59,8 +60,15 @@ namespace BoosterManager {
 			return Commands.FormatBotResponse(Bot, String.Format(Strings.QueueRemovalSuccess, removedGameIDs.Count, String.Join(", ", removedGameIDs)));
 		}
 
-		internal void UpdateJobs() {
-			Jobs.RemoveAll(job => job.IsFinished);
+		internal void UpdateBoosterJobs() {
+			Jobs.Finished().ToList().ForEach(job => Jobs.Remove(job));
+			BoosterDatabase.UpdateBoosterJobs(Jobs.Limited().Unfinised().SaveState());
+		}
+
+		private void RestoreBoosterJobs() {
+			foreach (BoosterJobState jobState in BoosterDatabase.BoosterJobs) {
+				Jobs.Add(new BoosterJob(Bot, BoosterJobType.Limited, jobState));
+			}
 		}
 
 		internal string GetStatus(bool shortStatus = false) {
@@ -69,21 +77,26 @@ namespace BoosterManager {
 			Booster? limitedLastBooster = Jobs.Limited().LastBooster();
 			if (nextBooster == null || limitedLastBooster == null) {
 				if (BoosterQueue.IsUpdatingBoosterInfos()) {
-					return Strings.BoosterInfoUpdating;
+					return Commands.FormatBotResponse(Bot, Strings.BoosterInfoUpdating);
 				}
 
-				return Strings.QueueEmpty;
+				return Commands.FormatBotResponse(Bot, Strings.QueueEmpty);
 			}
 
 			// Short status
 			int limitedNumBoosters = Jobs.Limited().NumBoosters();
 			int limitedGemsNeeded = Jobs.Limited().GemsNeeded();
 			if (shortStatus) {
-				return String.Format(Strings.QueueStatusShort, limitedNumBoosters, String.Format("{0:N0}", limitedGemsNeeded), String.Format("~{0:t}", limitedLastBooster.GetAvailableAtTime()));
+				return Commands.FormatBotResponse(Bot, String.Format(Strings.QueueStatusShort, limitedNumBoosters, String.Format("{0:N0}", limitedGemsNeeded), String.Format("~{0:t}", limitedLastBooster.GetAvailableAtTime())));
 			}
 
 			// Long status
 			List<string> responses = new List<string>();
+
+			// Refreshing booster page
+			if (BoosterQueue.IsUpdatingBoosterInfos()) {
+				responses.Add(Strings.BoosterInfoUpdating);
+			}
 
 			// Not enough gems
 			int gemsNeeded = Jobs.GemsNeeded();
@@ -119,7 +132,7 @@ namespace BoosterManager {
 
 			responses.Add("");
 
-			return String.Join(Environment.NewLine, responses);
+			return Commands.FormatBotResponse(Bot, String.Join(Environment.NewLine, responses));
 		}
 		
 		internal uint GetGemsNeeded() {
@@ -139,10 +152,6 @@ namespace BoosterManager {
 			// Refresh gems count
 			BoosterQueue.OnBoosterInfosUpdated += BoosterQueue.ForceUpdateBoosterInfos;
 			BoosterQueue.Start();
-		}
-
-		internal static bool IsCraftingOneTimeBoosters() {
-			return BoosterHandlers.Values.Any(handler => handler.Jobs.Limited().GemsNeeded() > 0);
 		}
 	}
 }

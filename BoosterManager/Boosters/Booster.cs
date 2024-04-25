@@ -1,12 +1,13 @@
 using ArchiSteamFarm.Steam;
 using SteamKit2;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace BoosterManager {
 	internal sealed class Booster {
 		private readonly Bot Bot;
-		private BoosterDatabase? BoosterDatabase => BoosterHandler.BoosterHandlers[Bot.BotName].BoosterDatabase;
+		private BoosterDatabase BoosterDatabase => BoosterHandler.BoosterHandlers[Bot.BotName].BoosterDatabase;
 		internal readonly BoosterJob BoosterJob;
 		internal readonly uint GameID;
 		internal readonly Steam.BoosterInfo Info;
@@ -20,7 +21,7 @@ namespace BoosterManager {
 			Info = info;
 			InitTime = DateTime.Now;
 			BoosterJob = boosterJob;
-			LastCraft = BoosterDatabase?.GetLastCraft(gameID);
+			LastCraft = BoosterDatabase.GetLastCraft(gameID);
 		}
 
 		internal async Task<Steam.BoostersResponse?> Craft(Steam.TradabilityPreference nTp) {
@@ -34,7 +35,7 @@ namespace BoosterManager {
 		}
 
 		internal void SetWasCrafted() {
-			BoosterDatabase?.SetLastCraft(GameID, DateTime.Now);
+			BoosterDatabase.SetLastCraft(GameID, DateTime.Now);
 			WasCrafted = true;
 		}
 
@@ -54,6 +55,16 @@ namespace BoosterManager {
 			}
 
 			return InitTime;
+		}
+	}
+
+	internal class BoosterComparer : IEqualityComparer<Booster> {
+		public bool Equals(Booster? x, Booster? y) {
+			return x?.GameID == y?.GameID;
+		}
+
+		public int GetHashCode(Booster obj) {
+			return HashCode.Combine(obj.GameID);
 		}
 	}
 }
