@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Steam.Data;
@@ -8,6 +10,8 @@ using BoosterManager.Localization;
 
 namespace BoosterManager {
 	internal static class InventoryHandler {
+		private static ConcurrentDictionary<Bot, Timer> TradeRepeatTimers = new();
+
 		internal static async Task<string> SendItemToMultipleBots(Bot sender, List<(Bot reciever, uint amount)> recievers, uint appID, ulong contextID, ItemIdentifier itemIdentifier) {
 			// Send Amounts A,B,... of Item X to Bots C,D,... from Bot E  
 			// 	Amount A of Item X to Bot C from Bot E
@@ -226,6 +230,43 @@ namespace BoosterManager {
 			}
 
 			return Commands.FormatBotResponse(bot, response);
+		}
+
+		internal static bool StopTradeRepeatTimer(Bot bot) {
+			if (!TradeRepeatTimers.ContainsKey(bot)) {
+				return false;
+			}
+
+			if (TradeRepeatTimers.TryRemove(bot, out Timer? oldTimer)) {
+				if (oldTimer != null) {
+					oldTimer.Change(Timeout.Infinite, Timeout.Infinite);
+					oldTimer.Dispose();
+				}
+			}
+
+			return true;
+		}
+
+		internal static void StartTradeRepeatTimer(Bot bot, uint minutes, StatusReporter? statusReporter) {
+			StopTradeRepeatTimer(bot);
+
+			Timer newTimer = new Timer(async _ => await InventoryHandler.AcceptTradeConfirmations(bot, statusReporter).ConfigureAwait(false), null, Timeout.Infinite, Timeout.Infinite);
+			if (TradeRepeatTimers.TryAdd(bot, newTimer)) {
+				newTimer.Change(TimeSpan.FromMinutes(minutes), TimeSpan.FromMinutes(minutes));
+			} else {
+				newTimer.Dispose();
+			}
+		}
+
+		private static async Task AcceptTradeConfirmations(Bot bot, StatusReporter? statusReporter) {
+			(bool success, _, string message) = await bot.Actions.HandleTwoFactorAuthenticationConfirmations(true, Confirmation.EConfirmationType.Trade).ConfigureAwait(false);
+
+			string report = success ? message : String.Format(ArchiSteamFarm.Localization.Strings.WarningFailedWithError, message);
+			if (statusReporter != null) {
+				statusReporter.Report(bot, report);
+			} else {
+				bot.ArchiLogger.LogGenericInfo(report);
+			}
 		}
 	}
 }

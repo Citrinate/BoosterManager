@@ -24,14 +24,16 @@ namespace BoosterManager {
 
 		private ConcurrentDictionary<Bot, List<string>> Reports = new();
 		private ConcurrentDictionary<Bot, List<string>> PreviousReports = new();
-		private const uint ReportDelaySeconds = 5;
+		private uint ReportDelaySeconds;
+		private const uint DefaultReportDelaySeconds = 5;
 
 		private Timer? ReportTimer;
 		private SemaphoreSlim ReportSemaphore = new SemaphoreSlim(1, 1);
 
-		internal StatusReporter(Bot? sender = null, ulong recipientSteamID = 0) {
+		internal StatusReporter(Bot? sender = null, ulong recipientSteamID = 0, uint reportDelaySeconds = DefaultReportDelaySeconds) {
 			SenderSteamID = sender?.SteamID ?? 0;
 			RecipientSteamID = recipientSteamID;
+			ReportDelaySeconds = reportDelaySeconds;
 		}
 
 		[JsonConstructor]

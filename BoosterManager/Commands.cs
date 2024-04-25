@@ -347,14 +347,18 @@ namespace BoosterManager {
 							return await ResponseSendItemToBot(access, steamID, Utilities.GetArgsAsText(args, 1, ","), ItemIdentifier.SackIdentifier).ConfigureAwait(false);
 						
 						case "MARKET2FAOK" or "M2FAOK" when args.Length > 2:
-							return await Response2FAOK(access, steamID, args[1], Confirmation.EConfirmationType.Market, args[2], new StatusReporter(bot, steamID)).ConfigureAwait(false);
+							return await Response2FAOK(access, steamID, args[1], Confirmation.EConfirmationType.Market, args[2], new StatusReporter(bot, steamID, reportDelaySeconds: 30)).ConfigureAwait(false);
 						case "MARKET2FAOK" or "M2FAOK":
 							return await Response2FAOK(access, steamID, args[1], Confirmation.EConfirmationType.Market).ConfigureAwait(false);
 						case "MARKET2FAOKA" or "M2FAOKA":
-							return await Response2FAOK(access, steamID, "ASF", Confirmation.EConfirmationType.Market, args[1], new StatusReporter(bot, steamID)).ConfigureAwait(false);
+							return await Response2FAOK(access, steamID, "ASF", Confirmation.EConfirmationType.Market, args[1], new StatusReporter(bot, steamID, reportDelaySeconds: 30)).ConfigureAwait(false);
 						
+						case "TRADE2FAOK" or "T2FAOK" when args.Length > 2:
+							return await Response2FAOK(access, steamID, args[1], Confirmation.EConfirmationType.Trade, args[2], new StatusReporter(bot, steamID, reportDelaySeconds: 30)).ConfigureAwait(false);
 						case "TRADE2FAOK" or "T2FAOK":
 							return await Response2FAOK(access, steamID, args[1], Confirmation.EConfirmationType.Trade).ConfigureAwait(false);
+						case "TRADE2FAOKA" or "T2FAOKA":
+							return await Response2FAOK(access, steamID, "ASF", Confirmation.EConfirmationType.Trade, args[1], new StatusReporter(bot, steamID, reportDelaySeconds: 30)).ConfigureAwait(false);
 
 						case "TRADECHECK" or "TCHECK" or "TC":
 							return ResponseTradeCheck(access, steamID, args[1]);
@@ -505,20 +509,27 @@ namespace BoosterManager {
 			}
 
 			string? repeatMessage = null;
-			if (minutesAsText != null && acceptedType == Confirmation.EConfirmationType.Market) {
+			if (minutesAsText != null && (acceptedType == Confirmation.EConfirmationType.Market || acceptedType == Confirmation.EConfirmationType.Trade)) {
 				if (!uint.TryParse(minutesAsText, out uint minutes)) {
 					return String.Format(ArchiSteamFarm.Localization.Strings.ErrorParsingObject, nameof(minutesAsText));
 				}
 
 				if (minutes == 0) {
-					if (MarketHandler.StopMarketRepeatTimer(bot)) {
+					if ((acceptedType == Confirmation.EConfirmationType.Market && MarketHandler.StopMarketRepeatTimer(bot))
+						|| (acceptedType == Confirmation.EConfirmationType.Trade && InventoryHandler.StopTradeRepeatTimer(bot))
+					) {
 						return FormatBotResponse(bot, Strings.RepetitionCancelled);
 					} else {
 						return FormatBotResponse(bot, Strings.RepetitionNotActive);
 					}
 				} else {
-					MarketHandler.StartMarketRepeatTimer(bot, minutes, statusReporter);
-					repeatMessage = String.Format(Strings.RepetitionNotice, minutes, String.Format("!m2faok {0} 0", bot.BotName));
+					if (acceptedType == Confirmation.EConfirmationType.Market) {
+						MarketHandler.StartMarketRepeatTimer(bot, minutes, statusReporter);
+						repeatMessage = String.Format(Strings.RepetitionNotice, minutes, String.Format("!m2faok {0} 0", bot.BotName));
+					} else if (acceptedType == Confirmation.EConfirmationType.Trade) {
+						InventoryHandler.StartTradeRepeatTimer(bot, minutes, statusReporter);
+						repeatMessage = String.Format(Strings.RepetitionNotice, minutes, String.Format("!t2faok {0} 0", bot.BotName));
+					}
 				}
 			}
 			

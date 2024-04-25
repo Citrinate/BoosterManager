@@ -98,7 +98,7 @@ Command | Access | Description
 
 Command | Access | Description
 --- | --- | ---
-`trade2faok [Bot]`|`Master`|Accepts all pending 2FA trade confirmations for given bot instances.
+`trade2faok [Bot] [Minutes]`|`Master`|Accepts all pending 2FA trade confirmations for given bot instances.  Optionally repeat this action once every `Minutes`.  To cancel any repetition, set `Minutes` to 0.
 `tradecheck [Bot]`|`Master`|Attempt to handle any incoming trades for the given bot using ASF's [trading logic](https://github.com/JustArchiNET/ArchiSteamFarm/wiki/Trading#logic).
 `tradesincoming [Bot] [From]`|`Master`|Displays the number of incoming trades for the given bot, optionally filtered to only count trades `From` the given bot names or 64-bit SteamIDs.
 
@@ -187,7 +187,7 @@ Command | Alias |
 `lootkeys ASF`|`lka`
 `lootsacks ASF`|`lsa`
 `market2faok ASF [Minutes]`|`m2faoka [Minutes]`
-`trade2faok ASF`|`t2faoka`
+`trade2faok ASF [Minutes]`|`t2faoka [Minutes]`
 `tradecheck ASF`|`tca`
 `tradesincoming ASF [From]`|`tia [From]`
 `tradesincoming ASF ASF`|`tiaa`
