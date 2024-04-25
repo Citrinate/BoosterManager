@@ -255,10 +255,10 @@ namespace BoosterManager {
 			return true;
 		}
 
-		internal static void StartMarketRepeatTimer(Bot bot, uint minutes) {
+		internal static void StartMarketRepeatTimer(Bot bot, uint minutes, StatusReporter? statusReporter) {
 			StopMarketRepeatTimer(bot);
 
-			Timer newTimer = new Timer(async _ => await MarketHandler.AcceptMarketConfirmations(bot).ConfigureAwait(false), null, Timeout.Infinite, Timeout.Infinite);
+			Timer newTimer = new Timer(async _ => await MarketHandler.AcceptMarketConfirmations(bot, statusReporter).ConfigureAwait(false), null, Timeout.Infinite, Timeout.Infinite);
 			if (MarketRepeatTimers.TryAdd(bot, newTimer)) {
 				newTimer.Change(TimeSpan.FromMinutes(minutes), TimeSpan.FromMinutes(minutes));
 			} else {
@@ -266,9 +266,15 @@ namespace BoosterManager {
 			}
 		}
 
-		private static async Task AcceptMarketConfirmations(Bot bot) {
+		private static async Task AcceptMarketConfirmations(Bot bot, StatusReporter? statusReporter) {
 			(bool success, _, string message) = await bot.Actions.HandleTwoFactorAuthenticationConfirmations(true, Confirmation.EConfirmationType.Market).ConfigureAwait(false);
-			bot.ArchiLogger.LogGenericInfo(success ? message : String.Format(ArchiSteamFarm.Localization.Strings.WarningFailedWithError, message));
+
+			string report = success ? message : String.Format(ArchiSteamFarm.Localization.Strings.WarningFailedWithError, message);
+			if (statusReporter != null) {
+				statusReporter.Report(bot, report);
+			} else {
+				bot.ArchiLogger.LogGenericInfo(report);
+			}
 		}
 	}
 }

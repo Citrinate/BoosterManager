@@ -178,7 +178,7 @@
     <comment>{0} will be replaced by a number of boosters</comment>
   </data>
   <data name="BoosterUnqueuedByUser" xml:space="preserve">
-    <value>User wants to remove {0} from booster queue</value>
+    <value>User removed {0} from booster queue</value>
     <comment>{0} will be replaced by an appID</comment>
   </data>
   <data name="BoosterInfoUpdating" xml:space="preserve">

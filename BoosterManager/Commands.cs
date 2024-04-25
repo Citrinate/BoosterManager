@@ -347,11 +347,11 @@ namespace BoosterManager {
 							return await ResponseSendItemToBot(access, steamID, Utilities.GetArgsAsText(args, 1, ","), ItemIdentifier.SackIdentifier).ConfigureAwait(false);
 						
 						case "MARKET2FAOK" or "M2FAOK" when args.Length > 2:
-							return await Response2FAOK(access, steamID, args[1], Confirmation.EConfirmationType.Market, args[2]).ConfigureAwait(false);
+							return await Response2FAOK(access, steamID, args[1], Confirmation.EConfirmationType.Market, args[2], new StatusReporter(bot, steamID)).ConfigureAwait(false);
 						case "MARKET2FAOK" or "M2FAOK":
 							return await Response2FAOK(access, steamID, args[1], Confirmation.EConfirmationType.Market).ConfigureAwait(false);
 						case "MARKET2FAOKA" or "M2FAOKA":
-							return await Response2FAOK(access, steamID, "ASF", Confirmation.EConfirmationType.Market, args[1]).ConfigureAwait(false);
+							return await Response2FAOK(access, steamID, "ASF", Confirmation.EConfirmationType.Market, args[1], new StatusReporter(bot, steamID)).ConfigureAwait(false);
 						
 						case "TRADE2FAOK" or "T2FAOK":
 							return await Response2FAOK(access, steamID, args[1], Confirmation.EConfirmationType.Trade).ConfigureAwait(false);
@@ -491,7 +491,7 @@ namespace BoosterManager {
 			}
 		}
 
-		private static async Task<string?> Response2FAOK(Bot bot, EAccess access, Confirmation.EConfirmationType acceptedType, string? minutesAsText = null) {
+		private static async Task<string?> Response2FAOK(Bot bot, EAccess access, Confirmation.EConfirmationType acceptedType, string? minutesAsText = null, StatusReporter? statusReporter = null) {
 			if (access < EAccess.Master) {
 				return null;
 			}
@@ -517,7 +517,7 @@ namespace BoosterManager {
 						return FormatBotResponse(bot, Strings.RepetitionNotActive);
 					}
 				} else {
-					MarketHandler.StartMarketRepeatTimer(bot, minutes);
+					MarketHandler.StartMarketRepeatTimer(bot, minutes, statusReporter);
 					repeatMessage = String.Format(Strings.RepetitionNotice, minutes, String.Format("!m2faok {0} 0", bot.BotName));
 				}
 			}
@@ -532,7 +532,7 @@ namespace BoosterManager {
 			return FormatBotResponse(bot, twofacMessage);
 		}
 
-		private static async Task<string?> Response2FAOK(EAccess access, ulong steamID, string botNames, Confirmation.EConfirmationType acceptedType, string? minutesAsText = null) {
+		private static async Task<string?> Response2FAOK(EAccess access, ulong steamID, string botNames, Confirmation.EConfirmationType acceptedType, string? minutesAsText = null, StatusReporter? statusReporter = null) {
 			if (String.IsNullOrEmpty(botNames)) {
 				throw new ArgumentNullException(nameof(botNames));
 			}
@@ -543,7 +543,7 @@ namespace BoosterManager {
 				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
 			}
 
-			IList<string?> results = await Utilities.InParallel(bots.Select(bot => Response2FAOK(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), acceptedType, minutesAsText))).ConfigureAwait(false);
+			IList<string?> results = await Utilities.InParallel(bots.Select(bot => Response2FAOK(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), acceptedType, minutesAsText, statusReporter))).ConfigureAwait(false);
 
 			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
 
