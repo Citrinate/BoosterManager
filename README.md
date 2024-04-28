@@ -106,6 +106,7 @@ Command | Access | Description
 
 Command | Access | Description
 --- | --- | ---
+`buylimit <Bots>`|`Master`|Displays the value of the given bot's active buy orders, and how close the bot is to hitting the buy order limit.
 `findlistings <Bots> <ItemIdentifiers>`|`Master`|Displays the `ListingIDs` of any market listing belonging to the given bot and matching any of the [`ItemIdentifiers`](#itemidentifiers).
 `findandremovelistings <Bots> <ItemIdentifiers>`|`Master`|Removes any market listing belonging to the given bot and matching any of the [`ItemIdentifiers`](#itemidentifiers).
 `listings [Bots]`|`Master`|Displays the total value of all market listings owned by the given bot.
@@ -156,6 +157,7 @@ Most pluralized commands also have a non-pluralized alias; ex: `lootboosters` ha
 
 Command | Alias |
 --- | --- |
+`buylimit`|`bl`
 `findlistings`|`fl`
 `findandremovelistings`|`frl`
 `removelistings`|`rlistings`, `removel`
@@ -174,6 +176,7 @@ Command | Alias |
 `bstatus ASF`|`bsa`
 `bstatus^ ASF`|`bsa^`
 `boosters asf`|`ba`
+`buylimit ASF`|`bla`
 `cards asf`|`ca`
 `foils asf`|`fa`
 `gems ASF`|`ga`

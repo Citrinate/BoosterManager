@@ -240,6 +240,45 @@ namespace BoosterManager {
 			return filteredListings;
 		}
 
+		internal static async Task<string> GetBuyLimit(Bot bot) {
+			(Steam.MarketListingsResponse? marketListings, _) = await WebRequest.GetMarketListings(bot).ConfigureAwait(false);
+
+			if (marketListings == null || !marketListings.Success) {
+				return Strings.MarketListingsFetchFailed;
+			}
+
+			long buyOrderValue = 0;
+			foreach (JsonNode? listing in marketListings.BuyOrders) {
+				if (listing == null) {
+					bot.ArchiLogger.LogNullError(listing);
+						
+					return Strings.MarketListingsFetchFailed;
+				}
+
+				uint? quantity_remaining = listing["quantity_remaining"]?.ToString().ToJsonObject<uint>();
+				if (quantity_remaining == null) {
+					bot.ArchiLogger.LogNullError(quantity_remaining);
+						
+					return Strings.MarketListingsFetchFailed;
+				}
+
+				long? price = listing["price"]?.ToString().ToJsonObject<long>();
+				if (price == null) {
+					bot.ArchiLogger.LogNullError(price);
+						
+					return Strings.MarketListingsFetchFailed;
+				}
+
+				buyOrderValue += price.Value * quantity_remaining.Value;					
+			}
+
+			long buyOrderLimit = bot.WalletBalance * 10;
+			long remainingBuyOrderLimit = buyOrderValue > buyOrderLimit ? 0 : buyOrderLimit - buyOrderValue;
+			double buyOrderUsagePercent = buyOrderLimit == 0 ? (buyOrderValue == 0 ? 1 : Double.PositiveInfinity) : (double) buyOrderValue / buyOrderLimit;
+
+			return Commands.FormatBotResponse(bot, String.Format(Strings.MarketBuyLimit, String.Format("{0:#,#0.00}", buyOrderValue / 100.0), String.Format("{0:#,#0.00}", buyOrderLimit / 100.0), String.Format("{0:0%}", buyOrderUsagePercent), String.Format("{0:#,#0.00}", remainingBuyOrderLimit / 100.0), bot.WalletCurrency.ToString()));
+		}
+
 		internal static async Task<bool> StopMarketRepeatTimer(Bot bot) {
 			if (!MarketRepeatTimers.ContainsKey(bot)) {
 				return false;

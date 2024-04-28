@@ -55,6 +55,11 @@ namespace BoosterManager {
 						case "BSTOPALL" or "BOOSTERSTOPALL":
 							return ResponseBoosterStopTime(bot, access, "0");
 
+						case "BLA":
+							return await ResponseBuyLimit(access, steamID, "ASF").ConfigureAwait(false);
+						case "BUYLIMIT" or "BL":
+							return await ResponseBuyLimit(bot, access).ConfigureAwait(false);
+
 						case "CARDS" or "MCARDS" or "CARD" or "MCARD":
 							return await ResponseCountItems(bot, access, ItemIdentifier.CardIdentifier, marketable: true).ConfigureAwait(false);
 						case "UCARDS" or "UCARD":
@@ -244,6 +249,9 @@ namespace BoosterManager {
 							return ResponseBoosterStopTime(access, steamID, args[1], args[2]);
 						case "BSTOPTIME" or "BOOSTERSTOPTIME":
 							return ResponseBoosterStopTime(bot, access, args[1]);
+
+						case "BUYLIMIT" or "BL":
+							return await ResponseBuyLimit(access, steamID, args[1]).ConfigureAwait(false);
 
 						case "CARDS" or "MCARDS" or "CARD" or "MCARD":
 							return await ResponseCountItems(access, steamID, Utilities.GetArgsAsText(args, 1, ","), ItemIdentifier.CardIdentifier, marketable: true).ConfigureAwait(false);
@@ -783,6 +791,36 @@ namespace BoosterManager {
 			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
 
 			return responses.Count > 0 ? String.Join(Environment.NewLine, responses) : null;
+		}
+
+		private static async Task<string?> ResponseBuyLimit(Bot bot, EAccess access) {
+			if (access < EAccess.Master) {
+				return null;
+			}
+
+			if (!bot.IsConnectedAndLoggedOn) {
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
+			}
+
+			return await MarketHandler.GetBuyLimit(bot).ConfigureAwait(false);
+		}
+
+		private static async Task<string?> ResponseBuyLimit(EAccess access, ulong steamID, string botNames) {
+			if (String.IsNullOrEmpty(botNames)) {
+				throw new ArgumentNullException(nameof(botNames));
+			}
+
+			HashSet<Bot>? bots = Bot.GetBots(botNames);
+
+			if ((bots == null) || (bots.Count == 0)) {
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
+			}
+
+			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseBuyLimit(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)))).ConfigureAwait(false);
+
+			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
+
+			return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
 		}
 		
 		private static async Task<string?> ResponseCountItems(Bot bot, EAccess access, ItemIdentifier itemIdentifier, bool? marketable = null) {
