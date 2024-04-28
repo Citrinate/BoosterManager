@@ -10,7 +10,7 @@ using BoosterManager.Localization;
 
 namespace BoosterManager {
 	internal static class InventoryHandler {
-		private static ConcurrentDictionary<Bot, Timer> TradeRepeatTimers = new();
+		private static ConcurrentDictionary<Bot, (Timer, StatusReporter?)> TradeRepeatTimers = new();
 
 		internal static async Task<string> SendItemToMultipleBots(Bot sender, List<(Bot reciever, uint amount)> recievers, uint appID, ulong contextID, ItemIdentifier itemIdentifier) {
 			// Send Amounts A,B,... of Item X to Bots C,D,... from Bot E  
@@ -232,26 +232,32 @@ namespace BoosterManager {
 			return Commands.FormatBotResponse(bot, response);
 		}
 
-		internal static bool StopTradeRepeatTimer(Bot bot) {
+		internal static async Task<bool> StopTradeRepeatTimer(Bot bot) {
 			if (!TradeRepeatTimers.ContainsKey(bot)) {
 				return false;
 			}
 
-			if (TradeRepeatTimers.TryRemove(bot, out Timer? oldTimer)) {
+			if (TradeRepeatTimers.TryRemove(bot, out (Timer, StatusReporter?) item)) {
+				(Timer? oldTimer, StatusReporter? statusReporter) = item;
+
 				if (oldTimer != null) {
 					oldTimer.Change(Timeout.Infinite, Timeout.Infinite);
 					oldTimer.Dispose();
+				}
+
+				if (statusReporter != null) {
+					await statusReporter.Send().ConfigureAwait(false);
 				}
 			}
 
 			return true;
 		}
 
-		internal static void StartTradeRepeatTimer(Bot bot, uint minutes, StatusReporter? statusReporter) {
-			StopTradeRepeatTimer(bot);
+		internal static async Task StartTradeRepeatTimer(Bot bot, uint minutes, StatusReporter? statusReporter) {
+			await StopTradeRepeatTimer(bot).ConfigureAwait(false);
 
 			Timer newTimer = new Timer(async _ => await InventoryHandler.AcceptTradeConfirmations(bot, statusReporter).ConfigureAwait(false), null, Timeout.Infinite, Timeout.Infinite);
-			if (TradeRepeatTimers.TryAdd(bot, newTimer)) {
+			if (TradeRepeatTimers.TryAdd(bot, (newTimer, statusReporter))) {
 				newTimer.Change(TimeSpan.FromMinutes(minutes), TimeSpan.FromMinutes(minutes));
 			} else {
 				newTimer.Dispose();

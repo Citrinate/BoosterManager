@@ -10,7 +10,7 @@ using ArchiSteamFarm.Steam;
 using SteamKit2;
 
 // For when long-running commands are issued through Steam chat, this is used to send status reports from the bot the command was sent to, to the user who issued the command
-// If the commands weren't issued through Steam chat, just log the status reports
+// If the commands weren't issued through Steam chat, this just logs the status reports
 
 namespace BoosterManager {
 	internal sealed class StatusReporter {
@@ -25,15 +25,18 @@ namespace BoosterManager {
 		private ConcurrentDictionary<Bot, List<string>> Reports = new();
 		private ConcurrentDictionary<Bot, List<string>> PreviousReports = new();
 		private uint ReportDelaySeconds;
+		private uint ReportMaxDelaySeconds;
 		private const uint DefaultReportDelaySeconds = 5;
 
 		private Timer? ReportTimer;
+		private DateTime? ReportMaxDelayTime = null;
 		private SemaphoreSlim ReportSemaphore = new SemaphoreSlim(1, 1);
 
-		internal StatusReporter(Bot? sender = null, ulong recipientSteamID = 0, uint reportDelaySeconds = DefaultReportDelaySeconds) {
+		internal StatusReporter(Bot? sender = null, ulong recipientSteamID = 0, uint reportDelaySeconds = DefaultReportDelaySeconds, uint? reportMaxDelaySeconds = null) {
 			SenderSteamID = sender?.SteamID ?? 0;
 			RecipientSteamID = recipientSteamID;
 			ReportDelaySeconds = reportDelaySeconds;
+			ReportMaxDelaySeconds = reportMaxDelaySeconds ?? reportDelaySeconds * 5;
 		}
 
 		[JsonConstructor]
@@ -68,22 +71,38 @@ namespace BoosterManager {
 				Reports.AddOrUpdate(reportingBot, new List<string>() { report }, (_, reports) => { reports.Add(report); return reports; });
 
 				// I prefer to send all reports in as few messages as possible
-				// As long as reports continue to come in, we wait
+				// As long as reports continue to come in, we wait (until some limit, to avoid possibly waiting forever)
+
+				double delayCorrectionSeconds = 0;
+				if (ReportMaxDelayTime != null) {
+					if (ReportMaxDelayTime <= DateTime.Now) {
+						return;
+					}
+
+					delayCorrectionSeconds = Math.Max(0, (DateTime.Now.AddSeconds(ReportDelaySeconds) - ReportMaxDelayTime.Value).TotalSeconds);
+				}
+
 				if (ReportTimer != null) {
 					ReportTimer.Change(Timeout.Infinite, Timeout.Infinite);
 					ReportTimer.Dispose();
 				}
 
-				ReportTimer = new Timer(async _ => await Send().ConfigureAwait(false), null, TimeSpan.FromSeconds(ReportDelaySeconds), Timeout.InfiniteTimeSpan);
+				ReportTimer = new Timer(async _ => await Send().ConfigureAwait(false), null, TimeSpan.FromSeconds(ReportDelaySeconds - delayCorrectionSeconds), Timeout.InfiniteTimeSpan);
+
+				if (ReportMaxDelayTime == null) {
+					ReportMaxDelayTime = DateTime.Now.AddSeconds(ReportMaxDelaySeconds);
+				}
 			} finally {
 				ReportSemaphore.Release();
 			}
 		}
 
-		private async Task Send() {
+		internal async Task Send() {
 			await ReportSemaphore.WaitAsync().ConfigureAwait(false);
 			try {
 				ReportTimer?.Dispose();
+				ReportMaxDelayTime = null;
+
 				List<string> messages = new List<string>();
 				List<Bot> bots = Reports.Keys.OrderBy(bot => bot.BotName).ToList();
 
@@ -99,6 +118,10 @@ namespace BoosterManager {
 							PreviousReports.AddOrUpdate(bot, previousReports, (_, _) => previousReports);
 						}
 					}
+				}
+
+				if (messages.Count == 0) {
+					return;
 				}
 
 				Bot? sender = SenderSteamID == 0 ? null : Bot.BotsReadOnly?.Values.FirstOrDefault(bot => bot.SteamID == SenderSteamID);

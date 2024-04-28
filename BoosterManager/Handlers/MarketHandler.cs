@@ -12,7 +12,7 @@ using BoosterManager.Localization;
 
 namespace BoosterManager {
 	internal static class MarketHandler {
-		private static ConcurrentDictionary<Bot, Timer> MarketRepeatTimers = new();
+		private static ConcurrentDictionary<Bot, (Timer, StatusReporter?)> MarketRepeatTimers = new();
 
 		internal static async Task<string> GetListings(Bot bot) {
 			uint? listingsValue = await GetMarketListingsValue(bot).ConfigureAwait(false);
@@ -240,26 +240,32 @@ namespace BoosterManager {
 			return filteredListings;
 		}
 
-		internal static bool StopMarketRepeatTimer(Bot bot) {
+		internal static async Task<bool> StopMarketRepeatTimer(Bot bot) {
 			if (!MarketRepeatTimers.ContainsKey(bot)) {
 				return false;
 			}
 
-			if (MarketRepeatTimers.TryRemove(bot, out Timer? oldTimer)) {
+			if (MarketRepeatTimers.TryRemove(bot, out (Timer, StatusReporter?) item)) {
+				(Timer? oldTimer, StatusReporter? statusReporter) = item;
+				
 				if (oldTimer != null) {
 					oldTimer.Change(Timeout.Infinite, Timeout.Infinite);
 					oldTimer.Dispose();
+				}
+
+				if (statusReporter != null) {
+					await statusReporter.Send().ConfigureAwait(false);
 				}
 			}
 
 			return true;
 		}
 
-		internal static void StartMarketRepeatTimer(Bot bot, uint minutes, StatusReporter? statusReporter) {
-			StopMarketRepeatTimer(bot);
+		internal static async Task StartMarketRepeatTimer(Bot bot, uint minutes, StatusReporter? statusReporter) {
+			await StopMarketRepeatTimer(bot).ConfigureAwait(false);
 
 			Timer newTimer = new Timer(async _ => await MarketHandler.AcceptMarketConfirmations(bot, statusReporter).ConfigureAwait(false), null, Timeout.Infinite, Timeout.Infinite);
-			if (MarketRepeatTimers.TryAdd(bot, newTimer)) {
+			if (MarketRepeatTimers.TryAdd(bot, (newTimer, statusReporter))) {
 				newTimer.Change(TimeSpan.FromMinutes(minutes), TimeSpan.FromMinutes(minutes));
 			} else {
 				newTimer.Dispose();
