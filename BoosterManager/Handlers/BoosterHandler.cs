@@ -114,8 +114,8 @@ namespace BoosterManager {
 
 			// One-time booster status
 			if (limitedNumBoosters > 0) {
-				responses.Add(String.Format(Strings.QueueStatusOneTimeBoosters, Jobs.Limited().NumCrafted(), limitedNumBoosters, String.Format("~{0:t}", limitedLastBooster.GetAvailableAtTime()), String.Format("{0:N0}", limitedGemsNeeded)));
-				responses.Add(String.Format(Strings.QueueStatusOneTimeBoosterList, String.Join(", ", Jobs.Limited().UncraftedGameIDs())));
+				responses.Add(String.Format(Strings.QueueStatusLimitedBoosters, Jobs.Limited().NumCrafted(), limitedNumBoosters, String.Format("~{0:t}", limitedLastBooster.GetAvailableAtTime()), String.Format("{0:N0}", limitedGemsNeeded)));
+				responses.Add(String.Format(Strings.QueueStatusLimitedBoosterList, String.Join(", ", Jobs.Limited().UncraftedGameIDs())));
 			}
 
 			// Permanent booster status
