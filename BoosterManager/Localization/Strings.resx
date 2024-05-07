@@ -205,12 +205,12 @@
     <value>Need {0} more gems to finish all boosters!</value>
     <comment>{0} will be replaced by a number of gems</comment>
   </data>
-  <data name="QueueStatusOneTimeBoosters" xml:space="preserve">
-    <value>Crafted {0}/{1} one-time boosters. Crafting will finish at {2}, and will use {3} gems.</value>
+  <data name="QueueStatusLimitedBoosters" xml:space="preserve">
+    <value>Crafted {0}/{1} boosters. Crafting will finish at {2}, and will use {3} gems.</value>
     <comment>{0} will be replaced by a number of boosters, {1} will be replaced by a number of boosters, {2} will be replaced by a time, {3} will be replaced by a number of gems</comment>
   </data>
-  <data name="QueueStatusOneTimeBoosterList" xml:space="preserve">
-    <value>One-time boosters waiting to be crafted: {0}</value>
+  <data name="QueueStatusLimitedBoosterList" xml:space="preserve">
+    <value>Boosters waiting to be crafted: {0}</value>
     <comment>{0} will be replaced by a list of appIDs</comment>
   </data>
   <data name="QueueStatusPermanentBoosters" xml:space="preserve">

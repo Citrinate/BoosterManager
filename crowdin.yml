@@ -1,0 +1,3 @@
+files:
+  - source: /BoosterManager/Localization/Strings.resx
+    translation: /BoosterManager/Localization/Strings.%locale%.resx

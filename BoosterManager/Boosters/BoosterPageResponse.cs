@@ -12,6 +12,8 @@ namespace BoosterManager {
 		internal readonly uint GooAmount;
 		internal readonly uint TradableGooAmount;
 		internal readonly uint UntradableGooAmount;
+		private readonly static Regex GooAmounts = new Regex("(?<=parseFloat\\( \")[0-9]+", RegexOptions.CultureInvariant);
+		private readonly static Regex Info = new Regex("\\[\\{\"[\\s\\S]*\"}]", RegexOptions.CultureInvariant);
 
 		internal BoosterPageResponse(Bot bot, IDocument? boosterPage) {
 			Bot = bot;
@@ -22,8 +24,8 @@ namespace BoosterManager {
 				throw new Exception();
 			}
 
-			MatchCollection gooAmounts = Regex.Matches(boosterPage.Source.Text, "(?<=parseFloat\\( \")[0-9]+");
-			Match info = Regex.Match(boosterPage.Source.Text, "\\[\\{\"[\\s\\S]*\"}]");
+			MatchCollection gooAmounts = GooAmounts.Matches(boosterPage.Source.Text);
+			Match info = Info.Match(boosterPage.Source.Text);
 
 			if (!info.Success || (gooAmounts.Count != 3)) {
 				Bot.ArchiLogger.LogGenericError(string.Format(ArchiSteamFarm.Localization.Strings.ErrorParsingObject, boosterPage));
