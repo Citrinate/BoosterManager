@@ -17,6 +17,7 @@ namespace BoosterManager {
 		private uint UntradableGooAmount = 0;
 		internal uint AvailableGems => BoosterHandler.AllowCraftUntradableBoosters ? GooAmount : TradableGooAmount;
 		internal event Action<Dictionary<uint, Steam.BoosterInfo>>? OnBoosterInfosUpdated;
+		internal event Action<Booster, BoosterDequeueReason>? OnBoosterRemoved;
 		private const int MinDelayBetweenBoosters = 5; // Minimum delay, in seconds, between booster crafts
 		private const float BoosterInfosUpdateBackOffMultiplierDefault = 1.0F;
 		private const float BoosterInfosUpdateBackOffMultiplierStep = 0.5F;
@@ -117,7 +118,7 @@ namespace BoosterManager {
 				try {
 					if (!boosterInfos.TryGetValue(gameID, out Steam.BoosterInfo? boosterInfo)) {
 						// Bot cannot craft this booster
-						Bot.ArchiLogger.LogGenericError(String.Format(Strings.BoosterUncraftable, gameID));
+						Bot.ArchiLogger.LogGenericDebug(String.Format(Strings.BoosterUncraftable, gameID));
 						boosterJob.OnBoosterUnqueueable(gameID, BoosterDequeueReason.Uncraftable);
 
 						return;
@@ -125,7 +126,7 @@ namespace BoosterManager {
 
 					if (!BoosterHandler.AllowCraftUnmarketableBoosters && !MarketableApps.AppIDs.Contains(gameID)) {
 						// This booster is unmarketable and the plugin was configured to not craft marketable boosters
-						Bot.ArchiLogger.LogGenericError(String.Format(Strings.BoosterUnmarketable, gameID));
+						Bot.ArchiLogger.LogGenericDebug(String.Format(Strings.BoosterUnmarketable, gameID));
 						boosterJob.OnBoosterUnqueueable(gameID, BoosterDequeueReason.Unmarketable);
 
 						return;
@@ -133,7 +134,7 @@ namespace BoosterManager {
 
 					Booster booster = new Booster(Bot, gameID, boosterInfo, boosterJob);
 					if (Boosters.Add(booster)) {
-						Bot.ArchiLogger.LogGenericInfo(String.Format(Strings.BoosterQueued, gameID));
+						Bot.ArchiLogger.LogGenericDebug(String.Format(Strings.BoosterQueued, gameID));
 						boosterJob.OnBoosterQueued(booster);
 					} else {
 						boosterJob.OnBoosterUnqueueable(gameID, BoosterDequeueReason.AlreadyQueued);
@@ -146,15 +147,20 @@ namespace BoosterManager {
 			OnBoosterInfosUpdated += handler;
 		}
 
-		internal bool RemoveBooster(uint gameID, BoosterDequeueReason reason) {
+		internal bool RemoveBooster(uint gameID, BoosterDequeueReason reason, BoosterJob? boosterJob = null) {
 			Booster? booster = Boosters.FirstOrDefault(booster => booster.GameID == gameID);
 			if (booster == null) {
 				return false;
 			}
 
+			if (boosterJob != null && booster.BoosterJob != boosterJob) {
+				return false;
+			}
+
 			if (Boosters.Remove(booster)) {
-				Bot.ArchiLogger.LogGenericInfo(String.Format(Strings.BoosterUnqueued, booster.GameID));
+				Bot.ArchiLogger.LogGenericDebug(String.Format(Strings.BoosterUnqueued, booster.GameID));
 				booster.BoosterJob.OnBoosterDequeued(booster, reason);
+				OnBoosterRemoved?.Invoke(booster, reason);
 
 				return true;
 			}
@@ -195,7 +201,7 @@ namespace BoosterManager {
 			UntradableGooAmount = boosterPage.UntradableGooAmount;
 			OnBoosterInfosUpdated?.Invoke(boosterPage.BoosterInfos.ToDictionary(boosterInfo => boosterInfo.AppID));
 
-			Bot.ArchiLogger.LogGenericInfo(Strings.BoosterInfoUpdateSuccess);
+			Bot.ArchiLogger.LogGenericDebug(Strings.BoosterInfoUpdateSuccess);
 
 			return true;
 		}
@@ -225,7 +231,7 @@ namespace BoosterManager {
 			// For any error we get, we'll need to refresh the booster page and see if the AvailableAtTime has changed to determine if we really failed to craft
 			void handler(Dictionary<uint, Steam.BoosterInfo> boosterInfos) {
 				try {
-					Bot.ArchiLogger.LogGenericInfo(String.Format(Strings.BoosterCreationError, booster.GameID));
+					Bot.ArchiLogger.LogGenericDebug(String.Format(Strings.BoosterCreationError, booster.GameID));
 
 					if (!boosterInfos.TryGetValue(booster.GameID, out Steam.BoosterInfo? newBoosterInfo)) {
 						// No longer have access to craft boosters for this game (game removed from account, or sometimes due to very rare Steam bugs)
@@ -248,7 +254,7 @@ namespace BoosterManager {
 						return;
 					}
 
-					Bot.ArchiLogger.LogGenericInfo(String.Format(Strings.BoosterCreationRetry, booster.GameID));
+					Bot.ArchiLogger.LogGenericDebug(String.Format(Strings.BoosterCreationRetry, booster.GameID));
 				} finally {
 					OnBoosterInfosUpdated -= handler;
 				}

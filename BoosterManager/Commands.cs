@@ -588,7 +588,7 @@ namespace BoosterManager {
 				return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsEmpty, nameof(gameIDs)));
 			}
 
-			HashSet<uint> gamesToBooster = new HashSet<uint>();
+			List<uint> gamesToBooster = new List<uint>();
 
 			foreach (string game in gameIDs) {
 				if (!uint.TryParse(game, out uint gameID) || (gameID == 0)) {

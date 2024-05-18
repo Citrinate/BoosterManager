@@ -5,7 +5,7 @@ namespace BoosterManager {
 	internal sealed class BoosterJobState {
 		[JsonInclude]
 		[JsonRequired]
-		internal HashSet<uint> GameIDs { get; init; }
+		internal List<uint> GameIDs { get; init; }
 
 		[JsonInclude]
 		[JsonRequired]
@@ -17,7 +17,7 @@ namespace BoosterManager {
 		}
 
 		[JsonConstructor]
-		internal BoosterJobState(HashSet<uint> gameIDs, StatusReporter statusReporter) {
+		internal BoosterJobState(List<uint> gameIDs, StatusReporter statusReporter) {
 			GameIDs = gameIDs;
 			StatusReporter = statusReporter;
 		}

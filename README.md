@@ -24,9 +24,9 @@ Parameters in square brackets are sometimes `[Optional]`, parameters in angle br
 
 Command | Access | Description
 --- | --- | ---
-`booster [Bots] <AppIDs>`|`Master`|Adds `AppIDs` to the given bot's booster queue.  `AppIDs` added to the booster queue this way will be crafted one time as soon as they become available.
+`booster [Bots] <AppIDs>`|`Master`|Adds `AppIDs` to the given bot's booster queue.
 `bstatus [Bots]`|`Master`|Prints the status of the given bot's booster queue.
-`bstatus^ [Bots]`|`Master`|Prints the condensed status of the given bot's booster queue.
+`bstatus^ [Bots]`|`Master`|Prints a shortened status of the given bot's booster queue.
 `bstop [Bots] <AppIDs>`|`Master`|Removes `AppIDs` from the given bot's booster queue.
 `bstoptime [Bots] <Hours>`|`Master`|Removes everything from the given bot's booster queue that will take more than the given `Hours` to craft.
 `bstopall [Bots]`|`Master`|Removes everything from the given bot's booster queue.
@@ -34,7 +34,7 @@ Command | Access | Description
 `bdrops [Bots]`|`Master`|Prints the number of booster eligible games for the given bots
 
 > [!NOTE]
-> Any `booster` commands that haven't completed when ASF is closed will automatically resume the next time ASF is started.
+> Any `booster` commands that haven't completed when ASF is closed will automatically resume the next time ASF is ran.
 
 ### Inventory Commands
 

@@ -186,7 +186,7 @@
     <comment/>
   </data>
   <data name="QueueStatusShort" xml:space="preserve">
-    <value>{0} boosters from {1} gems will be crafted by {2}</value>
+    <value>{0} boosters from {1} gems will be crafted by ~{2}</value>
     <comment>{0} will be replaced by a number of boosters, {1} will be replaced by a number of gems, {2} will be replaced by a time</comment>
   </data>
   <data name="QueueEmpty" xml:space="preserve">
@@ -206,7 +206,7 @@
     <comment>{0} will be replaced by a number of gems</comment>
   </data>
   <data name="QueueStatusLimitedBoosters" xml:space="preserve">
-    <value>Crafted {0}/{1} boosters. Crafting will finish at {2}, and will use {3} gems.</value>
+    <value>Crafted {0}/{1} boosters. Crafting will finish at ~{2}, and will use {3} gems.</value>
     <comment>{0} will be replaced by a number of boosters, {1} will be replaced by a number of boosters, {2} will be replaced by a time, {3} will be replaced by a number of gems</comment>
   </data>
   <data name="QueueStatusLimitedBoosterList" xml:space="preserve">
@@ -528,5 +528,17 @@
   <data name="MarketBuyLimit" xml:space="preserve">
     <value>Used: {0} {4} out of {1} {4} ({2}); Remaining: {3} {4}</value>
     <comment>{0} will be replaced by a number, {1} will be replaced by a number, {2} will be replaced by a percentage, {3} will be replaced by a number, {4} will be replaced by a currency name</comment>
+  </data>
+  <data name="QueueStatusShortWithDate" xml:space="preserve">
+    <value>{0} boosters from {1} gems will be crafted by {2} at ~{3}</value>
+    <comment>{0} will be replaced by a number of boosters, {1} will be replaced by a number of gems, {2} will be replaced by a date, {3} will be replaced by a time</comment>
+  </data>
+  <data name="QueueStatusNextBoosterCraftingLaterWithDate" xml:space="preserve">
+    <value>Next booster will be crafted on {0} at {1}: {2} ({3})</value>
+    <comment>{2} will be replaced by a date, {1} will be replaced by a time, {2} will be replaced by a game name, {3} will be replaced by an appID</comment>
+  </data>
+  <data name="QueueStatusLimitedBoostersWithDate" xml:space="preserve">
+    <value>Crafted {0}/{1} boosters. Crafting will finish on {2} at ~{3}, and will use {4} gems.</value>
+    <comment>{0} will be replaced by a number of boosters, {1} will be replaced by a number of boosters, {2} will be replaced by a date, {3} will be replaced by a time, {4} will be replaced by a number of gems</comment>
   </data>
 </root>

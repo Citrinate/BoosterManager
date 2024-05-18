@@ -9,7 +9,6 @@ using ArchiSteamFarm.Plugins.Interfaces;
 using ArchiSteamFarm.Steam.Exchange;
 using System.Text.Json;
 using ArchiSteamFarm.Helpers.Json;
-using ArchiSteamFarm.Collections;
 
 namespace BoosterManager {
 	[Export(typeof(IPlugin))]
@@ -102,7 +101,7 @@ namespace BoosterManager {
 						if (gameIDs == null) {
 							bot.ArchiLogger.LogNullError(gameIDs);
 						} else {
-							BoosterHandler.BoosterHandlers[bot.BotName].ScheduleBoosters(BoosterJobType.Permanent, gameIDs, StatusReporter.StatusLogger());
+							BoosterHandler.BoosterHandlers[bot.BotName].ScheduleBoosters(BoosterJobType.Permanent, gameIDs.ToList(), StatusReporter.StatusLogger());
 						}
 						break;
 					}

@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using ArchiSteamFarm.Collections;
 using ArchiSteamFarm.Steam;
 using BoosterManager.Localization;
+using SteamKit2.GC.Dota.Internal;
 
 // Represents the state of a !booster command
 
@@ -11,7 +11,7 @@ namespace BoosterManager {
 	internal sealed class BoosterJob {
 		private Bot Bot;
 		internal BoosterJobType JobType;
-		private HashSet<uint> GameIDsToBooster;
+		private List<uint> GameIDsToBooster;
 		internal StatusReporter StatusReporter;
 		private bool CreatedFromSaveState = false;
 		private readonly object LockObject = new();
@@ -19,39 +19,98 @@ namespace BoosterManager {
 		private BoosterHandler BoosterHandler => BoosterHandler.BoosterHandlers[Bot.BotName];
 		private BoosterQueue BoosterQueue => BoosterHandler.BoosterQueue;
 
-		private readonly ConcurrentHashSet<Booster> Boosters = new(new BoosterComparer());
-		internal bool IsFinished {
+		private readonly List<Booster> Boosters = new();
+		internal bool IsFinished => UncraftedGameIDs.Count == 0;
+
+		internal List<uint> GameIDs {
 			get {
 				lock(LockObject) {
-					return GameIDsToBooster.Count == 0 && UncraftedGameIDs.Count == 0;
+					return GameIDsToBooster.Concat(Boosters.Select(booster => booster.GameID)).ToList<uint>();
 				}
 			}
 		}
 
-		internal HashSet<uint> GameIDs {
+		internal List<uint> UncraftedGameIDs {
 			get {
 				lock(LockObject) {
-					return GameIDsToBooster.Union(Boosters.Select(booster => booster.GameID)).ToHashSet<uint>();
+					return GameIDsToBooster.Concat(Boosters.Where(booster => !booster.WasCrafted).Select(booster => booster.GameID)).ToList<uint>();
 				}
 			}
 		}
 
-		internal HashSet<uint> UncraftedGameIDs {
+		internal (List<Booster>, List<uint>) QueuedAndUnqueuedBoosters {
 			get {
 				lock(LockObject) {
-					return GameIDsToBooster.Union(Boosters.Where(booster => !booster.WasCrafted).Select(booster => booster.GameID)).ToHashSet<uint>();
+					return (Boosters.Where(booster => !booster.WasCrafted).ToList(), GameIDsToBooster);
 				}
 			}
 		}
 
-		internal int NumBoosters => Boosters.Count;
+		internal int NumBoosters {
+			get {
+				lock(LockObject) {
+					return Boosters.Count + GameIDsToBooster.Count;
+				}
+			}
+		}
+
 		internal int NumCrafted => Boosters.Where(booster => booster.WasCrafted).Count();
-		internal int NumUncrafted => Boosters.Where(booster => !booster.WasCrafted).Count();
-		internal int GemsNeeded => Boosters.Where(booster => !booster.WasCrafted).Sum(booster => (int) booster.Info.Price);
-		internal Booster? NextBooster => Boosters.Where(booster => !booster.WasCrafted).OrderBy(booster => booster.GetAvailableAtTime()).FirstOrDefault();
-		internal Booster? LastBooster => Boosters.Where(booster => !booster.WasCrafted).OrderBy(booster => booster.GetAvailableAtTime()).LastOrDefault();
+		internal int NumUncrafted {
+			get {
+				lock(LockObject) {
+					return GameIDsToBooster.Count + Boosters.Where(booster => !booster.WasCrafted).Count();
+				}
+			}
+		}
 
-		internal BoosterJob(Bot bot, BoosterJobType jobType, HashSet<uint> gameIDsToBooster, StatusReporter statusReporter) {
+		internal int GemsNeeded {
+			get {
+				lock(LockObject) {
+					int unqueuedGemsNeeded = 0;
+					if (GameIDsToBooster.Count > 0) {
+						foreach (var group in GameIDsToBooster.GroupBy(x => x)) {
+							uint gameID = group.Key;
+							int count = group.Count();
+							Booster? booster = BoosterHandler.Jobs.GetBooster(gameID);
+							if (booster == null) {
+								continue;
+							}
+
+							unqueuedGemsNeeded += (int) booster.Info.Price * count;
+						}
+					}
+
+					return unqueuedGemsNeeded + Boosters.Where(booster => !booster.WasCrafted).Sum(booster => (int) booster.Info.Price);
+				}
+			}
+		}
+		internal Booster? NextBooster => Boosters.Where(booster => !booster.WasCrafted).OrderBy(booster => booster.GetAvailableAtTime()).FirstOrDefault(); // Not necessary to consider unqueued boosters here, based on how this property is currently used
+		internal DateTime? LastBoosterCraftTime {
+			get {
+				lock(LockObject) {
+					DateTime? lastUnqueuedBoosterCraftTime = null;
+					if (GameIDsToBooster.Count > 0) {
+						foreach (uint gameID in GameIDsToBooster.Distinct()) {
+							int count = BoosterHandler.Jobs.GetNumUnqueuedBoosters(gameID); // Number of unqueable boosters across all jobs for this gameID
+							Booster? booster = BoosterHandler.Jobs.GetBooster(gameID); // The one queued booster across all jobs for this gameID
+							if (booster == null) {
+								continue;
+							}
+
+							// I don't consider here if multiple jobs have the same unqueued booster, which will get to queue first
+							// It's not relevant to consider this for how this property is currently being used
+							lastUnqueuedBoosterCraftTime = BoosterJobUtilities.MaxDateTime(lastUnqueuedBoosterCraftTime, booster.GetAvailableAtTime().AddDays(count));
+						}
+					}
+
+					Booster? lastQueuedBooster = Boosters.Where(booster => !booster.WasCrafted).OrderBy(booster => booster.GetAvailableAtTime()).LastOrDefault();
+
+					return BoosterJobUtilities.MaxDateTime(lastQueuedBooster?.GetAvailableAtTime(), lastUnqueuedBoosterCraftTime);
+				}
+			}
+		}
+
+		internal BoosterJob(Bot bot, BoosterJobType jobType, List<uint> gameIDsToBooster, StatusReporter statusReporter) {
 			Bot = bot;
 			JobType = jobType;
 			StatusReporter = statusReporter;
@@ -69,11 +128,11 @@ namespace BoosterManager {
 				BoosterQueue.AddBooster(gameID, this);
 			}
 
-			// void OnBoosterInfosUpdated() {
 			void OnBoosterInfosUpdated(Dictionary<uint, Steam.BoosterInfo> boosterInfos) {
 				try {
-					Booster? lastBooster = LastBooster;
-					if (lastBooster == null) {
+					// At this point, all boosters that can be added to the queue have been
+					DateTime? lastBoosterCraftTime = LastBoosterCraftTime;
+					if (lastBoosterCraftTime == null) {
 						StatusReporter.Report(Bot, Strings.BoostersUncraftable, log: CreatedFromSaveState);
 						Finish();
 
@@ -81,19 +140,52 @@ namespace BoosterManager {
 					}
 
 					BoosterHandler.UpdateBoosterJobs();
-					StatusReporter.Report(Bot, String.Format(Strings.QueueStatusShort, NumBoosters, String.Format("{0:N0}", GemsNeeded), String.Format("~{0:t}", lastBooster.GetAvailableAtTime())), log: CreatedFromSaveState);
+
+					if (lastBoosterCraftTime.Value.Date == DateTime.Today) {
+						StatusReporter.Report(Bot, String.Format(Strings.QueueStatusShort, NumBoosters, String.Format("{0:N0}", GemsNeeded), String.Format("{0:t}", lastBoosterCraftTime)), log: CreatedFromSaveState);
+					} else {
+						StatusReporter.Report(Bot, String.Format(Strings.QueueStatusShortWithDate, NumBoosters, String.Format("{0:N0}", GemsNeeded), String.Format("{0:d}", lastBoosterCraftTime), String.Format("{0:t}", lastBoosterCraftTime)), log: CreatedFromSaveState);
+					}
 				} finally {
 					BoosterQueue.OnBoosterInfosUpdated -= OnBoosterInfosUpdated;
 				}
 			}
 
 			BoosterQueue.OnBoosterInfosUpdated += OnBoosterInfosUpdated;
+			BoosterQueue.OnBoosterRemoved += OnBoosterRemoved;
 			BoosterQueue.Start();
+		}
+
+		internal void Finish() {
+			BoosterQueue.OnBoosterRemoved -= OnBoosterRemoved;
+
+			if (NumBoosters > 0) {
+				StatusReporter.Report(Bot, String.Format(Strings.BoosterCreationFinished, NumBoosters));
+			}
+		}
+
+		internal void OnBoosterRemoved(Booster booster, BoosterDequeueReason reason) {
+			if (!(reason == BoosterDequeueReason.Crafted 
+				// Currently we don't prevent user from queing a booster that already exists in the permanent booster job
+				// This can prevent the permanent job from queueing boosters if the user sometimes removes a booster, this addresses that
+				|| (JobType == BoosterJobType.Permanent && reason == BoosterDequeueReason.RemovedByUser)
+			)) {
+				return;
+			}
+
+			lock(LockObject) {
+				if (GameIDsToBooster.Contains(booster.GameID)) {
+					// Try to queue boosters that couldn't initially be queued
+					BoosterQueue.AddBooster(booster.GameID, this);
+					BoosterQueue.Start();
+				}
+			}
 		}
 
 		internal void OnBoosterQueued(Booster booster) {
 			lock(LockObject) {
 				if (!GameIDsToBooster.Remove(booster.GameID)) {
+					// We queued a booster that no longer exists in our list of boosters to craft, must have been removed by the user
 					BoosterQueue.RemoveBooster(booster.GameID, BoosterDequeueReason.RemovedByUser);
 				}
 
@@ -102,21 +194,32 @@ namespace BoosterManager {
 		}
 
 		internal void OnBoosterUnqueueable (uint gameID, BoosterDequeueReason reason) {
-			GameIDsToBooster.Remove(gameID);
-			CheckIfFinished();
+			if (reason == BoosterDequeueReason.AlreadyQueued) {
+				// We'll try again later
+				return;
+			}
+
+			// All other reasons are some variation of "we can't craft this booster"
+			lock(LockObject) {
+				GameIDsToBooster.RemoveAll(x => x == gameID);
+			}
+			BoosterHandler.UpdateBoosterJobs();
 		}
 
 		internal void OnBoosterDequeued(Booster booster, BoosterDequeueReason reason) {
 			if (reason == BoosterDequeueReason.UnexpectedlyUncraftable) {
 				// No longer have access to craft boosters for this game (game removed from account, or sometimes due to very rare Steam bugs)
-				Boosters.Remove(booster);
+				lock(LockObject) {
+					Boosters.Remove(booster);
+				}
 				StatusReporter.Report(Bot, String.Format(Strings.BoosterUnexpectedlyUncraftable, booster.Info.Name, booster.GameID));
-				CheckIfFinished();
+				BoosterHandler.UpdateBoosterJobs();
 
 				return;
 			}
 
 			if (JobType == BoosterJobType.Permanent) {
+				// Requeue this booster as permanent boosters are meant to be crafted endlessly
 				lock(LockObject) {
 					Boosters.Remove(booster);
 					GameIDsToBooster.Add(booster.GameID);
@@ -130,10 +233,12 @@ namespace BoosterManager {
 
 			if (JobType == BoosterJobType.Limited) {
 				if (reason == BoosterDequeueReason.RemovedByUser) {
-					Boosters.Remove(booster);
+					lock(LockObject) {
+						Boosters.Remove(booster);
+					}
 				}
 
-				CheckIfFinished();
+				BoosterHandler.UpdateBoosterJobs();
 
 				return;
 			}
@@ -143,64 +248,92 @@ namespace BoosterManager {
 			StatusReporter.Report(Bot, String.Format(Strings.NotEnoughGems, String.Format("{0:N0}", booster.Info.Price - BoosterQueue.AvailableGems)), suppressDuplicateMessages: true);
 		}
 
-		internal HashSet<uint> RemoveBoosters(HashSet<uint>? gameIDs = null, int? timeLimitHours = null) {
+		internal int RemoveBoosters(uint gameID) {
 			if (JobType == BoosterJobType.Permanent) {
-				return new HashSet<uint>();
+				return 0;
 			}
 
-			if (gameIDs == null) {
-				gameIDs = new HashSet<uint>();
-			}
+			int numRemoved = 0;
 
-			if (timeLimitHours != null) {
-				// Remove everything that will take more than a certain number of hours to craft
-				if (timeLimitHours == 0) {
-					// Cancel everything, as everything takes more than 0 hours to craft
-					gameIDs.UnionWith(GameIDs);
-				} else {
-					DateTime timeLimit = DateTime.Now.AddHours(timeLimitHours.Value);
-					HashSet<uint> timeFilteredGameIDs = Boosters.Where(booster => !booster.WasCrafted && booster.GetAvailableAtTime() > timeLimit).Select(booster => booster.GameID).ToHashSet<uint>();
-					gameIDs.UnionWith(timeFilteredGameIDs);
+			lock(LockObject) {
+				numRemoved += GameIDsToBooster.RemoveAll(x => x == gameID);
+
+				if (BoosterQueue.RemoveBooster(gameID, BoosterDequeueReason.RemovedByUser, this)) {
+					numRemoved++;
 				}
 			}
 
-			HashSet<uint> removedGameIDs = new HashSet<uint>();
-			foreach (uint gameID in gameIDs) {
-				bool removed = false;
-
-				if (GameIDsToBooster.Remove(gameID)) {
-					removed = true;
-				}
-
-				if (BoosterQueue.RemoveBooster(gameID, BoosterDequeueReason.RemovedByUser)) {
-					removed = true;
-				}
-				
-				if (removed) {
+			if (numRemoved > 0) {
+				for (int i = 0; i < numRemoved; i++) {
 					Bot.ArchiLogger.LogGenericInfo(String.Format(Strings.BoosterUnqueuedByUser, gameID));
-					removedGameIDs.Add(gameID);
 				}
 			}
 
-			return removedGameIDs;
+			return numRemoved;
 		}
 
-		private void CheckIfFinished() {
-			if (!IsFinished) {
-				BoosterHandler.UpdateBoosterJobs();
-
-				return;
+		internal bool RemoveUnqueuedBooster(uint gameID) {
+			if (JobType == BoosterJobType.Permanent) {
+				return false;
 			}
 
-			Finish();
-		}
+			bool removed = false;
 
-		private void Finish() {
-			if (NumBoosters > 0) {
-				StatusReporter.Report(Bot, String.Format(Strings.BoosterCreationFinished, NumBoosters));
+			lock(LockObject) {
+				removed = GameIDsToBooster.Remove(gameID);
 			}
 
 			BoosterHandler.UpdateBoosterJobs();
+
+			return removed;
+		}
+
+		internal bool RemoveQueuedBooster(uint gameID) {
+			if (JobType == BoosterJobType.Permanent) {
+				return false;
+			}
+
+			lock(LockObject) {
+				return BoosterQueue.RemoveBooster(gameID, BoosterDequeueReason.RemovedByUser, this);
+			}
+		}
+
+		internal List<uint> RemoveAllBoosters() {
+			if (JobType == BoosterJobType.Permanent) {
+				return new List<uint>();
+			}
+
+			List<uint> gameIDsRemoved = new List<uint>();
+
+			lock(LockObject) {
+				foreach (uint gameID in GameIDsToBooster.ToList()) {
+					if (GameIDsToBooster.Remove(gameID)) {
+						gameIDsRemoved.Add(gameID);
+					}
+				}
+
+				foreach (Booster booster in Boosters.ToList()) {
+					if (BoosterQueue.RemoveBooster(booster.GameID, BoosterDequeueReason.RemovedByUser)) {
+						gameIDsRemoved.Add(booster.GameID);
+					}
+				}
+			}
+
+			BoosterHandler.UpdateBoosterJobs();
+
+			return gameIDsRemoved;
+		}
+
+		internal Booster? GetBooster(uint gameID) {
+			lock(LockObject) {
+				return Boosters.FirstOrDefault(booster => !booster.WasCrafted && booster.GameID == gameID);
+			}
+		}
+
+		internal int GetNumUnqueuedBoosters(uint gameID) {
+			lock(LockObject) {
+				return GameIDsToBooster.Where(x => x == gameID).Count();
+			}
 		}
 	}
 }
