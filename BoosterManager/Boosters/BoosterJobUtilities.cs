@@ -116,6 +116,10 @@ namespace BoosterManager {
 			return jobs.ToList().Sum(job => job.GetNumUnqueuedBoosters(gameID));
 		}
 
+		internal static int GetNumBoosters(this IEnumerable<BoosterJob> jobs, uint gameID) {
+			return jobs.ToList().Sum(job => job.GetNumBoosters(gameID));
+		}
+
 		internal static DateTime? MaxDateTime(DateTime? a, DateTime? b) {
 			if (a == null || b == null) {
 				if (a == null && b == null) {

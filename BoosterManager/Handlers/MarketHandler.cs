@@ -279,7 +279,7 @@ namespace BoosterManager {
 			return Commands.FormatBotResponse(bot, String.Format(Strings.MarketBuyLimit, String.Format("{0:#,#0.00}", buyOrderValue / 100.0), String.Format("{0:#,#0.00}", buyOrderLimit / 100.0), String.Format("{0:0%}", buyOrderUsagePercent), String.Format("{0:#,#0.00}", remainingBuyOrderLimit / 100.0), bot.WalletCurrency.ToString()));
 		}
 
-		internal static async Task<bool> StopMarketRepeatTimer(Bot bot) {
+		internal static bool StopMarketRepeatTimer(Bot bot) {
 			if (!MarketRepeatTimers.ContainsKey(bot)) {
 				return false;
 			}
@@ -293,15 +293,15 @@ namespace BoosterManager {
 				}
 
 				if (statusReporter != null) {
-					await statusReporter.Send().ConfigureAwait(false);
+					statusReporter.ForceSend();
 				}
 			}
 
 			return true;
 		}
 
-		internal static async Task StartMarketRepeatTimer(Bot bot, uint minutes, StatusReporter? statusReporter) {
-			await StopMarketRepeatTimer(bot).ConfigureAwait(false);
+		internal static void StartMarketRepeatTimer(Bot bot, uint minutes, StatusReporter? statusReporter) {
+			StopMarketRepeatTimer(bot);
 
 			Timer newTimer = new Timer(async _ => await MarketHandler.AcceptMarketConfirmations(bot, statusReporter).ConfigureAwait(false), null, Timeout.Infinite, Timeout.Infinite);
 			if (MarketRepeatTimers.TryAdd(bot, (newTimer, statusReporter))) {

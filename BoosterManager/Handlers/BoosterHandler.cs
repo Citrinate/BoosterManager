@@ -46,6 +46,86 @@ namespace BoosterManager {
 			return Commands.FormatBotResponse(Bot, String.Format(Strings.BoosterCreationStarting, gameIDs.Count));
 		}
 
+		internal static void SmartScheduleBoosters(BoosterJobType jobType, HashSet<Bot> bots, Dictionary<Bot, Dictionary<uint, Steam.BoosterInfo>> botBoosterInfos, List<(uint gameID, uint amount)> gameIDsWithAmounts, StatusReporter craftingReporter) {
+			Dictionary<Bot, List<uint>> gameIDsToQueue = new();
+			DateTime now = DateTime.Now;
+
+			// Figure out the most efficient way to queue the given boosters and amounts using the given bots
+			foreach (var gameIDWithAmount in gameIDsWithAmounts) {
+				uint gameID = gameIDWithAmount.gameID;
+				uint amount = gameIDWithAmount.amount;
+
+				// Get all the data we need to determine which is the best bot for this booster
+				Dictionary<Bot, (int numQueued, DateTime nextCraftTime)> botStates = new();
+				foreach(Bot bot in bots) {
+					if (!botBoosterInfos.TryGetValue(bot, out Dictionary<uint, Steam.BoosterInfo>? boosterInfos)) {
+						continue;
+					}
+
+					if (!boosterInfos.TryGetValue(gameID, out Steam.BoosterInfo? boosterInfo)) {
+						continue;
+					}
+
+					botStates.Add(bot, (BoosterHandlers[bot.BotName].Jobs.GetNumBoosters(gameID), boosterInfo.AvailableAtTime ?? now));
+				}
+
+				if (botStates.Count == 0) {
+					continue;
+				}
+
+				for (int i = 0; i < amount; i++) {
+					// Find the best bot for this booster
+					Bot? bestBot = null;
+					foreach(var botState in botStates) {
+						if (bestBot == null) {
+							bestBot = botState.Key;
+
+							continue;
+						}
+
+						Bot bot = botState.Key;
+						int numQueued = botState.Value.numQueued;
+						DateTime nextCraftTime = botState.Value.nextCraftTime;
+
+						if (botStates[bestBot].nextCraftTime.AddDays(botStates[bestBot].numQueued) > nextCraftTime.AddDays(numQueued)) {
+							bestBot = bot;
+						}
+					}
+
+					if (bestBot == null) {
+						break;
+					}
+
+					// Assign the booster to the best bot
+					gameIDsToQueue.TryAdd(bestBot, new List<uint>());
+					gameIDsToQueue[bestBot].Add(gameID);
+					var bestBotState = botStates[bestBot];
+					botStates[bestBot] = (bestBotState.numQueued + 1, bestBotState.nextCraftTime);
+				}
+			}
+
+			if (gameIDsToQueue.Count == 0) {
+				foreach(Bot bot in bots) {
+					craftingReporter.Report(bot, Strings.BoostersUncraftable);
+				}
+
+				craftingReporter.ForceSend();
+
+				return;
+			}
+
+			// Queue the boosters
+			foreach (var item in gameIDsToQueue) {
+				Bot bot = item.Key;
+				List<uint> gameIDs = item.Value;
+
+				BoosterHandlers[bot.BotName].Jobs.Add(new BoosterJob(bot, jobType, gameIDs, craftingReporter));
+				craftingReporter.Report(bot, String.Format(Strings.BoosterCreationStarting, gameIDs.Count));
+			}
+
+			craftingReporter.ForceSend();
+		}
+
 		internal string UnscheduleBoosters(HashSet<uint>? gameIDs = null, int? timeLimitHours = null) {
 			List<uint> removedGameIDs = new List<uint>();
 
@@ -212,6 +292,24 @@ namespace BoosterManager {
 			// Refresh gems count
 			BoosterQueue.OnBoosterInfosUpdated += BoosterQueue.ForceUpdateBoosterInfos;
 			BoosterQueue.Start();
+		}
+
+		internal static void GetBoosterInfos(HashSet<Bot> bots, Action<Dictionary<Bot, Dictionary<uint, Steam.BoosterInfo>>> callback) {
+			Dictionary<Bot, Dictionary<uint, Steam.BoosterInfo>> boosterInfos = new();
+
+			foreach (Bot bot in bots) {
+				void OnBoosterInfosUpdated(Dictionary<uint, Steam.BoosterInfo> boosterInfo) {
+					BoosterHandlers[bot.BotName].BoosterQueue.OnBoosterInfosUpdated -= OnBoosterInfosUpdated;
+					boosterInfos.Add(bot, boosterInfo);
+
+					if (boosterInfos.Count == bots.Count) {
+						callback(boosterInfos);
+					}
+				}
+
+				BoosterHandlers[bot.BotName].BoosterQueue.OnBoosterInfosUpdated += OnBoosterInfosUpdated;
+				BoosterHandlers[bot.BotName].BoosterQueue.Start();
+			}
 		}
 	}
 }

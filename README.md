@@ -25,6 +25,7 @@ Parameters in square brackets are sometimes `[Optional]`, parameters in angle br
 Command | Access | Description
 --- | --- | ---
 `booster [Bots] <AppIDs>`|`Master`|Adds `AppIDs` to the given bot's booster queue.
+`booster^ [Bots] <AppIDs> <Amounts>`|`Master`|Adds `AppIDs` to some or all of given bot's booster queues, selected in a way to minimize the time it takes to craft a total `Amount` of boosters.  The `Amounts` specified may be a single amount for all `AppIDs`, or multiple amounts for each `AppID` respectively.
 `bstatus [Bots]`|`Master`|Prints the status of the given bot's booster queue.
 `bstatus^ [Bots]`|`Master`|Prints a shortened status of the given bot's booster queue.
 `bstop [Bots] <AppIDs>`|`Master`|Removes `AppIDs` from the given bot's booster queue.

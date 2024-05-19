@@ -218,6 +218,11 @@ namespace BoosterManager {
 						case "BOOSTER":
 							return ResponseBooster(bot, access, steamID, new StatusReporter(bot, steamID), args[1]);
 
+						case "BOOSTER^" when args.Length > 3:
+							return ResponseSmartBooster(access, steamID, new StatusReporter(bot, steamID), args[1], args[2], Utilities.GetArgsAsText(args, 3, ","));
+						case "BOOSTER^" when args.Length > 2:
+							return ResponseSmartBooster(access, steamID, new StatusReporter(bot, steamID), bot.BotName, args[1], args[2]);
+
 						case "BOOSTERS" or "MBOOSTERS":
 							return await ResponseCountItems(access, steamID, Utilities.GetArgsAsText(args, 1, ","), ItemIdentifier.BoosterIdentifier, marketable: true).ConfigureAwait(false);
 						case "UBOOSTERS":
@@ -523,8 +528,8 @@ namespace BoosterManager {
 				}
 
 				if (minutes == 0) {
-					if ((acceptedType == Confirmation.EConfirmationType.Market && await MarketHandler.StopMarketRepeatTimer(bot).ConfigureAwait(false))
-						|| (acceptedType == Confirmation.EConfirmationType.Trade && await InventoryHandler.StopTradeRepeatTimer(bot).ConfigureAwait(false))
+					if ((acceptedType == Confirmation.EConfirmationType.Market && MarketHandler.StopMarketRepeatTimer(bot))
+						|| (acceptedType == Confirmation.EConfirmationType.Trade && InventoryHandler.StopTradeRepeatTimer(bot))
 					) {
 						return FormatBotResponse(bot, Strings.RepetitionCancelled);
 					} else {
@@ -532,10 +537,10 @@ namespace BoosterManager {
 					}
 				} else {
 					if (acceptedType == Confirmation.EConfirmationType.Market) {
-						await MarketHandler.StartMarketRepeatTimer(bot, minutes, statusReporter).ConfigureAwait(false);
+						MarketHandler.StartMarketRepeatTimer(bot, minutes, statusReporter);
 						repeatMessage = String.Format(Strings.RepetitionNotice, minutes, String.Format("!m2faok {0} 0", bot.BotName));
 					} else if (acceptedType == Confirmation.EConfirmationType.Trade) {
-						await InventoryHandler.StartTradeRepeatTimer(bot, minutes, statusReporter).ConfigureAwait(false);
+						InventoryHandler.StartTradeRepeatTimer(bot, minutes, statusReporter);
 						repeatMessage = String.Format(Strings.RepetitionNotice, minutes, String.Format("!t2faok {0} 0", bot.BotName));
 					}
 				}
@@ -1684,6 +1689,77 @@ namespace BoosterManager {
 			}
 
 			return await ResponseSendMultipleItemsToMultipleBots(sender, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(sender, access, steamID), recieverBotNames, amountsAsText, appIDAsText, contextIDAsText, itemIdentifiersAsText, marketable).ConfigureAwait(false);
+		}
+
+		private static string? ResponseSmartBooster(EAccess access, ulong steamID, StatusReporter craftingReporter, string botNames, string gameIDsAsText, string amountsAsText) {
+			if (String.IsNullOrEmpty(botNames)) {
+				throw new ArgumentNullException(nameof(botNames));
+			}
+			
+			if (String.IsNullOrEmpty(gameIDsAsText)) {
+				throw new ArgumentNullException(nameof(gameIDsAsText));
+			}
+			
+			if (String.IsNullOrEmpty(amountsAsText)) {
+				throw new ArgumentNullException(nameof(amountsAsText));
+			}
+
+			HashSet<Bot>? bots = Bot.GetBots(botNames);
+
+			if ((bots == null) || (bots.Count == 0)) {
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
+			}
+
+			if(bots.Any(bot => ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID) < EAccess.Master)) {
+				return null;
+			}
+
+			// Parse GameIDs
+			string[] gameIDs = gameIDsAsText.Split(",", StringSplitOptions.RemoveEmptyEntries);
+
+			if (gameIDs.Length == 0) {
+				return FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsEmpty, nameof(gameIDs)));
+			}
+
+			List<uint> gamesToBooster = new List<uint>();
+
+			foreach (string game in gameIDs) {
+				if (!uint.TryParse(game, out uint gameID) || (gameID == 0)) {
+					return FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.ErrorParsingObject, nameof(gameID)));
+				}
+
+				gamesToBooster.Add(gameID);
+			}
+
+			// Parse Amounts
+			string[] amountStrings = amountsAsText.Split(",", StringSplitOptions.RemoveEmptyEntries);
+
+			if (amountStrings.Length == 0) {
+				return FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsEmpty, nameof(amountStrings)));
+			}
+
+			if (amountStrings.Length == 1 && gamesToBooster.Count > 1) {
+				amountStrings = Enumerable.Repeat(amountStrings[0], gamesToBooster.Count).ToArray();
+			}
+			
+			if (amountStrings.Length != gamesToBooster.Count) {
+				return FormatStaticResponse(String.Format(Strings.AppIDCountDoesNotEqualAmountCount, gamesToBooster.Count, amountStrings.Length));
+			}
+
+			List<uint> amounts = new List<uint>();
+			foreach (string amount in amountStrings) {
+				if (!uint.TryParse(amount, out uint amountNum)) {
+					return FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.ErrorParsingObject, nameof(amountNum)));
+				}
+
+				amounts.Add(amountNum);
+			}
+
+			// Try to craft boosters
+			List<(uint, uint)> gameIDsWithAmounts = Zip(gamesToBooster, amounts).ToList();
+			BoosterHandler.GetBoosterInfos(bots, (boosterInfos) => BoosterHandler.SmartScheduleBoosters(BoosterJobType.Limited, bots, boosterInfos, gameIDsWithAmounts, craftingReporter));
+
+			return FormatStaticResponse(String.Format(Strings.BoosterAssignmentStarting, gameIDsWithAmounts.Sum(gameIDWithAmount => amounts.Sum(amount => amount))));
 		}
 
 		private static string? ResponseTradeCheck(Bot bot, EAccess access) {

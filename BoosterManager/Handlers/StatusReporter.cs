@@ -97,7 +97,11 @@ namespace BoosterManager {
 			}
 		}
 
-		internal async Task Send() {
+		internal void ForceSend() {
+			Utilities.InBackground(async() => await Send().ConfigureAwait(false));
+		}
+
+		private async Task Send() {
 			await ReportSemaphore.WaitAsync().ConfigureAwait(false);
 			try {
 				ReportTimer?.Dispose();

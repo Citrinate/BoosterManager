@@ -541,4 +541,12 @@
     <value>Crafted {0}/{1} boosters. Crafting will finish on {2} at ~{3}, and will use {4} gems.</value>
     <comment>{0} will be replaced by a number of boosters, {1} will be replaced by a number of boosters, {2} will be replaced by a date, {3} will be replaced by a time, {4} will be replaced by a number of gems</comment>
   </data>
+  <data name="AppIDCountDoesNotEqualAmountCount" xml:space="preserve">
+    <value>Number of appIDs ({0}) does not match number of item amounts ({1})</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
+  </data>
+  <data name="BoosterAssignmentStarting" xml:space="preserve">
+    <value>Attempting to assign {0} boosters...</value>
+    <comment>{0} will be replaced by a number of boosters</comment>
+  </data>
 </root>

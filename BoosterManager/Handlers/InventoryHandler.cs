@@ -232,7 +232,7 @@ namespace BoosterManager {
 			return Commands.FormatBotResponse(bot, response);
 		}
 
-		internal static async Task<bool> StopTradeRepeatTimer(Bot bot) {
+		internal static bool StopTradeRepeatTimer(Bot bot) {
 			if (!TradeRepeatTimers.ContainsKey(bot)) {
 				return false;
 			}
@@ -246,15 +246,15 @@ namespace BoosterManager {
 				}
 
 				if (statusReporter != null) {
-					await statusReporter.Send().ConfigureAwait(false);
+					statusReporter.ForceSend();
 				}
 			}
 
 			return true;
 		}
 
-		internal static async Task StartTradeRepeatTimer(Bot bot, uint minutes, StatusReporter? statusReporter) {
-			await StopTradeRepeatTimer(bot).ConfigureAwait(false);
+		internal static void StartTradeRepeatTimer(Bot bot, uint minutes, StatusReporter? statusReporter) {
+			StopTradeRepeatTimer(bot);
 
 			Timer newTimer = new Timer(async _ => await InventoryHandler.AcceptTradeConfirmations(bot, statusReporter).ConfigureAwait(false), null, Timeout.Infinite, Timeout.Infinite);
 			if (TradeRepeatTimers.TryAdd(bot, (newTimer, statusReporter))) {

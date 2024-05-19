@@ -335,5 +335,11 @@ namespace BoosterManager {
 				return GameIDsToBooster.Where(x => x == gameID).Count();
 			}
 		}
+
+		internal int GetNumBoosters(uint gameID) {
+			lock(LockObject) {
+				return (GetBooster(gameID) == null ? 0 : 1) + GetNumUnqueuedBoosters(gameID);
+			}
+		}
 	}
 }
