@@ -47,10 +47,13 @@ namespace BoosterManager {
 		}
 
 		internal static void SmartScheduleBoosters(BoosterJobType jobType, HashSet<Bot> bots, Dictionary<Bot, Dictionary<uint, Steam.BoosterInfo>> botBoosterInfos, List<(uint gameID, uint amount)> gameIDsWithAmounts, StatusReporter craftingReporter) {
+			// Group together any duplicate gameIDs
+			gameIDsWithAmounts = gameIDsWithAmounts.GroupBy(item => item.gameID).Select(group => (group.First().gameID, (uint) group.Sum(item => item.amount))).ToList();
+
+			// Figure out the most efficient way to queue the given boosters and amounts using the given bots
 			Dictionary<Bot, List<uint>> gameIDsToQueue = new();
 			DateTime now = DateTime.Now;
 
-			// Figure out the most efficient way to queue the given boosters and amounts using the given bots
 			foreach (var gameIDWithAmount in gameIDsWithAmounts) {
 				uint gameID = gameIDWithAmount.gameID;
 				uint amount = gameIDWithAmount.amount;

@@ -1759,7 +1759,7 @@ namespace BoosterManager {
 			List<(uint, uint)> gameIDsWithAmounts = Zip(gamesToBooster, amounts).ToList();
 			BoosterHandler.GetBoosterInfos(bots, (boosterInfos) => BoosterHandler.SmartScheduleBoosters(BoosterJobType.Limited, bots, boosterInfos, gameIDsWithAmounts, craftingReporter));
 
-			return FormatStaticResponse(String.Format(Strings.BoosterAssignmentStarting, gameIDsWithAmounts.Sum(gameIDWithAmount => amounts.Sum(amount => amount))));
+			return FormatStaticResponse(String.Format(Strings.BoosterAssignmentStarting, gameIDsWithAmounts.Sum(gameIDWithAmount => gameIDWithAmount.Item2)));
 		}
 
 		private static string? ResponseTradeCheck(Bot bot, EAccess access) {
