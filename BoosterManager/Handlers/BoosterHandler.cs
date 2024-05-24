@@ -7,9 +7,9 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace BoosterManager {
-	internal sealed class BoosterHandler : IDisposable {
+	internal sealed class BoosterHandler {
 		private readonly Bot Bot;
-		internal readonly BoosterDatabase BoosterDatabase;
+		internal BoosterDatabase BoosterDatabase { get; private set; }
 		internal readonly BoosterQueue BoosterQueue;
 		internal static ConcurrentDictionary<string, BoosterHandler> BoosterHandlers = new();
 		internal ConcurrentList<BoosterJob> Jobs = new();
@@ -24,14 +24,14 @@ namespace BoosterManager {
 			BoosterQueue = new BoosterQueue(Bot);
 		}
 
-		public void Dispose() {
-			BoosterQueue.Dispose();
-		}
-
 		internal static void AddHandler(Bot bot, BoosterDatabase boosterDatabase) {
 			if (BoosterHandlers.ContainsKey(bot.BotName)) {
-				BoosterHandlers[bot.BotName].Dispose();
-				BoosterHandlers.TryRemove(bot.BotName, out BoosterHandler? _);
+				// Bot's config was reloaded, cancel and then restore jobs
+				BoosterHandlers[bot.BotName].CancelBoosterJobs();
+				BoosterHandlers[bot.BotName].BoosterDatabase = boosterDatabase;
+				BoosterHandlers[bot.BotName].RestoreBoosterJobs();
+
+				return;
 			}
 
 			BoosterHandler handler = new BoosterHandler(bot, boosterDatabase);
@@ -72,6 +72,7 @@ namespace BoosterManager {
 					botStates.Add(bot, (BoosterHandlers[bot.BotName].Jobs.GetNumBoosters(gameID), boosterInfo.AvailableAtTime ?? now));
 				}
 
+				// No bots can craft boosters for this gameID
 				if (botStates.Count == 0) {
 					continue;
 				}
@@ -199,6 +200,14 @@ namespace BoosterManager {
 			BoosterDatabase.UpdateBoosterJobs(Jobs.Limited().Unfinised().SaveState());
 		}
 
+		private void CancelBoosterJobs() {
+			foreach (BoosterJob job in Jobs) {
+				job.Stop();
+			}
+
+			Jobs.Clear();
+		}
+
 		private void RestoreBoosterJobs() {
 			foreach (BoosterJobState jobState in BoosterDatabase.BoosterJobs) {
 				Jobs.Add(new BoosterJob(Bot, BoosterJobType.Limited, jobState));
@@ -298,20 +307,22 @@ namespace BoosterManager {
 		}
 
 		internal static void GetBoosterInfos(HashSet<Bot> bots, Action<Dictionary<Bot, Dictionary<uint, Steam.BoosterInfo>>> callback) {
-			Dictionary<Bot, Dictionary<uint, Steam.BoosterInfo>> boosterInfos = new();
+			ConcurrentDictionary<Bot, Dictionary<uint, Steam.BoosterInfo>> boosterInfos = new();
 
 			foreach (Bot bot in bots) {
+				BoosterQueue boosterQueue = BoosterHandlers[bot.BotName].BoosterQueue;
+
 				void OnBoosterInfosUpdated(Dictionary<uint, Steam.BoosterInfo> boosterInfo) {
-					BoosterHandlers[bot.BotName].BoosterQueue.OnBoosterInfosUpdated -= OnBoosterInfosUpdated;
-					boosterInfos.Add(bot, boosterInfo);
+					boosterQueue.OnBoosterInfosUpdated -= OnBoosterInfosUpdated;
+					boosterInfos.TryAdd(bot, boosterInfo);
 
 					if (boosterInfos.Count == bots.Count) {
-						callback(boosterInfos);
+						callback(boosterInfos.ToDictionary());
 					}
 				}
 
-				BoosterHandlers[bot.BotName].BoosterQueue.OnBoosterInfosUpdated += OnBoosterInfosUpdated;
-				BoosterHandlers[bot.BotName].BoosterQueue.Start();
+				boosterQueue.OnBoosterInfosUpdated += OnBoosterInfosUpdated;
+				boosterQueue.Start();
 			}
 		}
 	}

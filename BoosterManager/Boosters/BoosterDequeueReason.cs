@@ -5,6 +5,7 @@ namespace BoosterManager {
 		RemovedByUser,
 		Uncraftable,
 		UnexpectedlyUncraftable,
-		Unmarketable
+		Unmarketable,
+		JobStopped
 	}
 }

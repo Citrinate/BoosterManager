@@ -4,11 +4,12 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Collections;
+using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Steam;
 using BoosterManager.Localization;
 
 namespace BoosterManager {
-	internal sealed class BoosterQueue : IDisposable {
+	internal sealed class BoosterQueue {
 		private readonly Bot Bot;
 		private readonly Timer Timer;
 		private readonly ConcurrentHashSet<Booster> Boosters = new(new BoosterComparer());
@@ -24,6 +25,7 @@ namespace BoosterManager {
 		private const int BoosterInfosUpdateBackOffMinMinutes = 1;
 		private const int BoosterInfosUpdateBackOffMaxMinutes = 15;
 		private float BoosterInfosUpdateBackOffMultiplier = BoosterInfosUpdateBackOffMultiplierDefault;
+		private SemaphoreSlim RunSemaphore = new SemaphoreSlim(1, 1);
 
 		internal BoosterQueue(Bot bot) {
 			Bot = bot;
@@ -35,82 +37,83 @@ namespace BoosterManager {
 			);
 		}
 
-		public void Dispose() {
-			Timer.Dispose();
-		}
-
 		internal void Start() {
-			UpdateTimer(DateTime.Now);
+			Utilities.InBackground(async() => await Run().ConfigureAwait(false));
 		}
 
 		private async Task Run() {
-			if (!Bot.IsConnectedAndLoggedOn) {
-				UpdateTimer(DateTime.Now.AddSeconds(1));
+			await RunSemaphore.WaitAsync().ConfigureAwait(false);
+			try {
+				if (!Bot.IsConnectedAndLoggedOn) {
+					UpdateTimer(DateTime.Now.AddSeconds(1));
 
-				return;
-			}
+					return;
+				}
 
-			// Reload the booster creator page
-			if (!await UpdateBoosterInfos().ConfigureAwait(false)) {
-				// Reload failed, try again later
-				Bot.ArchiLogger.LogGenericError(Strings.BoosterInfoUpdateFailed);
-				UpdateTimer(DateTime.Now.AddMinutes(Math.Min(BoosterInfosUpdateBackOffMaxMinutes, BoosterInfosUpdateBackOffMinMinutes * BoosterInfosUpdateBackOffMultiplier)));
-				BoosterInfosUpdateBackOffMultiplier += BoosterInfosUpdateBackOffMultiplierStep;
-
-				return;
-			}
-
-			Booster? booster = GetNextCraftableBooster();
-			if (booster == null) {
-				// Booster queue is empty
-				BoosterInfosUpdateBackOffMultiplier = BoosterInfosUpdateBackOffMultiplierDefault;
-
-				return;
-			}
-			
-			if (DateTime.Now >= booster.GetAvailableAtTime()) {
-				// Attempt to craft the next booster in the queue
-				if (booster.Info.Price > AvailableGems) {
-					// Not enough gems, wait until we get more gems
-					booster.BoosterJob.OnInsufficientGems(booster);
-					OnBoosterInfosUpdated += ForceUpdateBoosterInfos;
+				// Reload the booster creator page
+				if (!await UpdateBoosterInfos().ConfigureAwait(false)) {
+					// Reload failed, try again later
+					Bot.ArchiLogger.LogGenericError(Strings.BoosterInfoUpdateFailed);
 					UpdateTimer(DateTime.Now.AddMinutes(Math.Min(BoosterInfosUpdateBackOffMaxMinutes, BoosterInfosUpdateBackOffMinMinutes * BoosterInfosUpdateBackOffMultiplier)));
 					BoosterInfosUpdateBackOffMultiplier += BoosterInfosUpdateBackOffMultiplierStep;
 
 					return;
 				}
 
+				Booster? booster = GetNextCraftableBooster();
+				if (booster == null) {
+					// Booster queue is empty
+					BoosterInfosUpdateBackOffMultiplier = BoosterInfosUpdateBackOffMultiplierDefault;
+
+					return;
+				}
+				
+				if (DateTime.Now >= booster.GetAvailableAtTime()) {
+					// Attempt to craft the next booster in the queue
+					if (booster.Info.Price > AvailableGems) {
+						// Not enough gems, wait until we get more gems
+						booster.BoosterJob.OnInsufficientGems(booster);
+						OnBoosterInfosUpdated += ForceUpdateBoosterInfos;
+						UpdateTimer(DateTime.Now.AddMinutes(Math.Min(BoosterInfosUpdateBackOffMaxMinutes, BoosterInfosUpdateBackOffMinMinutes * BoosterInfosUpdateBackOffMultiplier)));
+						BoosterInfosUpdateBackOffMultiplier += BoosterInfosUpdateBackOffMultiplierStep;
+
+						return;
+					}
+
+					BoosterInfosUpdateBackOffMultiplier = BoosterInfosUpdateBackOffMultiplierDefault;
+
+					if (!await CraftBooster(booster).ConfigureAwait(false)) {
+						// Craft failed, decide whether or not to remove this booster from the queue
+						Bot.ArchiLogger.LogGenericError(String.Format(Strings.BoosterCreationFailed, booster.GameID));
+						VerifyCraftBoosterError(booster);
+						UpdateTimer(DateTime.Now);
+
+						return;
+					}
+
+					Bot.ArchiLogger.LogGenericInfo(String.Format(Strings.BoosterCreationSuccess, booster.GameID));
+					RemoveBooster(booster.GameID, BoosterDequeueReason.Crafted);
+
+					booster = GetNextCraftableBooster();
+					if (booster == null) {
+						// Queue has no more boosters in it
+						return;
+					}
+				}
+
 				BoosterInfosUpdateBackOffMultiplier = BoosterInfosUpdateBackOffMultiplierDefault;
 
-				if (!await CraftBooster(booster).ConfigureAwait(false)) {
-					// Craft failed, decide whether or not to remove this booster from the queue
-					Bot.ArchiLogger.LogGenericError(String.Format(Strings.BoosterCreationFailed, booster.GameID));
-					VerifyCraftBoosterError(booster);
-					UpdateTimer(DateTime.Now);
-
-					return;
+				// Wait until the next booster is ready to craft
+				DateTime nextBoosterTime = booster.GetAvailableAtTime();
+				if (nextBoosterTime < DateTime.Now.AddSeconds(MinDelayBetweenBoosters)) {
+					nextBoosterTime = DateTime.Now.AddSeconds(MinDelayBetweenBoosters);
 				}
 
-				Bot.ArchiLogger.LogGenericInfo(String.Format(Strings.BoosterCreationSuccess, booster.GameID));
-				RemoveBooster(booster.GameID, BoosterDequeueReason.Crafted);
-
-				booster = GetNextCraftableBooster();
-				if (booster == null) {
-					// Queue has no more boosters in it
-					return;
-				}
+				UpdateTimer(nextBoosterTime);
+				Bot.ArchiLogger.LogGenericInfo(String.Format(Strings.NextBoosterCraft, String.Format("{0:T}", nextBoosterTime)));
+			} finally {
+				RunSemaphore.Release();
 			}
-
-			BoosterInfosUpdateBackOffMultiplier = BoosterInfosUpdateBackOffMultiplierDefault;
-
-			// Wait until the next booster is ready to craft
-			DateTime nextBoosterTime = booster.GetAvailableAtTime();
-			if (nextBoosterTime < DateTime.Now.AddSeconds(MinDelayBetweenBoosters)) {
-				nextBoosterTime = DateTime.Now.AddSeconds(MinDelayBetweenBoosters);
-			}
-
-			UpdateTimer(nextBoosterTime);
-			Bot.ArchiLogger.LogGenericInfo(String.Format(Strings.NextBoosterCraft, String.Format("{0:T}", nextBoosterTime)));
 		}
 
 		internal void AddBooster(uint gameID, BoosterJob boosterJob) {

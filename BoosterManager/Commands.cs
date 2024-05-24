@@ -550,7 +550,7 @@ namespace BoosterManager {
 			string twofacMessage = success ? message : String.Format(ArchiSteamFarm.Localization.Strings.WarningFailedWithError, message);
 
 			if (repeatMessage != null) {
-				return FormatBotResponse(bot, String.Format("{0}. {1}", twofacMessage, repeatMessage));
+				return FormatBotResponse(bot, String.Format("{0} {1}", twofacMessage, repeatMessage));
 			}
 
 			return FormatBotResponse(bot, twofacMessage);
@@ -1710,8 +1710,13 @@ namespace BoosterManager {
 				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
 			}
 
-			if(bots.Any(bot => ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID) < EAccess.Master)) {
+			if (bots.Any(bot => ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID) < EAccess.Master)) {
 				return null;
+			}
+
+			Bot? offlineBot = bots.FirstOrDefault(bot => !bot.IsConnectedAndLoggedOn);
+			if (offlineBot != null) {
+				return FormatBotResponse(offlineBot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
 			}
 
 			// Parse GameIDs
