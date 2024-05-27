@@ -549,4 +549,8 @@
     <value>Attempting to assign {0} boosters...</value>
     <comment>{0} will be replaced by a number of boosters</comment>
   </data>
+  <data name="QueueStatusShortWithoutTime" xml:space="preserve">
+    <value>{0} boosters from {1} gems will be crafted</value>
+    <comment>{0} will be replaced by a number of boosters, {1} will be replaced by a number of gems</comment>
+  </data>
 </root>

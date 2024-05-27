@@ -153,7 +153,7 @@ namespace BoosterManager {
 			}
 		}
 
-		private void Update() {
+		private void SaveJobState() {
 			if (JobStopped) {
 				return;
 			}
@@ -165,17 +165,19 @@ namespace BoosterManager {
 		void OnBoosterInfosUpdated(Dictionary<uint, Steam.BoosterInfo> boosterInfos) {
 			try {
 				// At this point, all boosters that can be added to the queue have been
-				DateTime? lastBoosterCraftTime = LastBoosterCraftTime;
-				if (lastBoosterCraftTime == null) {
+				if (NumBoosters == 0) {
 					StatusReporter.Report(Bot, Strings.BoostersUncraftable, log: CreatedFromSaveState);
 					Finish();
 
 					return;
 				}
 
-				Update();
+				SaveJobState();
 
-				if (lastBoosterCraftTime.Value.Date == DateTime.Today) {
+				DateTime? lastBoosterCraftTime = LastBoosterCraftTime;
+				if (lastBoosterCraftTime == null) {
+					StatusReporter.Report(Bot, String.Format(Strings.QueueStatusShortWithoutTime, NumBoosters, String.Format("{0:N0}", GemsNeeded)), log: CreatedFromSaveState);
+				} else if (lastBoosterCraftTime.Value.Date == DateTime.Today) {
 					StatusReporter.Report(Bot, String.Format(Strings.QueueStatusShort, NumBoosters, String.Format("{0:N0}", GemsNeeded), String.Format("{0:t}", lastBoosterCraftTime)), log: CreatedFromSaveState);
 				} else {
 					StatusReporter.Report(Bot, String.Format(Strings.QueueStatusShortWithDate, NumBoosters, String.Format("{0:N0}", GemsNeeded), String.Format("{0:d}", lastBoosterCraftTime), String.Format("{0:t}", lastBoosterCraftTime)), log: CreatedFromSaveState);
@@ -225,7 +227,7 @@ namespace BoosterManager {
 				GameIDsToBooster.RemoveAll(x => x == gameID);
 			}
 			
-			Update();
+			SaveJobState();
 		}
 
 		internal void OnBoosterDequeued(Booster booster, BoosterDequeueReason reason) {
@@ -235,7 +237,7 @@ namespace BoosterManager {
 					Boosters.Remove(booster);
 				}
 				StatusReporter.Report(Bot, String.Format(Strings.BoosterUnexpectedlyUncraftable, booster.Info.Name, booster.GameID));
-				Update();
+				SaveJobState();
 
 				return;
 			}
@@ -249,6 +251,7 @@ namespace BoosterManager {
 
 				Bot.ArchiLogger.LogGenericInfo(String.Format(Strings.PermanentBoosterRequeued, booster.GameID));
 				BoosterQueue.AddBooster(booster.GameID, this);
+				BoosterQueue.Start();
 
 				return;
 			}
@@ -260,7 +263,7 @@ namespace BoosterManager {
 					}
 				}
 
-				Update();
+				SaveJobState();
 
 				return;
 			}
@@ -305,7 +308,7 @@ namespace BoosterManager {
 				removed = GameIDsToBooster.Remove(gameID);
 			}
 
-			Update();
+			SaveJobState();
 
 			return removed;
 		}
@@ -341,7 +344,7 @@ namespace BoosterManager {
 				}
 			}
 
-			Update();
+			SaveJobState();
 
 			return gameIDsRemoved;
 		}
