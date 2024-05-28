@@ -553,4 +553,12 @@
     <value>{0} boosters from {1} gems will be crafted</value>
     <comment>{0} will be replaced by a number of boosters, {1} will be replaced by a number of gems</comment>
   </data>
+  <data name="BoostersUnmarketable" xml:space="preserve">
+    <value>The requested boosters are unmarketable and won't be crafted</value>
+    <comment/>
+  </data>
+  <data name="BoostersUncraftableAndUnmarketable" xml:space="preserve">
+    <value>No boosters will be crafted. This bot either can't craft the requested boosters, or the requested boosters are unmarketable. The following boosters are unmarketable: {0}</value>
+    <comment>{0} will be replaced by a list of appIDs</comment>
+  </data>
 </root>

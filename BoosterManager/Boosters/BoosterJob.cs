@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using ArchiSteamFarm.Collections;
 using ArchiSteamFarm.Steam;
 using BoosterManager.Localization;
 
@@ -15,6 +16,8 @@ namespace BoosterManager {
 		private bool CreatedFromSaveState = false;
 		private readonly object LockObject = new();
 		private bool JobStopped = false;
+		private ConcurrentHashSet<uint> UncraftableGameIDs = new();
+		private ConcurrentHashSet<uint> UnmarketableGameIDs = new();
 		
 		private BoosterHandler BoosterHandler => BoosterHandler.BoosterHandlers[Bot.BotName];
 		private BoosterQueue BoosterQueue => BoosterHandler.BoosterQueue;
@@ -166,7 +169,16 @@ namespace BoosterManager {
 			try {
 				// At this point, all boosters that can be added to the queue have been
 				if (NumBoosters == 0) {
-					StatusReporter.Report(Bot, Strings.BoostersUncraftable, log: CreatedFromSaveState);
+					if (UnmarketableGameIDs.Count > 0) {
+						if (UncraftableGameIDs.Count > 0) {
+							StatusReporter.Report(Bot, String.Format(Strings.BoostersUncraftableAndUnmarketable, String.Join(", ", UnmarketableGameIDs)), log: CreatedFromSaveState);
+						} else {
+							StatusReporter.Report(Bot, Strings.BoostersUnmarketable, log: CreatedFromSaveState);
+						}
+					} else {
+						StatusReporter.Report(Bot, Strings.BoostersUncraftable, log: CreatedFromSaveState);
+					}
+
 					Finish();
 
 					return;
@@ -225,6 +237,12 @@ namespace BoosterManager {
 			// All other reasons are some variation of "we can't craft this booster"
 			lock(LockObject) {
 				GameIDsToBooster.RemoveAll(x => x == gameID);
+			}
+
+			if (reason == BoosterDequeueReason.Uncraftable) {
+				UncraftableGameIDs.Add(gameID);
+			} else if (reason == BoosterDequeueReason.Unmarketable) {
+				UnmarketableGameIDs.Add(gameID);
 			}
 			
 			SaveJobState();
