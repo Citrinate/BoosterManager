@@ -12,8 +12,12 @@ using BoosterManager.Localization;
 namespace BoosterManager {
 	internal static class MarketableApps {
 		internal static HashSet<uint> AppIDs = new();
+		private static HashSet<uint> MarketableOverrides = new();
+		private static HashSet<uint> UnmarketableOverrides = new();
 		
 		private static Uri Source = new("https://raw.githubusercontent.com/Citrinate/Steam-MarketableApps/main/data/marketable_apps.min.json");
+		private static Uri MarketableOverridesSource = new("https://raw.githubusercontent.com/Citrinate/Steam-MarketableApps/main/overrides/marketable_app_overrides.json");
+		private static Uri UnmarketableOverridesSource = new("https://raw.githubusercontent.com/Citrinate/Steam-MarketableApps/main/overrides/unmarketable_app_overrides.json");
 		private static TimeSpan UpdateFrequency = TimeSpan.FromMinutes(30);
 		private static TimeSpan SteamUpdateFrequency = TimeSpan.FromMinutes(5);
 
@@ -38,13 +42,20 @@ namespace BoosterManager {
 				// Can't account for these errors whithin this plugin (in a timely fashion), and so we use a cached version of ISteamApps/GetApplist which is known to be good
 
 				ObjectResponse<HashSet<uint>>? response = await ASF.WebBrowser.UrlGetToJsonObject<HashSet<uint>>(Source).ConfigureAwait(false);
-				if (response == null || response.Content == null) {
+				ObjectResponse<HashSet<uint>>? marketableOverrideResponse = await ASF.WebBrowser.UrlGetToJsonObject<HashSet<uint>>(MarketableOverridesSource).ConfigureAwait(false);
+				ObjectResponse<HashSet<uint>>? unmarketableOverrideResponse = await ASF.WebBrowser.UrlGetToJsonObject<HashSet<uint>>(UnmarketableOverridesSource).ConfigureAwait(false);
+				if (response == null || response.Content == null 
+					|| marketableOverrideResponse == null || marketableOverrideResponse.Content == null 
+					|| unmarketableOverrideResponse == null || unmarketableOverrideResponse.Content == null
+				) {
 					ASF.ArchiLogger.LogGenericDebug("Failed to fetch marketable apps data");
 
 					return false;
 				}
 
 				AppIDs = response.Content;
+				MarketableOverrides = marketableOverrideResponse.Content;
+				UnmarketableOverrides = unmarketableOverrideResponse.Content;
 				LastUpdate = DateTime.Now;
 
 				// We're good to stop here, but let's try to replace the cached data that may be up to 1 hour old with fresh data from Steam
@@ -108,7 +119,7 @@ namespace BoosterManager {
 				return;
 			}
 
-			AppIDs = newerAppIDs;
+			AppIDs = newerAppIDs.Union(MarketableOverrides).Except(UnmarketableOverrides).ToHashSet();
 		}
 	}
 }
