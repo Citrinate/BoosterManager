@@ -209,8 +209,44 @@ namespace BoosterManager {
 		}
 
 		private void RestoreBoosterJobs() {
-			foreach (BoosterJobState jobState in BoosterDatabase.BoosterJobs) {
-				Jobs.Add(new BoosterJob(Bot, BoosterJobType.Limited, jobState));
+			uint? craftingGameID = BoosterDatabase.CraftingGameID;
+			DateTime? craftingTime = BoosterDatabase.CraftingTime;
+			if (craftingGameID != null && craftingTime != null) {
+				// We were in the middle of crafting a booster when ASF was reset, check to see if that booster was crafted or not
+				void handler(Dictionary<uint, Steam.BoosterInfo> boosterInfos) {
+					try {
+						if (!boosterInfos.TryGetValue(craftingGameID.Value, out Steam.BoosterInfo? newBoosterInfo)) {
+							// No longer have access to craft boosters for this game (game removed from account, or sometimes due to very rare Steam bugs)
+
+							return;
+						}
+
+						if (newBoosterInfo.Unavailable && newBoosterInfo.AvailableAtTime != null
+							&& newBoosterInfo.AvailableAtTime != craftingTime.Value
+							&& (newBoosterInfo.AvailableAtTime.Value - craftingTime.Value).TotalHours > 2 // Make sure the change in time isn't due to daylight savings
+						) {
+							// Booster was crafted
+							Bot.ArchiLogger.LogGenericInfo(String.Format(Strings.BoosterUnexpectedlyCrafted, craftingGameID.Value));
+
+							// Remove 1 of this booster from our jobs
+							BoosterDatabase.BoosterJobs.Any(jobState => jobState.GameIDs.Remove(craftingGameID.Value));
+							BoosterDatabase.PostCraft();
+
+							foreach (BoosterJobState jobState in BoosterDatabase.BoosterJobs) {
+								Jobs.Add(new BoosterJob(Bot, BoosterJobType.Limited, jobState));
+							}
+						}
+					} finally {
+						BoosterQueue.OnBoosterInfosUpdated -= handler;
+					}
+				}
+
+				BoosterQueue.OnBoosterInfosUpdated += handler;
+				BoosterQueue.Start();
+			} else {
+				foreach (BoosterJobState jobState in BoosterDatabase.BoosterJobs) {
+					Jobs.Add(new BoosterJob(Bot, BoosterJobType.Limited, jobState));
+				}
 			}
 		}
 

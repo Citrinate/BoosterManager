@@ -16,6 +16,12 @@ namespace BoosterManager {
 		[JsonInclude]
 		internal List<BoosterJobState> BoosterJobs { get; private set; } = new();
 
+		[JsonInclude]
+		internal uint? CraftingGameID { get; private set; } = null;
+
+		[JsonInclude]
+		internal DateTime? CraftingTime { get; private set; } = null;
+
 		[JsonConstructor]
 		private BoosterDatabase() { }
 
@@ -96,6 +102,20 @@ namespace BoosterManager {
 
 		internal void UpdateBoosterJobs(List<BoosterJobState> boosterJobs) {
 			BoosterJobs = boosterJobs;
+
+			Utilities.InBackground(Save);
+		}
+
+		internal async Task PreCraft(Booster booster) {
+			CraftingGameID = booster.GameID;
+			CraftingTime = booster.Info.AvailableAtTime;
+
+			await Save().ConfigureAwait(false);
+		}
+
+		internal void PostCraft() {
+			CraftingGameID = null;
+			CraftingTime = null;
 
 			Utilities.InBackground(Save);
 		}

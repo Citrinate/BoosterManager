@@ -307,6 +307,8 @@ namespace BoosterManager {
 			}
 
 			if (numRemoved > 0) {
+				SaveJobState();
+				
 				for (int i = 0; i < numRemoved; i++) {
 					Bot.ArchiLogger.LogGenericInfo(String.Format(Strings.BoosterUnqueuedByUser, gameID));
 				}
