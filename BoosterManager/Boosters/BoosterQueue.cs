@@ -112,7 +112,12 @@ namespace BoosterManager {
 				UpdateTimer(nextBoosterTime);
 				Bot.ArchiLogger.LogGenericInfo(String.Format(Strings.NextBoosterCraft, String.Format("{0:T}", nextBoosterTime)));
 			} finally {
-				RunSemaphore.Release();
+				Utilities.InBackground(
+					async() => {
+						await Task.Delay(TimeSpan.FromSeconds(MinDelayBetweenBoosters)).ConfigureAwait(false);
+						RunSemaphore.Release();
+					}
+				);
 			}
 		}
 
