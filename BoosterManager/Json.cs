@@ -253,6 +253,12 @@ namespace BoosterManager {
 			private ExchangeGooResponse() { }
 		}
 
+		internal enum TradabilityPreference {
+			Tradable = 1,
+			Default = 2,
+			Untradable = 3
+		}
+
 		// https://stackoverflow.com/a/51319347
 		// internal sealed class BoosterInfoDateConverter : JsonConverter {
 		internal sealed class BoosterInfoDateConverter : JsonConverter<DateTime> {

@@ -68,7 +68,7 @@ namespace BoosterManager {
 			return Commands.FormatBotResponse(bot, String.Join(Environment.NewLine, responses));
 		}
 
-		public static async Task<string> SendInventoryHistoryOnly(Bot bot, Bot respondingBot, ulong recipientSteamID, uint? numPages = 1, uint? startTime = null, uint? timeFrac = null, string? s = null) {
+		public static async Task<string> SendInventoryHistoryOnly(Bot bot, StatusReporter rateLimitReporter, uint? numPages = 1, uint? startTime = null, uint? timeFrac = null, string? s = null) {
 			if (InventoryHistoryAPI == null) {
 				return Commands.FormatBotResponse(bot, Strings.InventoryHistoryEndpointUndefined);
 			}
@@ -81,9 +81,9 @@ namespace BoosterManager {
 			numPages = numPages ?? 1;
 			if (startTime != null && timeFrac != null && s != null) {
 				Steam.InventoryHistoryCursor cursor = new Steam.InventoryHistoryCursor(startTime.Value, timeFrac.Value, s);
-				tasks.Add(SendInventoryHistory(bot, tasks, DateTime.Now, cursor: cursor, pagesRemaining: numPages.Value - 1, retryOnRateLimit: true, respondingBot: respondingBot, recipientSteamID: recipientSteamID));
+				tasks.Add(SendInventoryHistory(bot, tasks, DateTime.Now, cursor: cursor, pagesRemaining: numPages.Value - 1, retryOnRateLimit: true, rateLimitReporter: rateLimitReporter));
 			} else {
-				tasks.Add(SendInventoryHistory(bot, tasks, DateTime.Now, startTime: startTime, pagesRemaining: numPages.Value - 1, retryOnRateLimit: true, respondingBot: respondingBot, recipientSteamID: recipientSteamID));
+				tasks.Add(SendInventoryHistory(bot, tasks, DateTime.Now, startTime: startTime, pagesRemaining: numPages.Value - 1, retryOnRateLimit: true, rateLimitReporter: rateLimitReporter));
 			}
 
 			while (tasks.Any(task => !task.IsCompleted)) {
@@ -208,7 +208,7 @@ namespace BoosterManager {
 			return Strings.BoosterDataEndpointSuccess;
 		}
 
-		private static async Task<string?> SendInventoryHistory(Bot bot, List<Task<string?>> tasks, DateTime tasksStartedTime, Steam.InventoryHistoryCursor? cursor = null, uint? startTime = null, uint pagesRemaining = 0, uint delayInMilliseconds = 0, bool retryOnRateLimit = false, bool showRateLimitMessage = true, Bot? respondingBot = null, ulong? recipientSteamID = null) {
+		private static async Task<string?> SendInventoryHistory(Bot bot, List<Task<string?>> tasks, DateTime tasksStartedTime, Steam.InventoryHistoryCursor? cursor = null, uint? startTime = null, uint pagesRemaining = 0, uint delayInMilliseconds = 0, bool retryOnRateLimit = false, bool showRateLimitMessage = true, StatusReporter? rateLimitReporter = null) {
 			if (InventoryHistoryAPI == null) {
 				return null;
 			}
@@ -230,7 +230,7 @@ namespace BoosterManager {
 			}
 
 			if (!bot.IsConnectedAndLoggedOn) {
-				return await SendInventoryHistory(bot, tasks, tasksStartedTime, cursor, startTime, pagesRemaining, 60 * 1000, retryOnRateLimit, showRateLimitMessage, respondingBot, recipientSteamID).ConfigureAwait(false);
+				return await SendInventoryHistory(bot, tasks, tasksStartedTime, cursor, startTime, pagesRemaining, 60 * 1000, retryOnRateLimit, showRateLimitMessage, rateLimitReporter).ConfigureAwait(false);
 			}
 
 			pageTime = cursor?.Time ?? startTime ?? (uint) DateTimeOffset.Now.ToUnixTimeSeconds();
@@ -241,19 +241,19 @@ namespace BoosterManager {
 			} catch (InventoryHistoryException) {
 				if (retryOnRateLimit) {
 					// This API has a very reachable rate limit
-					if (showRateLimitMessage && respondingBot != null && recipientSteamID != null) {
+					if (showRateLimitMessage && rateLimitReporter != null) {
 						string message = Strings.InventoryHistoryRateLimitExceeded;
-						await respondingBot.SendMessage(recipientSteamID.Value, Commands.FormatBotResponse(bot, message)).ConfigureAwait(false);
+						rateLimitReporter.Report(bot, message);
 					}
 
 					// Try again in 15 minutes
-					return await SendInventoryHistory(bot, tasks, tasksStartedTime, cursor, startTime, pagesRemaining, 15 * 60 * 1000, retryOnRateLimit, false, respondingBot, recipientSteamID).ConfigureAwait(false);
+					return await SendInventoryHistory(bot, tasks, tasksStartedTime, cursor, startTime, pagesRemaining, 15 * 60 * 1000, retryOnRateLimit, false, rateLimitReporter).ConfigureAwait(false);
 				}
 			}
 
 			if (inventoryHistory == null || !inventoryHistory.Success) {
 				if (!bot.IsConnectedAndLoggedOn) {
-					return await SendInventoryHistory(bot, tasks, tasksStartedTime, cursor, startTime, pagesRemaining, 60 * 1000, retryOnRateLimit, showRateLimitMessage, respondingBot, recipientSteamID).ConfigureAwait(false);
+					return await SendInventoryHistory(bot, tasks, tasksStartedTime, cursor, startTime, pagesRemaining, 60 * 1000, retryOnRateLimit, showRateLimitMessage, rateLimitReporter).ConfigureAwait(false);
 				}
 
 				if (inventoryHistory?.Error != null) {
@@ -272,11 +272,11 @@ namespace BoosterManager {
 
 			if (response.Success && pagesRemaining > 0) {
 				if (response.NextCursor != null) {
-					tasks.Add(SendInventoryHistory(bot, tasks, tasksStartedTime, response.NextCursor, null, pagesRemaining - 1, LogDataPageDelay * 1000, retryOnRateLimit, true, respondingBot, recipientSteamID));
+					tasks.Add(SendInventoryHistory(bot, tasks, tasksStartedTime, response.NextCursor, null, pagesRemaining - 1, LogDataPageDelay * 1000, retryOnRateLimit, true, rateLimitReporter));
 				} else if (response.NextPage != null) {
-					tasks.Add(SendInventoryHistory(bot, tasks, tasksStartedTime, null, response.NextPage, pagesRemaining - 1, LogDataPageDelay * 1000, retryOnRateLimit, true, respondingBot, recipientSteamID));
+					tasks.Add(SendInventoryHistory(bot, tasks, tasksStartedTime, null, response.NextPage, pagesRemaining - 1, LogDataPageDelay * 1000, retryOnRateLimit, true, rateLimitReporter));
 				} else if (inventoryHistory.Cursor != null) {
-					tasks.Add(SendInventoryHistory(bot, tasks, tasksStartedTime, inventoryHistory.Cursor, null, pagesRemaining - 1, LogDataPageDelay * 1000, retryOnRateLimit, true, respondingBot, recipientSteamID));
+					tasks.Add(SendInventoryHistory(bot, tasks, tasksStartedTime, inventoryHistory.Cursor, null, pagesRemaining - 1, LogDataPageDelay * 1000, retryOnRateLimit, true, rateLimitReporter));
 				} else {
 					// Inventory History has ended, possibly due to a bug described in ../Docs/InventoryHistory.md
 					List<string> messages = new List<string>();

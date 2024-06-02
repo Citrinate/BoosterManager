@@ -48,12 +48,17 @@ namespace BoosterManager {
 							return ResponseBoosterStatus(bot, access);
 
 						case "BSA^":
-							return ResponseBoosterStatus(access, steamID, "ASF", true);
+							return ResponseBoosterStatus(access, steamID, "ASF", shortStatus: true);
 						case "BSTATUS^" or "BOOSTERSTATUS^":
-							return ResponseBoosterStatus(bot, access, true);
+							return ResponseBoosterStatus(bot, access, shortStatus: true);
 						
 						case "BSTOPALL" or "BOOSTERSTOPALL":
 							return ResponseBoosterStopTime(bot, access, "0");
+
+						case "BLA":
+							return await ResponseBuyLimit(access, steamID, "ASF").ConfigureAwait(false);
+						case "BUYLIMIT" or "BL":
+							return await ResponseBuyLimit(bot, access).ConfigureAwait(false);
 
 						case "CARDS" or "MCARDS" or "CARD" or "MCARD":
 							return await ResponseCountItems(bot, access, ItemIdentifier.CardIdentifier, marketable: true).ConfigureAwait(false);
@@ -108,7 +113,7 @@ namespace BoosterManager {
 							return ResponseLogStop(bot, access);
 
 						case "LOGINVENTORYHISTORY" or "SENDINVENTORYHISTORY" or "LOGIH" or "SENDIH":
-							return await ResponseLogInventoryHistory(bot, access, steamID).ConfigureAwait(false);
+							return await ResponseLogInventoryHistory(bot, access, new StatusReporter(bot, steamID)).ConfigureAwait(false);
 
 						case "LOGMARKETHISTORY" or "SENDMARKETHISTORY" or "LOGMH" or "SENDMH":
 							return await ResponseLogMarketHistory(bot, access).ConfigureAwait(false);
@@ -209,9 +214,14 @@ namespace BoosterManager {
 				default:
 					switch (args[0].ToUpperInvariant()) {
 						case "BOOSTER" when args.Length > 2:
-							return ResponseBooster(access, steamID, args[1], Utilities.GetArgsAsText(args, 2, ","), bot);
+							return ResponseBooster(access, steamID, new StatusReporter(bot, steamID), args[1], Utilities.GetArgsAsText(args, 2, ","));
 						case "BOOSTER":
-							return ResponseBooster(bot, access, steamID, args[1]);
+							return ResponseBooster(bot, access, steamID, new StatusReporter(bot, steamID), args[1]);
+
+						case "BOOSTER^" when args.Length > 3:
+							return ResponseSmartBooster(access, steamID, new StatusReporter(bot, steamID), args[1], args[2], Utilities.GetArgsAsText(args, 3, ","));
+						case "BOOSTER^" when args.Length > 2:
+							return ResponseSmartBooster(access, steamID, new StatusReporter(bot, steamID), bot.BotName, args[1], args[2]);
 
 						case "BOOSTERS" or "MBOOSTERS":
 							return await ResponseCountItems(access, steamID, Utilities.GetArgsAsText(args, 1, ","), ItemIdentifier.BoosterIdentifier, marketable: true).ConfigureAwait(false);
@@ -230,7 +240,7 @@ namespace BoosterManager {
 							return ResponseBoosterStatus(access, steamID, args[1]);
 
 						case "BSTATUS^" or "BOOSTERSTATUS^":
-							return ResponseBoosterStatus(access, steamID, args[1], true);
+							return ResponseBoosterStatus(access, steamID, args[1], shortStatus: true);
 						
 						case "BSTOP" or "BOOSTERSTOP" when args.Length > 2:
 							return ResponseBoosterStop(access, steamID, args[1], Utilities.GetArgsAsText(args, 2, ","));
@@ -244,6 +254,9 @@ namespace BoosterManager {
 							return ResponseBoosterStopTime(access, steamID, args[1], args[2]);
 						case "BSTOPTIME" or "BOOSTERSTOPTIME":
 							return ResponseBoosterStopTime(bot, access, args[1]);
+
+						case "BUYLIMIT" or "BL":
+							return await ResponseBuyLimit(access, steamID, args[1]).ConfigureAwait(false);
 
 						case "CARDS" or "MCARDS" or "CARD" or "MCARD":
 							return await ResponseCountItems(access, steamID, Utilities.GetArgsAsText(args, 1, ","), ItemIdentifier.CardIdentifier, marketable: true).ConfigureAwait(false);
@@ -291,13 +304,13 @@ namespace BoosterManager {
 							return ResponseLogStop(access, steamID, Utilities.GetArgsAsText(args, 1, ","));
 						
 						case "LOGINVENTORYHISTORY" or "SENDINVENTORYHISTORY" or "LOGIH" or "SENDIH" when args.Length > 5:
-							return await ResponseLogInventoryHistory(access, steamID, bot, args[1], args[2], args[3], args[4], args[5]).ConfigureAwait(false);
+							return await ResponseLogInventoryHistory(access, steamID, new StatusReporter(bot, steamID), args[1], args[2], args[3], args[4], args[5]).ConfigureAwait(false);
 						case "LOGINVENTORYHISTORY" or "SENDINVENTORYHISTORY" or "LOGIH" or "SENDIH" when args.Length > 3:
-							return await ResponseLogInventoryHistory(access, steamID, bot, args[1], args[2], args[3]).ConfigureAwait(false);
+							return await ResponseLogInventoryHistory(access, steamID, new StatusReporter(bot, steamID), args[1], args[2], args[3]).ConfigureAwait(false);
 						case "LOGINVENTORYHISTORY" or "SENDINVENTORYHISTORY" or "LOGIH" or "SENDIH" when args.Length > 2:
-							return await ResponseLogInventoryHistory(access, steamID, bot, args[1], args[2]).ConfigureAwait(false);
+							return await ResponseLogInventoryHistory(access, steamID, new StatusReporter(bot, steamID), args[1], args[2]).ConfigureAwait(false);
 						case "LOGINVENTORYHISTORY" or "SENDINVENTORYHISTORY" or "LOGIH" or "SENDIH":
-							return await ResponseLogInventoryHistory(access, steamID, bot, args[1]).ConfigureAwait(false);	
+							return await ResponseLogInventoryHistory(access, steamID, new StatusReporter(bot, steamID), args[1]).ConfigureAwait(false);	
 
 						case "LOGMARKETHISTORY" or "SENDMARKETHISTORY" or "LOGMH" or "SENDMH" when args.Length > 3:
 							return await ResponseLogMarketHistory(access, steamID, args[1], args[2], args[3]).ConfigureAwait(false);
@@ -347,14 +360,18 @@ namespace BoosterManager {
 							return await ResponseSendItemToBot(access, steamID, Utilities.GetArgsAsText(args, 1, ","), ItemIdentifier.SackIdentifier).ConfigureAwait(false);
 						
 						case "MARKET2FAOK" or "M2FAOK" when args.Length > 2:
-							return await Response2FAOK(access, steamID, args[1], Confirmation.EConfirmationType.Market, args[2]).ConfigureAwait(false);
+							return await Response2FAOK(access, steamID, args[1], Confirmation.EConfirmationType.Market, args[2], new StatusReporter(bot, steamID, reportDelaySeconds: 30, reportMaxDelaySeconds: 60)).ConfigureAwait(false);
 						case "MARKET2FAOK" or "M2FAOK":
 							return await Response2FAOK(access, steamID, args[1], Confirmation.EConfirmationType.Market).ConfigureAwait(false);
 						case "MARKET2FAOKA" or "M2FAOKA":
-							return await Response2FAOK(access, steamID, "ASF", Confirmation.EConfirmationType.Market, args[1]).ConfigureAwait(false);
+							return await Response2FAOK(access, steamID, "ASF", Confirmation.EConfirmationType.Market, args[1], new StatusReporter(bot, steamID, reportDelaySeconds: 30, reportMaxDelaySeconds: 60)).ConfigureAwait(false);
 						
+						case "TRADE2FAOK" or "T2FAOK" when args.Length > 2:
+							return await Response2FAOK(access, steamID, args[1], Confirmation.EConfirmationType.Trade, args[2], new StatusReporter(bot, steamID, reportDelaySeconds: 30, reportMaxDelaySeconds: 60)).ConfigureAwait(false);
 						case "TRADE2FAOK" or "T2FAOK":
 							return await Response2FAOK(access, steamID, args[1], Confirmation.EConfirmationType.Trade).ConfigureAwait(false);
+						case "TRADE2FAOKA" or "T2FAOKA":
+							return await Response2FAOK(access, steamID, "ASF", Confirmation.EConfirmationType.Trade, args[1], new StatusReporter(bot, steamID, reportDelaySeconds: 30, reportMaxDelaySeconds: 60)).ConfigureAwait(false);
 
 						case "TRADECHECK" or "TCHECK" or "TC":
 							return ResponseTradeCheck(access, steamID, args[1]);
@@ -491,7 +508,7 @@ namespace BoosterManager {
 			}
 		}
 
-		private static async Task<string?> Response2FAOK(Bot bot, EAccess access, Confirmation.EConfirmationType acceptedType, string? minutesAsText = null) {
+		private static async Task<string?> Response2FAOK(Bot bot, EAccess access, Confirmation.EConfirmationType acceptedType, string? minutesAsText = null, StatusReporter? statusReporter = null) {
 			if (access < EAccess.Master) {
 				return null;
 			}
@@ -505,20 +522,27 @@ namespace BoosterManager {
 			}
 
 			string? repeatMessage = null;
-			if (minutesAsText != null && acceptedType == Confirmation.EConfirmationType.Market) {
+			if (minutesAsText != null && (acceptedType == Confirmation.EConfirmationType.Market || acceptedType == Confirmation.EConfirmationType.Trade)) {
 				if (!uint.TryParse(minutesAsText, out uint minutes)) {
 					return String.Format(ArchiSteamFarm.Localization.Strings.ErrorParsingObject, nameof(minutesAsText));
 				}
 
 				if (minutes == 0) {
-					if (BoosterHandler.BoosterHandlers[bot.BotName].StopMarketTimer()) {
+					if ((acceptedType == Confirmation.EConfirmationType.Market && MarketHandler.StopMarketRepeatTimer(bot))
+						|| (acceptedType == Confirmation.EConfirmationType.Trade && InventoryHandler.StopTradeRepeatTimer(bot))
+					) {
 						return FormatBotResponse(bot, Strings.RepetitionCancelled);
 					} else {
 						return FormatBotResponse(bot, Strings.RepetitionNotActive);
 					}
 				} else {
-					BoosterHandler.BoosterHandlers[bot.BotName].StartMarketTimer(minutes);
-					repeatMessage = String.Format(Strings.RepetitionNotice, minutes, String.Format("!m2faok {0} 0", bot.BotName));
+					if (acceptedType == Confirmation.EConfirmationType.Market) {
+						MarketHandler.StartMarketRepeatTimer(bot, minutes, statusReporter);
+						repeatMessage = String.Format(Strings.RepetitionNotice, minutes, String.Format("!m2faok {0} 0", bot.BotName));
+					} else if (acceptedType == Confirmation.EConfirmationType.Trade) {
+						InventoryHandler.StartTradeRepeatTimer(bot, minutes, statusReporter);
+						repeatMessage = String.Format(Strings.RepetitionNotice, minutes, String.Format("!t2faok {0} 0", bot.BotName));
+					}
 				}
 			}
 			
@@ -526,13 +550,13 @@ namespace BoosterManager {
 			string twofacMessage = success ? message : String.Format(ArchiSteamFarm.Localization.Strings.WarningFailedWithError, message);
 
 			if (repeatMessage != null) {
-				return FormatBotResponse(bot, String.Format("{0}. {1}", twofacMessage, repeatMessage));
+				return FormatBotResponse(bot, String.Format("{0} {1}", twofacMessage, repeatMessage));
 			}
 
 			return FormatBotResponse(bot, twofacMessage);
 		}
 
-		private static async Task<string?> Response2FAOK(EAccess access, ulong steamID, string botNames, Confirmation.EConfirmationType acceptedType, string? minutesAsText = null) {
+		private static async Task<string?> Response2FAOK(EAccess access, ulong steamID, string botNames, Confirmation.EConfirmationType acceptedType, string? minutesAsText = null, StatusReporter? statusReporter = null) {
 			if (String.IsNullOrEmpty(botNames)) {
 				throw new ArgumentNullException(nameof(botNames));
 			}
@@ -543,14 +567,14 @@ namespace BoosterManager {
 				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
 			}
 
-			IList<string?> results = await Utilities.InParallel(bots.Select(bot => Response2FAOK(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), acceptedType, minutesAsText))).ConfigureAwait(false);
+			IList<string?> results = await Utilities.InParallel(bots.Select(bot => Response2FAOK(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), acceptedType, minutesAsText, statusReporter))).ConfigureAwait(false);
 
 			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
 
 			return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
 		}
 
-		private static string? ResponseBooster(Bot bot, EAccess access, ulong steamID, string targetGameIDs, Bot? respondingBot = null) {
+		private static string? ResponseBooster(Bot bot, EAccess access, ulong steamID, StatusReporter craftingReporter, string targetGameIDs) {
 			if (String.IsNullOrEmpty(targetGameIDs)) {
 				throw new ArgumentNullException(nameof(targetGameIDs));
 			}
@@ -569,7 +593,7 @@ namespace BoosterManager {
 				return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsEmpty, nameof(gameIDs)));
 			}
 
-			HashSet<uint> gamesToBooster = new HashSet<uint>();
+			List<uint> gamesToBooster = new List<uint>();
 
 			foreach (string game in gameIDs) {
 				if (!uint.TryParse(game, out uint gameID) || (gameID == 0)) {
@@ -579,10 +603,10 @@ namespace BoosterManager {
 				gamesToBooster.Add(gameID);
 			}
 
-			return BoosterHandler.BoosterHandlers[bot.BotName].ScheduleBoosters(gamesToBooster, respondingBot ?? bot, steamID);
+			return BoosterHandler.BoosterHandlers[bot.BotName].ScheduleBoosters(BoosterJobType.Limited, gamesToBooster, craftingReporter);
 		}
 
-		private static string? ResponseBooster(EAccess access, ulong steamID, string botNames, string targetGameIDs, Bot respondingBot) {
+		private static string? ResponseBooster(EAccess access, ulong steamID, StatusReporter craftingReporter, string botNames, string targetGameIDs) {
 			if (String.IsNullOrEmpty(botNames)) {
 				throw new ArgumentNullException(nameof(botNames));
 			}
@@ -593,7 +617,7 @@ namespace BoosterManager {
 				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
 			}
 
-			IEnumerable<string?> results = bots.Select(bot => ResponseBooster(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), steamID, targetGameIDs, respondingBot));
+			IEnumerable<string?> results = bots.Select(bot => ResponseBooster(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), steamID, craftingReporter, targetGameIDs));
 
 			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
 
@@ -772,6 +796,36 @@ namespace BoosterManager {
 			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
 
 			return responses.Count > 0 ? String.Join(Environment.NewLine, responses) : null;
+		}
+
+		private static async Task<string?> ResponseBuyLimit(Bot bot, EAccess access) {
+			if (access < EAccess.Master) {
+				return null;
+			}
+
+			if (!bot.IsConnectedAndLoggedOn) {
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
+			}
+
+			return await MarketHandler.GetBuyLimit(bot).ConfigureAwait(false);
+		}
+
+		private static async Task<string?> ResponseBuyLimit(EAccess access, ulong steamID, string botNames) {
+			if (String.IsNullOrEmpty(botNames)) {
+				throw new ArgumentNullException(nameof(botNames));
+			}
+
+			HashSet<Bot>? bots = Bot.GetBots(botNames);
+
+			if ((bots == null) || (bots.Count == 0)) {
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
+			}
+
+			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseBuyLimit(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)))).ConfigureAwait(false);
+
+			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
+
+			return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
 		}
 		
 		private static async Task<string?> ResponseCountItems(Bot bot, EAccess access, ItemIdentifier itemIdentifier, bool? marketable = null) {
@@ -1089,7 +1143,7 @@ namespace BoosterManager {
 			return responses.Count > 0 ? String.Join(Environment.NewLine, responses) : null;
 		}
 
-		private static async Task<string?> ResponseLogInventoryHistory(Bot bot, EAccess access, ulong steamID, string? numPagesString = null, string? startTimeString = null, string? timeFracString = null, string? sString = null, Bot? respondingBot = null) {
+		private static async Task<string?> ResponseLogInventoryHistory(Bot bot, EAccess access, StatusReporter rateLimitReporter, string? numPagesString = null, string? startTimeString = null, string? timeFracString = null, string? sString = null) {
 			if (access < EAccess.Master) {
 				return null;
 			}
@@ -1134,10 +1188,10 @@ namespace BoosterManager {
 				}
 			}
 
-			return await DataHandler.SendInventoryHistoryOnly(bot, respondingBot ?? bot, steamID, numPages, startTime, timeFrac, s).ConfigureAwait(false);
+			return await DataHandler.SendInventoryHistoryOnly(bot, rateLimitReporter, numPages, startTime, timeFrac, s).ConfigureAwait(false);
 		}
 
-		private static async Task<string?> ResponseLogInventoryHistory(EAccess access, ulong steamID, Bot respondingBot, string botNames, string? numPagesString = null, string? startTimeString = null, string? timeFracString = null, string? sString = null) {
+		private static async Task<string?> ResponseLogInventoryHistory(EAccess access, ulong steamID, StatusReporter rateLimitReporter, string botNames, string? numPagesString = null, string? startTimeString = null, string? timeFracString = null, string? sString = null) {
 			if (String.IsNullOrEmpty(botNames)) {
 				throw new ArgumentNullException(nameof(botNames));
 			}
@@ -1148,7 +1202,7 @@ namespace BoosterManager {
 				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
 			}
 
-			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseLogInventoryHistory(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), steamID, numPagesString, startTimeString, timeFracString, sString, respondingBot))).ConfigureAwait(false);
+			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseLogInventoryHistory(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), rateLimitReporter, numPagesString, startTimeString, timeFracString, sString))).ConfigureAwait(false);
 
 			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
 
@@ -1635,6 +1689,82 @@ namespace BoosterManager {
 			}
 
 			return await ResponseSendMultipleItemsToMultipleBots(sender, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(sender, access, steamID), recieverBotNames, amountsAsText, appIDAsText, contextIDAsText, itemIdentifiersAsText, marketable).ConfigureAwait(false);
+		}
+
+		private static string? ResponseSmartBooster(EAccess access, ulong steamID, StatusReporter craftingReporter, string botNames, string gameIDsAsText, string amountsAsText) {
+			if (String.IsNullOrEmpty(botNames)) {
+				throw new ArgumentNullException(nameof(botNames));
+			}
+			
+			if (String.IsNullOrEmpty(gameIDsAsText)) {
+				throw new ArgumentNullException(nameof(gameIDsAsText));
+			}
+			
+			if (String.IsNullOrEmpty(amountsAsText)) {
+				throw new ArgumentNullException(nameof(amountsAsText));
+			}
+
+			HashSet<Bot>? bots = Bot.GetBots(botNames);
+
+			if ((bots == null) || (bots.Count == 0)) {
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
+			}
+
+			if (bots.Any(bot => ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID) < EAccess.Master)) {
+				return null;
+			}
+
+			Bot? offlineBot = bots.FirstOrDefault(bot => !bot.IsConnectedAndLoggedOn);
+			if (offlineBot != null) {
+				return FormatBotResponse(offlineBot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
+			}
+
+			// Parse GameIDs
+			string[] gameIDs = gameIDsAsText.Split(",", StringSplitOptions.RemoveEmptyEntries);
+
+			if (gameIDs.Length == 0) {
+				return FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsEmpty, nameof(gameIDs)));
+			}
+
+			List<uint> gamesToBooster = new List<uint>();
+
+			foreach (string game in gameIDs) {
+				if (!uint.TryParse(game, out uint gameID) || (gameID == 0)) {
+					return FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.ErrorParsingObject, nameof(gameID)));
+				}
+
+				gamesToBooster.Add(gameID);
+			}
+
+			// Parse Amounts
+			string[] amountStrings = amountsAsText.Split(",", StringSplitOptions.RemoveEmptyEntries);
+
+			if (amountStrings.Length == 0) {
+				return FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsEmpty, nameof(amountStrings)));
+			}
+
+			if (amountStrings.Length == 1 && gamesToBooster.Count > 1) {
+				amountStrings = Enumerable.Repeat(amountStrings[0], gamesToBooster.Count).ToArray();
+			}
+			
+			if (amountStrings.Length != gamesToBooster.Count) {
+				return FormatStaticResponse(String.Format(Strings.AppIDCountDoesNotEqualAmountCount, gamesToBooster.Count, amountStrings.Length));
+			}
+
+			List<uint> amounts = new List<uint>();
+			foreach (string amount in amountStrings) {
+				if (!uint.TryParse(amount, out uint amountNum)) {
+					return FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.ErrorParsingObject, nameof(amountNum)));
+				}
+
+				amounts.Add(amountNum);
+			}
+
+			// Try to craft boosters
+			List<(uint, uint)> gameIDsWithAmounts = Zip(gamesToBooster, amounts).ToList();
+			BoosterHandler.GetBoosterInfos(bots, (boosterInfos) => BoosterHandler.SmartScheduleBoosters(BoosterJobType.Limited, bots, boosterInfos, gameIDsWithAmounts, craftingReporter));
+
+			return FormatStaticResponse(String.Format(Strings.BoosterAssignmentStarting, gameIDsWithAmounts.Sum(gameIDWithAmount => gameIDWithAmount.Item2)));
 		}
 
 		private static string? ResponseTradeCheck(Bot bot, EAccess access) {

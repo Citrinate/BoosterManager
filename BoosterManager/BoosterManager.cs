@@ -15,7 +15,6 @@ namespace BoosterManager {
 	public sealed class BoosterManager : IASF, IBotModules, IBotCommand2, IBotTradeOfferResults, IGitHubPluginUpdates {
 		public string Name => nameof(BoosterManager);
 		public string RepositoryName => "Citrinate/BoosterManager";
-		public bool CanUpdate => !BoosterHandler.IsCraftingOneTimeBoosters();
 		public Version Version => typeof(BoosterManager).Assembly.GetName().Version ?? new Version("0");
 
 		public Task OnLoaded() {
@@ -43,11 +42,6 @@ namespace BoosterManager {
 					case "AllowCraftUnmarketableBoosters" when (configProperty.Value.ValueKind == JsonValueKind.True || configProperty.Value.ValueKind == JsonValueKind.False): {
 						ASF.ArchiLogger.LogGenericInfo("Allow Craft Unmarketable Boosters : " + configProperty.Value);
 						BoosterHandler.AllowCraftUnmarketableBoosters = configProperty.Value.GetBoolean();
-						break;
-					}
-					case "BoosterDelayBetweenBots" when configProperty.Value.ValueKind == JsonValueKind.Number: {
-						ASF.ArchiLogger.LogGenericInfo("Booster Delay Between Bots : " + configProperty.Value);
-						BoosterHandler.UpdateBotDelays(configProperty.Value.GetInt32());
 						break;
 					}
 					case "BoosterDataAPI" when configProperty.Value.ValueKind == JsonValueKind.String: {
@@ -92,7 +86,8 @@ namespace BoosterManager {
 		}
 
 		public Task OnBotInitModules(Bot bot, IReadOnlyDictionary<string, JsonElement>? additionalConfigProperties = null) {
-			BoosterHandler.AddHandler(bot);
+			string databaseFilePath = Bot.GetFilePath(String.Format("{0}_{1}", bot.BotName, nameof(BoosterManager)), Bot.EFileType.Database);
+			BoosterHandler.AddHandler(bot, BoosterDatabase.CreateOrLoad(databaseFilePath));
 
 			if (additionalConfigProperties == null) {
 				return Task.FromResult(0);
@@ -106,7 +101,7 @@ namespace BoosterManager {
 						if (gameIDs == null) {
 							bot.ArchiLogger.LogNullError(gameIDs);
 						} else {
-							BoosterHandler.BoosterHandlers[bot.BotName].SchedulePermanentBoosters(gameIDs);
+							BoosterHandler.BoosterHandlers[bot.BotName].ScheduleBoosters(BoosterJobType.Permanent, gameIDs.ToList(), StatusReporter.StatusLogger());
 						}
 						break;
 					}

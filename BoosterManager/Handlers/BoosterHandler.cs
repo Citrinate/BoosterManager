@@ -1,188 +1,335 @@
-using ArchiSteamFarm.Core;
+using ArchiSteamFarm.Collections;
 using ArchiSteamFarm.Steam;
 using BoosterManager.Localization;
-using SteamKit2;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace BoosterManager {
-	internal sealed class BoosterHandler : IDisposable {
+	internal sealed class BoosterHandler {
 		private readonly Bot Bot;
-		private readonly BoosterQueue BoosterQueue;
-		private Bot RespondingBot; // When we send status alerts, they'll come from this bot
-		private ulong RecipientSteamID; // When we send status alerts, they'll go to this SteamID
-		internal static ConcurrentDictionary<string, Timer> ResponseTimers = new();
-		internal List<string> StoredResponses = new();
-		private string LastResponse = "";
+		internal BoosterDatabase BoosterDatabase { get; private set; }
+		internal readonly BoosterQueue BoosterQueue;
 		internal static ConcurrentDictionary<string, BoosterHandler> BoosterHandlers = new();
-		private static int DelayBetweenBots = 0; // Delay, in minutes, between when bots will craft boosters
+		internal ConcurrentList<BoosterJob> Jobs = new();
 		internal static bool AllowCraftUntradableBoosters = true;
 		internal static bool AllowCraftUnmarketableBoosters = true;
-		private Timer? MarketRepeatTimer = null;
 
-		private BoosterHandler(Bot bot) {
+		private BoosterHandler(Bot bot, BoosterDatabase boosterDatabase) {
+			ArgumentNullException.ThrowIfNull(boosterDatabase);
+
 			Bot = bot;
-			BoosterQueue = new BoosterQueue(Bot, this);
-			RespondingBot = bot;
-			RecipientSteamID = Bot.Actions.GetFirstSteamMasterID();
+			BoosterDatabase = boosterDatabase;
+			BoosterQueue = new BoosterQueue(Bot);
 		}
 
-		public void Dispose() {
-			BoosterQueue.Dispose();
-			MarketRepeatTimer?.Dispose();
-		}
-
-		internal static void AddHandler(Bot bot) {
+		internal static void AddHandler(Bot bot, BoosterDatabase boosterDatabase) {
 			if (BoosterHandlers.ContainsKey(bot.BotName)) {
-				BoosterHandlers[bot.BotName].Dispose();
-				BoosterHandlers.TryRemove(bot.BotName, out BoosterHandler? _);
-			}
+				// Bot's config was reloaded, cancel and then restore jobs
+				BoosterHandlers[bot.BotName].CancelBoosterJobs();
+				BoosterHandlers[bot.BotName].BoosterDatabase = boosterDatabase;
+				BoosterHandlers[bot.BotName].RestoreBoosterJobs();
 
-			if (BoosterHandlers.TryAdd(bot.BotName, new BoosterHandler(bot))) {
-				UpdateBotDelays();
-			}
-		}
-
-		internal static void UpdateBotDelays(int? delayInSeconds = null) {
-			if (DelayBetweenBots <= 0 && (delayInSeconds == null || delayInSeconds <= 0)) {
 				return;
 			}
 
-			// This assumes that the same bots will be used all of the time, with the same names, and all boosters will be 
-			// crafted when they're scheduled to be crafted (no unexpected delays due to Steam downtime or insufficient gems).  
-			// If all of these things are true then BoosterDelayBetweenBots should work as it's described in the README.  If these 
-			// assumptions are not met, then the delay between bots might become lower than intended, but it should never be higher
-			// I don't intend to fix this.
-			// A workaround for users caught in an undesirable state is to let the 24-hour cooldown on all of their boosters expire.
-
-			DelayBetweenBots = delayInSeconds ?? DelayBetweenBots;
-			List<string> botNames = BoosterHandlers.Keys.ToList<string>();
-			botNames.Sort();
-			foreach (KeyValuePair<string, BoosterHandler> kvp in BoosterHandlers) {
-				int index = botNames.IndexOf(kvp.Key);
-				kvp.Value.BoosterQueue.BoosterDelay = DelayBetweenBots * index;
+			BoosterHandler handler = new BoosterHandler(bot, boosterDatabase);
+			if (BoosterHandlers.TryAdd(bot.BotName, handler)) {
+				handler.RestoreBoosterJobs();
 			}
 		}
 
-		internal string ScheduleBoosters(HashSet<uint> gameIDs, Bot respondingBot, ulong recipientSteamID) {
-			RespondingBot = respondingBot;
-			RecipientSteamID = recipientSteamID;
-			foreach (uint gameID in gameIDs) {
-				BoosterQueue.AddBooster(gameID, BoosterType.OneTime);
-			}
-			BoosterQueue.OnBoosterInfosUpdated -= ScheduleBoostersResponse;
-			BoosterQueue.OnBoosterInfosUpdated += ScheduleBoostersResponse;
-			BoosterQueue.Start();
+		internal string ScheduleBoosters(BoosterJobType jobType, List<uint> gameIDs, StatusReporter craftingReporter) {
+			Jobs.Add(new BoosterJob(Bot, jobType, gameIDs, craftingReporter));
 
 			return Commands.FormatBotResponse(Bot, String.Format(Strings.BoosterCreationStarting, gameIDs.Count));
 		}
 
-		private void ScheduleBoostersResponse() {
-			BoosterQueue.OnBoosterInfosUpdated -= ScheduleBoostersResponse;
-			string? message = BoosterQueue.GetShortStatus();
-			if (message == null) {
-				PerpareStatusReport(Strings.BoostersUncraftable);
+		internal static void SmartScheduleBoosters(BoosterJobType jobType, HashSet<Bot> bots, Dictionary<Bot, Dictionary<uint, Steam.BoosterInfo>> botBoosterInfos, List<(uint gameID, uint amount)> gameIDsWithAmounts, StatusReporter craftingReporter) {
+			// Group together any duplicate gameIDs
+			gameIDsWithAmounts = gameIDsWithAmounts.GroupBy(item => item.gameID).Select(group => (group.First().gameID, (uint) group.Sum(item => item.amount))).ToList();
 
-				return;
-			}
+			// Figure out the most efficient way to queue the given boosters and amounts using the given bots
+			Dictionary<Bot, List<uint>> gameIDsToQueue = new();
+			DateTime now = DateTime.Now;
 
-			PerpareStatusReport(message);
-		}
+			foreach (var gameIDWithAmount in gameIDsWithAmounts) {
+				uint gameID = gameIDWithAmount.gameID;
+				uint amount = gameIDWithAmount.amount;
 
-		internal void SchedulePermanentBoosters(HashSet<uint> gameIDs) {
-			foreach (uint gameID in gameIDs) {
-				BoosterQueue.AddBooster(gameID, BoosterType.Permanent);
-			}
-			BoosterQueue.Start();
-		}
+				// Get all the data we need to determine which is the best bot for this booster
+				Dictionary<Bot, (int numQueued, DateTime nextCraftTime)> botStates = new();
+				foreach(Bot bot in bots) {
+					if (!botBoosterInfos.TryGetValue(bot, out Dictionary<uint, Steam.BoosterInfo>? boosterInfos)) {
+						continue;
+					}
 
-		internal string UnscheduleBoosters(HashSet<uint>? gameIDs = null, int? timeLimitHours = null) {
-			HashSet<uint> removedGameIDs = BoosterQueue.RemoveBoosters(gameIDs, timeLimitHours);
+					if (!boosterInfos.TryGetValue(gameID, out Steam.BoosterInfo? boosterInfo)) {
+						continue;
+					}
 
-			if (removedGameIDs.Count == 0) {
-				if (timeLimitHours == null) {
-					return Commands.FormatBotResponse(Bot, Strings.QueueRemovalByAppFail);
+					botStates.Add(bot, (BoosterHandlers[bot.BotName].Jobs.GetNumBoosters(gameID), boosterInfo.AvailableAtTime ?? now));
 				}
-				
-				return Commands.FormatBotResponse(Bot, Strings.QueueRemovalByTimeFail);
 
-			}
-
-			return Commands.FormatBotResponse(Bot, String.Format(Strings.QueueRemovalSuccess, removedGameIDs.Count, String.Join(", ", removedGameIDs)));
-		}
-
-		internal string GetStatus(bool shortStatus = false) {
-			if (shortStatus) {
-				return Commands.FormatBotResponse(Bot, BoosterQueue.GetShortStatus() ?? BoosterQueue.GetStatus());
-			}
-
-			return Commands.FormatBotResponse(Bot, BoosterQueue.GetStatus());
-		}
-
-		internal void PerpareStatusReport(string message, bool suppressDuplicateMessages = false) {
-			if (suppressDuplicateMessages && LastResponse == message) {
-				return;
-			}
-
-			LastResponse = message;
-			// Could be that multiple bots will try to respond all at once individually.  Start a timer, during which all messages will be logged and sent all together when the timer triggers.
-			if (StoredResponses.Count == 0) {
-				message = Commands.FormatBotResponse(Bot, message);
-			}
-			StoredResponses.Add(message);
-			if (!ResponseTimers.ContainsKey(RespondingBot.BotName)) {
-				ResponseTimers[RespondingBot.BotName] = new Timer(
-					async e => await SendStatusReport(RespondingBot, RecipientSteamID).ConfigureAwait(false),
-					null,
-					GetMillisecondsFromNow(DateTime.Now.AddSeconds(5)),
-					Timeout.Infinite
-				);
-			}
-		}
-
-		private static async Task SendStatusReport(Bot respondingBot, ulong recipientSteamID) {
-			if (!respondingBot.IsConnectedAndLoggedOn) {
-				ResponseTimers[respondingBot.BotName].Change(BoosterHandler.GetMillisecondsFromNow(DateTime.Now.AddSeconds(1)), Timeout.Infinite);
-
-				return;
-			}
-
-			ResponseTimers.TryRemove(respondingBot.BotName, out Timer? _);
-			List<string> messages = new List<string>();
-			List<string> botNames = BoosterHandlers.Keys.ToList<string>();
-			botNames.Sort();
-			foreach (string botName in botNames) {
-				if (BoosterHandlers[botName].StoredResponses.Count == 0 
-					|| BoosterHandlers[botName].RespondingBot.BotName != respondingBot.BotName) {
+				// No bots can craft boosters for this gameID
+				if (botStates.Count == 0) {
 					continue;
 				}
 
-				messages.Add(String.Join(Environment.NewLine, BoosterHandlers[botName].StoredResponses));
-				if (BoosterHandlers[botName].StoredResponses.Count > 1) {
-					messages.Add("");
-				}
-				BoosterHandlers[botName].StoredResponses.Clear();
-			}
-			
-			string message = String.Join(Environment.NewLine, messages);
+				for (int i = 0; i < amount; i++) {
+					// Find the best bot for this booster
+					Bot? bestBot = null;
+					foreach(var botState in botStates) {
+						if (bestBot == null) {
+							bestBot = botState.Key;
 
-			if (recipientSteamID == 0 || !new SteamID(recipientSteamID).IsIndividualAccount) {
-				ASF.ArchiLogger.LogGenericInfo(message);
-			} else {
-				await respondingBot.SendMessage(recipientSteamID, message).ConfigureAwait(false);
+							continue;
+						}
+
+						Bot bot = botState.Key;
+						int numQueued = botState.Value.numQueued;
+						DateTime nextCraftTime = botState.Value.nextCraftTime;
+
+						if (botStates[bestBot].nextCraftTime.AddDays(botStates[bestBot].numQueued) > nextCraftTime.AddDays(numQueued)) {
+							bestBot = bot;
+						}
+					}
+
+					if (bestBot == null) {
+						break;
+					}
+
+					// Assign the booster to the best bot
+					gameIDsToQueue.TryAdd(bestBot, new List<uint>());
+					gameIDsToQueue[bestBot].Add(gameID);
+					var bestBotState = botStates[bestBot];
+					botStates[bestBot] = (bestBotState.numQueued + 1, bestBotState.nextCraftTime);
+				}
 			}
+
+			if (gameIDsToQueue.Count == 0) {
+				foreach(Bot bot in bots) {
+					craftingReporter.Report(bot, Strings.BoostersUncraftable);
+				}
+
+				craftingReporter.ForceSend();
+
+				return;
+			}
+
+			// Queue the boosters
+			foreach (var item in gameIDsToQueue) {
+				Bot bot = item.Key;
+				List<uint> gameIDs = item.Value;
+
+				BoosterHandlers[bot.BotName].Jobs.Add(new BoosterJob(bot, jobType, gameIDs, craftingReporter));
+				craftingReporter.Report(bot, String.Format(Strings.BoosterCreationStarting, gameIDs.Count));
+			}
+
+			craftingReporter.ForceSend();
+		}
+
+		internal string UnscheduleBoosters(HashSet<uint>? gameIDs = null, int? timeLimitHours = null) {
+			List<uint> removedGameIDs = new List<uint>();
+
+			if (timeLimitHours == 0) {
+				// Cancel everything, as everything takes more than 0 hours to craft
+				removedGameIDs.AddRange(Jobs.RemoveAllBoosters());
+			} else {
+				// Cancel all boosters for a certain game
+				if (gameIDs != null) {
+					foreach(uint gameID in gameIDs) {
+						int numRemoved = Jobs.RemoveBoosters(gameID);
+
+						if (numRemoved > 0) {
+							for (int i = 0; i < numRemoved; i++) {
+								removedGameIDs.Add(gameID);
+							}
+						}
+					}
+				}
+
+				// Cancel all boosters that will take more than a certain number of hours to craft
+				if (timeLimitHours != null) {
+					DateTime timeLimit = DateTime.Now.AddHours(timeLimitHours.Value);
+					(List<Booster> queuedBoosters, List<uint> unqueuedBoosters) = Jobs.QueuedAndUnqueuedBoosters();
+
+					foreach (Booster booster in queuedBoosters) {
+						int unqueuedCount = unqueuedBoosters.Where(x => x == booster.GameID).Count();
+						DateTime boosterCraftTime = booster.GetAvailableAtTime();
+
+						if (unqueuedCount > 0) {
+							for (int i = 0; i < unqueuedCount; i++) {
+								if (boosterCraftTime.AddDays(i + 1) > timeLimit) {
+									if (Jobs.RemoveUnqueuedBooster(booster.GameID)) {
+										removedGameIDs.Add(booster.GameID);
+									}
+								}
+							}
+						}
+
+						if (boosterCraftTime > timeLimit) {
+							if (Jobs.RemoveQueuedBooster(booster.GameID)) {
+								removedGameIDs.Add(booster.GameID);
+							}
+						}
+					}
+				}
+			}
+
+			if (removedGameIDs.Count == 0) {
+				if (timeLimitHours != null) {
+					return Commands.FormatBotResponse(Bot, Strings.QueueRemovalByTimeFail);
+				} else {
+					return Commands.FormatBotResponse(Bot, Strings.QueueRemovalByAppFail);
+				}
+			}
+
+			IEnumerable<string> gameIDStringsWithMultiples = removedGameIDs.GroupBy(x => x).Select(group => group.Count() == 1 ? group.Key.ToString() : String.Format("{0} (x{1})", group.Key, group.Count()));
+
+			return Commands.FormatBotResponse(Bot, String.Format(Strings.QueueRemovalSuccess, removedGameIDs.Count, String.Join(", ", gameIDStringsWithMultiples)));
+		}
+
+		internal void UpdateBoosterJobs() {
+			Jobs.Finished().ToList().ForEach(job => {
+				job.Finish();
+				Jobs.Remove(job);
+			});
+
+			BoosterDatabase.UpdateBoosterJobs(Jobs.Limited().Unfinised().SaveState());
+		}
+
+		private void CancelBoosterJobs() {
+			foreach (BoosterJob job in Jobs) {
+				job.Stop();
+			}
+
+			Jobs.Clear();
+		}
+
+		private void RestoreBoosterJobs() {
+			uint? craftingGameID = BoosterDatabase.CraftingGameID;
+			DateTime? craftingTime = BoosterDatabase.CraftingTime;
+			if (craftingGameID != null && craftingTime != null) {
+				// We were in the middle of crafting a booster when ASF was reset, check to see if that booster was crafted or not
+				void handler(Dictionary<uint, Steam.BoosterInfo> boosterInfos) {
+					try {
+						if (!boosterInfos.TryGetValue(craftingGameID.Value, out Steam.BoosterInfo? newBoosterInfo)) {
+							// No longer have access to craft boosters for this game (game removed from account, or sometimes due to very rare Steam bugs)
+
+							return;
+						}
+
+						if (newBoosterInfo.Unavailable && newBoosterInfo.AvailableAtTime != null
+							&& newBoosterInfo.AvailableAtTime != craftingTime.Value
+							&& (newBoosterInfo.AvailableAtTime.Value - craftingTime.Value).TotalHours > 2 // Make sure the change in time isn't due to daylight savings
+						) {
+							// Booster was crafted
+							Bot.ArchiLogger.LogGenericInfo(String.Format(Strings.BoosterUnexpectedlyCrafted, craftingGameID.Value));
+
+							// Remove 1 of this booster from our jobs
+							BoosterDatabase.BoosterJobs.Any(jobState => jobState.GameIDs.Remove(craftingGameID.Value));
+							BoosterDatabase.PostCraft();
+
+							foreach (BoosterJobState jobState in BoosterDatabase.BoosterJobs) {
+								Jobs.Add(new BoosterJob(Bot, BoosterJobType.Limited, jobState));
+							}
+						}
+					} finally {
+						BoosterQueue.OnBoosterInfosUpdated -= handler;
+					}
+				}
+
+				BoosterQueue.OnBoosterInfosUpdated += handler;
+				BoosterQueue.Start();
+			} else {
+				foreach (BoosterJobState jobState in BoosterDatabase.BoosterJobs) {
+					Jobs.Add(new BoosterJob(Bot, BoosterJobType.Limited, jobState));
+				}
+			}
+		}
+
+		internal string GetStatus(bool shortStatus = false) {
+			// Queue empty
+			Booster? nextBooster = Jobs.NextBooster();
+			DateTime? limitedLastBoosterCraftTime = Jobs.Limited().LastBoosterCraftTime();
+			if (nextBooster == null || (shortStatus && limitedLastBoosterCraftTime == null)) {
+				if (BoosterQueue.IsUpdatingBoosterInfos()) {
+					return Commands.FormatBotResponse(Bot, Strings.BoosterInfoUpdating);
+				}
+
+				return Commands.FormatBotResponse(Bot, Strings.QueueEmpty);
+			}
+
+			// Short status
+			int limitedNumBoosters = Jobs.Limited().NumBoosters();
+			int limitedGemsNeeded = Jobs.Limited().GemsNeeded();
+			if (shortStatus) {
+				if (limitedLastBoosterCraftTime!.Value.Date == DateTime.Today) {
+					return Commands.FormatBotResponse(Bot, String.Format(Strings.QueueStatusShort, limitedNumBoosters, String.Format("{0:N0}", limitedGemsNeeded), String.Format("{0:t}", limitedLastBoosterCraftTime)));
+				} else {
+					return Commands.FormatBotResponse(Bot, String.Format(Strings.QueueStatusShortWithDate, limitedNumBoosters, String.Format("{0:N0}", limitedGemsNeeded), String.Format("{0:d}", limitedLastBoosterCraftTime), String.Format("{0:t}", limitedLastBoosterCraftTime)));
+				}
+			}
+
+			// Long status
+			List<string> responses = new List<string>();
+
+			// Refreshing booster page
+			if (BoosterQueue.IsUpdatingBoosterInfos()) {
+				responses.Add(Strings.BoosterInfoUpdating);
+			}
+
+			// Not enough gems
+			int gemsNeeded = Jobs.GemsNeeded();
+			if (gemsNeeded > BoosterQueue.AvailableGems) {
+				responses.Add(String.Format("{0} :steamsad:", Strings.QueueStatusNotEnoughGems));
+
+				if (nextBooster.Info.Price > BoosterQueue.AvailableGems) {
+					responses.Add(String.Format(Strings.QueueStatusGemsNeeded, String.Format("{0:N0}", nextBooster.Info.Price - BoosterQueue.AvailableGems)));
+				}
+
+				if (Jobs.NumUncrafted() > 1) {
+					responses.Add(String.Format(Strings.QueueStatusTotalGemsNeeded, String.Format("{0:N0}", gemsNeeded - BoosterQueue.AvailableGems)));
+				}
+			}
+
+			// One-time booster status
+			if (limitedNumBoosters > 0 && limitedLastBoosterCraftTime != null) {
+				if (limitedLastBoosterCraftTime.Value.Date == DateTime.Today) {
+					responses.Add(String.Format(Strings.QueueStatusLimitedBoosters, Jobs.Limited().NumCrafted(), limitedNumBoosters, String.Format("{0:t}", limitedLastBoosterCraftTime), String.Format("{0:N0}", limitedGemsNeeded)));
+				} else {
+					responses.Add(String.Format(Strings.QueueStatusLimitedBoostersWithDate, Jobs.Limited().NumCrafted(), limitedNumBoosters, String.Format("{0:d}", limitedLastBoosterCraftTime), String.Format("{0:t}", limitedLastBoosterCraftTime), String.Format("{0:N0}", limitedGemsNeeded)));
+				}
+				IEnumerable<string> gameIDStringsWithMultiples = Jobs.Limited().UncraftedGameIDs().GroupBy(x => x).Select(group => group.Count() == 1 ? group.Key.ToString() : String.Format("{0} (x{1})", group.Key, group.Count()));
+				responses.Add(String.Format(Strings.QueueStatusLimitedBoosterList, String.Join(", ", gameIDStringsWithMultiples)));
+			}
+
+			// Permanent booster status
+			if (Jobs.Permanent().NumBoosters() > 0) {
+				responses.Add(String.Format(Strings.QueueStatusPermanentBoosters, String.Format("{0:N0}", Jobs.Permanent().GemsNeeded()), String.Join(", ", Jobs.Permanent().GameIDs())));
+			}
+
+			// Next booster to be crafted
+			if (DateTime.Now > nextBooster.GetAvailableAtTime()) {
+				responses.Add(String.Format(Strings.QueueStatusNextBoosterCraftingNow, nextBooster.Info.Name, nextBooster.GameID));
+			} else {
+				responses.Add(String.Format(Strings.QueueStatusNextBoosterCraftingLater, String.Format("{0:t}", nextBooster.GetAvailableAtTime()), nextBooster.Info.Name, nextBooster.GameID));
+			}
+
+			responses.Add("");
+
+			return Commands.FormatBotResponse(Bot, String.Join(Environment.NewLine, responses));
 		}
 		
 		internal uint GetGemsNeeded() {
-			if (BoosterQueue.GetAvailableGems() > BoosterQueue.GetGemsNeeded(BoosterType.Any, wasCrafted: false)) {
+			int gemsNeeded = Jobs.GemsNeeded();
+			if (BoosterQueue.AvailableGems > gemsNeeded) {
 				return 0;
 			}
 
-			return (uint) (BoosterQueue.GetGemsNeeded(BoosterType.Any, wasCrafted: false) - BoosterQueue.GetAvailableGems());
+			return (uint) (gemsNeeded - BoosterQueue.AvailableGems);
 		}
 
 		internal void OnGemsRecieved() {
@@ -195,31 +342,24 @@ namespace BoosterManager {
 			BoosterQueue.Start();
 		}
 
-		internal bool StopMarketTimer() {
-			if (MarketRepeatTimer == null) {
-				return false;
+		internal static void GetBoosterInfos(HashSet<Bot> bots, Action<Dictionary<Bot, Dictionary<uint, Steam.BoosterInfo>>> callback) {
+			ConcurrentDictionary<Bot, Dictionary<uint, Steam.BoosterInfo>> boosterInfos = new();
+
+			foreach (Bot bot in bots) {
+				BoosterQueue boosterQueue = BoosterHandlers[bot.BotName].BoosterQueue;
+
+				void OnBoosterInfosUpdated(Dictionary<uint, Steam.BoosterInfo> boosterInfo) {
+					boosterQueue.OnBoosterInfosUpdated -= OnBoosterInfosUpdated;
+					boosterInfos.TryAdd(bot, boosterInfo);
+
+					if (boosterInfos.Count == bots.Count) {
+						callback(boosterInfos.ToDictionary());
+					}
+				}
+
+				boosterQueue.OnBoosterInfosUpdated += OnBoosterInfosUpdated;
+				boosterQueue.Start();
 			}
-
-			MarketRepeatTimer.Change(Timeout.Infinite, Timeout.Infinite);
-			MarketRepeatTimer.Dispose();
-			MarketRepeatTimer = null;
-
-			return true;
 		}
-
-		internal void StartMarketTimer(uint minutes) {
-			StopMarketTimer();
-			MarketRepeatTimer = new Timer(async e => await MarketHandler.AcceptMarketConfirmations(Bot).ConfigureAwait(false),
-				null, 
-				TimeSpan.FromMinutes(minutes), 
-				TimeSpan.FromMinutes(minutes)
-			);
-		}
-
-		internal static bool IsCraftingOneTimeBoosters() {
-			return BoosterHandlers.Any(handler => handler.Value.BoosterQueue.GetNumBoosters(BoosterType.OneTime, wasCrafted: false) > 0);
-		}
-
-		private static int GetMillisecondsFromNow(DateTime then) => Math.Max(0, (int) (then - DateTime.Now).TotalMilliseconds);
 	}
 }

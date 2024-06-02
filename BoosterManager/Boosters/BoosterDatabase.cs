@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.IO;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
@@ -11,6 +12,15 @@ namespace BoosterManager {
 	internal sealed class BoosterDatabase : SerializableFile {
 		[JsonInclude]
 		private ConcurrentDictionary<uint, BoosterLastCraft> BoosterLastCrafts { get; init; } = new();
+
+		[JsonInclude]
+		internal List<BoosterJobState> BoosterJobs { get; private set; } = new();
+
+		[JsonInclude]
+		internal uint? CraftingGameID { get; private set; } = null;
+
+		[JsonInclude]
+		internal DateTime? CraftingTime { get; private set; } = null;
 
 		[JsonConstructor]
 		private BoosterDatabase() { }
@@ -25,7 +35,7 @@ namespace BoosterManager {
 
 		protected override Task Save() => Save(this);
 
-		internal static BoosterDatabase? CreateOrLoad(string filePath) {
+		internal static BoosterDatabase CreateOrLoad(string filePath) {
 			if (string.IsNullOrEmpty(filePath)) {
 				throw new ArgumentNullException(nameof(filePath));
 			}
@@ -42,20 +52,20 @@ namespace BoosterManager {
 				if (string.IsNullOrEmpty(json)) {
 					ASF.ArchiLogger.LogGenericError(string.Format(ArchiSteamFarm.Localization.Strings.ErrorIsEmpty, nameof(json)));
 
-					return null;
+					return new BoosterDatabase(filePath);
 				}
 
 				boosterDatabase = json.ToJsonObject<BoosterDatabase>();
 			} catch (Exception e) {
 				ASF.ArchiLogger.LogGenericException(e);
 
-				return null;
+				return new BoosterDatabase(filePath);
 			}
 
 			if (boosterDatabase == null) {
 				ASF.ArchiLogger.LogNullError(boosterDatabase);
 
-				return null;
+				return new BoosterDatabase(filePath);
 			}
 
 			boosterDatabase.FilePath = filePath;
@@ -79,15 +89,34 @@ namespace BoosterManager {
 			return null;
 		}
 
-		internal void SetLastCraft(uint appID, DateTime craftTime, int boosterDelay) {
-			BoosterLastCraft newCraft = new BoosterLastCraft(craftTime, boosterDelay);
+		internal void SetLastCraft(uint appID, DateTime craftTime) {
+			BoosterLastCraft newCraft = new BoosterLastCraft(craftTime);
 			BoosterLastCrafts.AddOrUpdate(appID, newCraft, (key, oldCraft) => {
 				oldCraft.CraftTime = craftTime;
-				// boosterDelay might change, but the old delay will still be there, the real delay will be the bigger of the two
-				oldCraft.BoosterDelay = Math.Max(oldCraft.BoosterDelay, boosterDelay);
 
 				return oldCraft;
 			});
+			
+			Utilities.InBackground(Save);
+		}
+
+		internal void UpdateBoosterJobs(List<BoosterJobState> boosterJobs) {
+			BoosterJobs = boosterJobs;
+
+			Utilities.InBackground(Save);
+		}
+
+		internal async Task PreCraft(Booster booster) {
+			CraftingGameID = booster.GameID;
+			CraftingTime = booster.Info.AvailableAtTime;
+
+			await Save().ConfigureAwait(false);
+		}
+
+		internal void PostCraft() {
+			CraftingGameID = null;
+			CraftingTime = null;
+
 			Utilities.InBackground(Save);
 		}
 	}

@@ -24,9 +24,10 @@ Parameters in square brackets are sometimes `[Optional]`, parameters in angle br
 
 Command | Access | Description
 --- | --- | ---
-`booster [Bots] <AppIDs>`|`Master`|Adds `AppIDs` to the given bot's booster queue.  `AppIDs` added to the booster queue this way will be crafted one time as soon as they become available.
+`booster [Bots] <AppIDs>`|`Master`|Adds `AppIDs` to the given bot's booster queue.
+`booster^ [Bots] <AppIDs> <Amounts>`|`Master`|Adds `AppIDs` to some or all of given bot's booster queues, selected in a way to minimize the time it takes to craft a total `Amount` of boosters.  The `Amounts` specified may be a single amount for all `AppIDs`, or multiple amounts for each `AppID` respectively.
 `bstatus [Bots]`|`Master`|Prints the status of the given bot's booster queue.
-`bstatus^ [Bots]`|`Master`|Prints the condensed status of the given bot's booster queue.
+`bstatus^ [Bots]`|`Master`|Prints a shortened status of the given bot's booster queue.
 `bstop [Bots] <AppIDs>`|`Master`|Removes `AppIDs` from the given bot's booster queue.
 `bstoptime [Bots] <Hours>`|`Master`|Removes everything from the given bot's booster queue that will take more than the given `Hours` to craft.
 `bstopall [Bots]`|`Master`|Removes everything from the given bot's booster queue.
@@ -34,7 +35,7 @@ Command | Access | Description
 `bdrops [Bots]`|`Master`|Prints the number of booster eligible games for the given bots
 
 > [!NOTE]
-> Any `booster` commands that haven't completed when ASF is closed will not automatically restart the next time ASF is run.  If you allow ASF to update this plugin, then these updates will be paused until all `booster` commands have finished.
+> Any `booster` commands that haven't completed when ASF is closed will automatically resume the next time ASF is ran.
 
 ### Inventory Commands
 
@@ -98,7 +99,7 @@ Command | Access | Description
 
 Command | Access | Description
 --- | --- | ---
-`trade2faok [Bot]`|`Master`|Accepts all pending 2FA trade confirmations for given bot instances.
+`trade2faok [Bot] [Minutes]`|`Master`|Accepts all pending 2FA trade confirmations for given bot instances.  Optionally repeat this action once every `Minutes`.  To cancel any repetition, set `Minutes` to 0.
 `tradecheck [Bot]`|`Master`|Attempt to handle any incoming trades for the given bot using ASF's [trading logic](https://github.com/JustArchiNET/ArchiSteamFarm/wiki/Trading#logic).
 `tradesincoming [Bot] [From]`|`Master`|Displays the number of incoming trades for the given bot, optionally filtered to only count trades `From` the given bot names or 64-bit SteamIDs.
 
@@ -106,6 +107,7 @@ Command | Access | Description
 
 Command | Access | Description
 --- | --- | ---
+`buylimit <Bots>`|`Master`|Displays the value of the given bot's active buy orders, and how close the bot is to hitting the buy order limit.
 `findlistings <Bots> <ItemIdentifiers>`|`Master`|Displays the `ListingIDs` of any market listing belonging to the given bot and matching any of the [`ItemIdentifiers`](#itemidentifiers).
 `findandremovelistings <Bots> <ItemIdentifiers>`|`Master`|Removes any market listing belonging to the given bot and matching any of the [`ItemIdentifiers`](#itemidentifiers).
 `listings [Bots]`|`Master`|Displays the total value of all market listings owned by the given bot.
@@ -156,6 +158,7 @@ Most pluralized commands also have a non-pluralized alias; ex: `lootboosters` ha
 
 Command | Alias |
 --- | --- |
+`buylimit`|`bl`
 `findlistings`|`fl`
 `findandremovelistings`|`frl`
 `removelistings`|`rlistings`, `removel`
@@ -174,6 +177,7 @@ Command | Alias |
 `bstatus ASF`|`bsa`
 `bstatus^ ASF`|`bsa^`
 `boosters asf`|`ba`
+`buylimit ASF`|`bla`
 `cards asf`|`ca`
 `foils asf`|`fa`
 `gems ASF`|`ga`
@@ -187,7 +191,7 @@ Command | Alias |
 `lootkeys ASF`|`lka`
 `lootsacks ASF`|`lsa`
 `market2faok ASF [Minutes]`|`m2faoka [Minutes]`
-`trade2faok ASF`|`t2faoka`
+`trade2faok ASF [Minutes]`|`t2faoka [Minutes]`
 `tradecheck ASF`|`tca`
 `tradesincoming ASF [From]`|`tia [From]`
 `tradesincoming ASF ASF`|`tiaa`
@@ -230,21 +234,6 @@ Example:
 
 > [!NOTE]
 > It's not possible to remove any of these `AppIDs` from the booster queue using any commands.  Any changes you want to make will need to be made in the configuration file.
-
----
-
-### BoosterDelayBetweenBots
-
-`uint` type with default value of `0`.  This configuration setting can be added to your `ASF.json` config file.  It will add a `Seconds` delay between each of your bot's booster crafts.  For example: when crafting a booster at 12:00 using a 60 second delay; Bot 1 will craft at 12:00, Bot 2 will  craft at 12:01, Bot 3 will craft at 12:02, and so on.
-
-Example:
-
-```json
-"BoosterDelayBetweenBots": 60,
-```
-
-> [!NOTE]
-> This is not recommended to be used except in the most extreme cases.
 
 ---
 

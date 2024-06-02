@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Nodes;
+using System.Threading;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Helpers.Json;
 using ArchiSteamFarm.Steam;
@@ -10,6 +12,8 @@ using BoosterManager.Localization;
 
 namespace BoosterManager {
 	internal static class MarketHandler {
+		private static ConcurrentDictionary<Bot, (Timer, StatusReporter?)> MarketRepeatTimers = new();
+
 		internal static async Task<string> GetListings(Bot bot) {
 			uint? listingsValue = await GetMarketListingsValue(bot).ConfigureAwait(false);
 
@@ -236,9 +240,86 @@ namespace BoosterManager {
 			return filteredListings;
 		}
 
-		internal static async Task AcceptMarketConfirmations(Bot bot) {
+		internal static async Task<string> GetBuyLimit(Bot bot) {
+			(Steam.MarketListingsResponse? marketListings, _) = await WebRequest.GetMarketListings(bot).ConfigureAwait(false);
+
+			if (marketListings == null || !marketListings.Success) {
+				return Strings.MarketListingsFetchFailed;
+			}
+
+			long buyOrderValue = 0;
+			foreach (JsonNode? listing in marketListings.BuyOrders) {
+				if (listing == null) {
+					bot.ArchiLogger.LogNullError(listing);
+						
+					return Strings.MarketListingsFetchFailed;
+				}
+
+				uint? quantity_remaining = listing["quantity_remaining"]?.ToString().ToJsonObject<uint>();
+				if (quantity_remaining == null) {
+					bot.ArchiLogger.LogNullError(quantity_remaining);
+						
+					return Strings.MarketListingsFetchFailed;
+				}
+
+				long? price = listing["price"]?.ToString().ToJsonObject<long>();
+				if (price == null) {
+					bot.ArchiLogger.LogNullError(price);
+						
+					return Strings.MarketListingsFetchFailed;
+				}
+
+				buyOrderValue += price.Value * quantity_remaining.Value;					
+			}
+
+			long buyOrderLimit = bot.WalletBalance * 10;
+			long remainingBuyOrderLimit = buyOrderValue > buyOrderLimit ? 0 : buyOrderLimit - buyOrderValue;
+			double buyOrderUsagePercent = buyOrderLimit == 0 ? (buyOrderValue == 0 ? 1 : Double.PositiveInfinity) : (double) buyOrderValue / buyOrderLimit;
+
+			return Commands.FormatBotResponse(bot, String.Format(Strings.MarketBuyLimit, String.Format("{0:#,#0.00}", buyOrderValue / 100.0), String.Format("{0:#,#0.00}", buyOrderLimit / 100.0), String.Format("{0:0%}", buyOrderUsagePercent), String.Format("{0:#,#0.00}", remainingBuyOrderLimit / 100.0), bot.WalletCurrency.ToString()));
+		}
+
+		internal static bool StopMarketRepeatTimer(Bot bot) {
+			if (!MarketRepeatTimers.ContainsKey(bot)) {
+				return false;
+			}
+
+			if (MarketRepeatTimers.TryRemove(bot, out (Timer, StatusReporter?) item)) {
+				(Timer? oldTimer, StatusReporter? statusReporter) = item;
+				
+				if (oldTimer != null) {
+					oldTimer.Change(Timeout.Infinite, Timeout.Infinite);
+					oldTimer.Dispose();
+				}
+
+				if (statusReporter != null) {
+					statusReporter.ForceSend();
+				}
+			}
+
+			return true;
+		}
+
+		internal static void StartMarketRepeatTimer(Bot bot, uint minutes, StatusReporter? statusReporter) {
+			StopMarketRepeatTimer(bot);
+
+			Timer newTimer = new Timer(async _ => await MarketHandler.AcceptMarketConfirmations(bot, statusReporter).ConfigureAwait(false), null, Timeout.Infinite, Timeout.Infinite);
+			if (MarketRepeatTimers.TryAdd(bot, (newTimer, statusReporter))) {
+				newTimer.Change(TimeSpan.FromMinutes(minutes), TimeSpan.FromMinutes(minutes));
+			} else {
+				newTimer.Dispose();
+			}
+		}
+
+		private static async Task AcceptMarketConfirmations(Bot bot, StatusReporter? statusReporter) {
 			(bool success, _, string message) = await bot.Actions.HandleTwoFactorAuthenticationConfirmations(true, Confirmation.EConfirmationType.Market).ConfigureAwait(false);
-			bot.ArchiLogger.LogGenericInfo(success ? message : String.Format(ArchiSteamFarm.Localization.Strings.WarningFailedWithError, message));
+
+			string report = success ? message : String.Format(ArchiSteamFarm.Localization.Strings.WarningFailedWithError, message);
+			if (statusReporter != null) {
+				statusReporter.Report(bot, report);
+			} else {
+				bot.ArchiLogger.LogGenericInfo(report);
+			}
 		}
 	}
 }
