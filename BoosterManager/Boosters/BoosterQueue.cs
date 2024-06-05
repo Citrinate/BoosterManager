@@ -26,6 +26,7 @@ namespace BoosterManager {
 		private const int BoosterInfosUpdateBackOffMaxMinutes = 15;
 		private float BoosterInfosUpdateBackOffMultiplier = BoosterInfosUpdateBackOffMultiplierDefault;
 		private SemaphoreSlim RunSemaphore = new SemaphoreSlim(1, 1);
+		private bool RunScheduled = false;
 
 		internal BoosterQueue(Bot bot) {
 			Bot = bot;
@@ -42,8 +43,21 @@ namespace BoosterManager {
 		}
 
 		private async Task Run() {
+			// Allow for a maximum of two running tasks, one waiting, and one working
+			lock (RunSemaphore) {
+				if (RunScheduled) {
+					return;
+				}
+
+				RunScheduled = true;
+			}
+
 			await RunSemaphore.WaitAsync().ConfigureAwait(false);
 			try {
+				lock (RunSemaphore) {
+					RunScheduled = false;
+				}
+
 				if (!Bot.IsConnectedAndLoggedOn) {
 					UpdateTimer(DateTime.Now.AddSeconds(1));
 
