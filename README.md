@@ -110,11 +110,11 @@ Command | Access | Description
 `buylimit <Bots>`|`Master`|Displays the value of the given bot's active buy orders, and how close the bot is to hitting the buy order limit.
 `findlistings <Bots> <ItemIdentifiers>`|`Master`|Displays the `ListingIDs` of any market listing belonging to the given bot and matching any of the [`ItemIdentifiers`](#itemidentifiers).
 `findandremovelistings <Bots> <ItemIdentifiers>`|`Master`|Removes any market listing belonging to the given bot and matching any of the [`ItemIdentifiers`](#itemidentifiers).
-`listings [Bots]`|`Master`|Displays the total value of all market listings owned by the given bot.
+`listings [Bots]`|`Master`|Displays the total value of all active market listings owned by the given bot.
 `removelistings [Bot] <ListingIDs>`|`Master`|Removes market `ListingIDs` belonging to the given bot.
 `removepending <Bots>`|`Master`|Removes all pending market listings belonging to the given bot.
 `market2faok [Bot] [Minutes]`|`Master`|Accepts all pending 2FA market confirmations for given bot instances.  Optionally repeat this action once every `Minutes`.  To cancel any repetition, set `Minutes` to 0.
-`value [Bots] [BalanceLimit]`|`Master`|Displays the combined wallet balance and total value of all market listings owned by the given bot.  The maximum allowed balance in your region may be provided as `BalanceLimit`, a whole number, and it will instead display how close the given bot is to reaching that limit.
+`value [Bots] [BalanceLimit]`|`Master`|Displays the combined wallet balance and total value of all active market listings owned by the given bot.  The maximum allowed balance in your region may be provided as `BalanceLimit`, a whole number, and it will instead display how close the given bot is to reaching that limit.
 
 ### Log Commands
 
