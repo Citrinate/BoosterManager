@@ -67,8 +67,9 @@ namespace BoosterManager {
 				// Reload the booster creator page
 				if (!await UpdateBoosterInfos().ConfigureAwait(false)) {
 					// Reload failed, try again later
-					Bot.ArchiLogger.LogGenericError(Strings.BoosterInfoUpdateFailed);
-					UpdateTimer(DateTime.Now.AddMinutes(Math.Min(BoosterInfosUpdateBackOffMaxMinutes, BoosterInfosUpdateBackOffMinMinutes * BoosterInfosUpdateBackOffMultiplier)));
+					var retryBoosterUpdateInMinutes = Math.Min(BoosterInfosUpdateBackOffMaxMinutes, BoosterInfosUpdateBackOffMinMinutes * BoosterInfosUpdateBackOffMultiplier);
+					Bot.ArchiLogger.LogGenericError(String.Format(Strings.BoosterInfoUpdateFailed, String.Format("{0:0.##}", retryBoosterUpdateInMinutes)));
+					UpdateTimer(DateTime.Now.AddMinutes(retryBoosterUpdateInMinutes));
 					BoosterInfosUpdateBackOffMultiplier += BoosterInfosUpdateBackOffMultiplierStep;
 
 					return;

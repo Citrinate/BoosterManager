@@ -118,8 +118,8 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="BoosterInfoUpdateFailed" xml:space="preserve">
-    <value>Failed to update booster information, will retry in 1 minute</value>
-    <comment/>
+    <value>Failed to update booster information, will retry in {0} minutes</value>
+    <comment>{0} will be replaced by a number</comment>
   </data>
   <data name="NotEnoughGems" xml:space="preserve">
     <value>{0} more gems are needed to continue crafting boosters. Crafting will resume when more gems are available.</value>
