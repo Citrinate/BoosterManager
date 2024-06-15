@@ -561,4 +561,8 @@
     <value>No boosters will be crafted. This bot either can't craft the requested boosters, or the requested boosters are unmarketable. The following boosters are unmarketable: {0}</value>
     <comment>{0} will be replaced by a list of appIDs</comment>
   </data>
+  <data name="MarketableAppDataFetchFailed" xml:space="preserve">
+    <value>Failed to fetch marketable apps data</value>
+    <comment/>
+  </data>
 </root>

@@ -220,6 +220,9 @@ Command | Alias |
 "AllowCraftUnmarketableBoosters": false,
 ```
 
+> [!NOTE]
+> The plugin cannot immediately detect when a game's boosters switch from being marketable to unmarketable.  It will usually take ~4 hours to detect this change.
+
 ---
 
 ### GamesToBooster

@@ -48,7 +48,7 @@ namespace BoosterManager {
 					|| marketableOverrideResponse == null || marketableOverrideResponse.Content == null 
 					|| unmarketableOverrideResponse == null || unmarketableOverrideResponse.Content == null
 				) {
-					ASF.ArchiLogger.LogGenericDebug("Failed to fetch marketable apps data");
+					ASF.ArchiLogger.LogGenericDebug(Strings.MarketableAppDataFetchFailed);
 
 					return false;
 				}
@@ -58,7 +58,7 @@ namespace BoosterManager {
 				UnmarketableOverrides = unmarketableOverrideResponse.Content;
 				LastUpdate = DateTime.Now;
 
-				// We're good to stop here, but let's try to replace the cached data that may be up to 1 hour old with fresh data from Steam
+				// We're good to stop here, but let's try to update the cached data that may be up to 1 hour old with fresh data from Steam
 				await UpdateFromSteam().ConfigureAwait(false);
 
 				return true;
@@ -114,12 +114,9 @@ namespace BoosterManager {
 
 			LastSteamUpdate = DateTime.Now;
 
-			if (AppIDs.Count - newerAppIDs.Count > 1000) {
-				// Bad data from Steam, ignore it
-				return;
-			}
-
-			AppIDs = newerAppIDs.Union(MarketableOverrides).Except(UnmarketableOverrides).ToHashSet();
+			// Steam's ISteamApps/GetAppList API is unreliable (more details: https://github.com/Citrinate/Steam-MarketableApps/blob/main/update.py)
+			// Due to this, we should only add apps from this API to our existing list of AppIDs, and should never remove apps just because they don't appear in this API's response
+			AppIDs.UnionWith(newerAppIDs.Except(UnmarketableOverrides));
 		}
 	}
 }
