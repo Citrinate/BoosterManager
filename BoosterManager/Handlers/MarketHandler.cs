@@ -31,11 +31,13 @@ namespace BoosterManager {
 				return Strings.MarketListingsFetchFailed;
 			}
 
+			var value = (listingsValue + bot.WalletBalance + bot.WalletBalanceDelayed) / 100.0;
+
 			if (subtractFrom != 0) {
-				return Commands.FormatBotResponse(bot, String.Format(Strings.AccountValueRemaining, String.Format("{0:#,#0.00}", subtractFrom - ((listingsValue + bot.WalletBalance) / 100.0)), bot.WalletCurrency.ToString()));
+				return Commands.FormatBotResponse(bot, String.Format(Strings.AccountValueRemaining, String.Format("{0:#,#0.00}", subtractFrom - value), bot.WalletCurrency.ToString()));
 			}
 
-			return Commands.FormatBotResponse(bot, String.Format(Strings.AccountValue, String.Format("{0:#,#0.00}", (listingsValue + bot.WalletBalance) / 100.0), bot.WalletCurrency.ToString()));
+			return Commands.FormatBotResponse(bot, String.Format(Strings.AccountValue, String.Format("{0:#,#0.00}", value), bot.WalletCurrency.ToString()));
 		}
 
 		private static async Task<uint?> GetMarketListingsValue(Bot bot) {
