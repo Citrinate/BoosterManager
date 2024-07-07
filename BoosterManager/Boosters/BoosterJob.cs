@@ -108,7 +108,13 @@ namespace BoosterManager {
 
 					Booster? lastQueuedBooster = Boosters.Where(booster => !booster.WasCrafted).OrderBy(booster => booster.GetAvailableAtTime()).LastOrDefault();
 
-					return BoosterJobUtilities.MaxDateTime(lastQueuedBooster?.GetAvailableAtTime(), lastUnqueuedBoosterCraftTime);
+					if (lastQueuedBooster == null && lastUnqueuedBoosterCraftTime == null) {
+						return null;
+					}
+
+					DateTime minDelayAdjustedTime = DateTime.Now.AddSeconds((UncraftedGameIDs.Distinct().Count() - 1) * BoosterQueue.MinDelayBetweenBoostersSeconds);
+
+					return BoosterJobUtilities.MaxDateTime(BoosterJobUtilities.MaxDateTime(lastQueuedBooster?.GetAvailableAtTime(), lastUnqueuedBoosterCraftTime), minDelayAdjustedTime);
 				}
 			}
 		}

@@ -19,7 +19,7 @@ namespace BoosterManager {
 		internal uint AvailableGems => BoosterHandler.AllowCraftUntradableBoosters ? GooAmount : TradableGooAmount;
 		internal event Action<Dictionary<uint, Steam.BoosterInfo>>? OnBoosterInfosUpdated;
 		internal event Action<Booster, BoosterDequeueReason>? OnBoosterRemoved;
-		private const int MinDelayBetweenBoosters = 5; // Minimum delay, in seconds, between booster crafts
+		internal const int MinDelayBetweenBoostersSeconds = 5; // Minimum delay, in seconds, between booster crafts
 		private const float BoosterInfosUpdateBackOffMultiplierDefault = 1.0F;
 		private const float BoosterInfosUpdateBackOffMultiplierStep = 0.5F;
 		private const int BoosterInfosUpdateBackOffMinMinutes = 1;
@@ -120,8 +120,8 @@ namespace BoosterManager {
 
 				// Wait until the next booster is ready to craft
 				DateTime nextBoosterTime = booster.GetAvailableAtTime();
-				if (nextBoosterTime < DateTime.Now.AddSeconds(MinDelayBetweenBoosters)) {
-					nextBoosterTime = DateTime.Now.AddSeconds(MinDelayBetweenBoosters);
+				if (nextBoosterTime < DateTime.Now.AddSeconds(MinDelayBetweenBoostersSeconds)) {
+					nextBoosterTime = DateTime.Now.AddSeconds(MinDelayBetweenBoostersSeconds);
 				}
 
 				UpdateTimer(nextBoosterTime);
@@ -129,7 +129,7 @@ namespace BoosterManager {
 			} finally {
 				Utilities.InBackground(
 					async() => {
-						await Task.Delay(TimeSpan.FromSeconds(MinDelayBetweenBoosters)).ConfigureAwait(false);
+						await Task.Delay(TimeSpan.FromSeconds(MinDelayBetweenBoostersSeconds)).ConfigureAwait(false);
 						RunSemaphore.Release();
 					}
 				);
