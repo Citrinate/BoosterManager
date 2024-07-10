@@ -9,10 +9,11 @@ using ArchiSteamFarm.Plugins.Interfaces;
 using ArchiSteamFarm.Steam.Exchange;
 using System.Text.Json;
 using ArchiSteamFarm.Helpers.Json;
+using SteamKit2;
 
 namespace BoosterManager {
 	[Export(typeof(IPlugin))]
-	public sealed class BoosterManager : IASF, IBotModules, IBotCommand2, IBotTradeOfferResults, IGitHubPluginUpdates {
+	public sealed class BoosterManager : IASF, IBotModules, IBotCommand2, IBotTradeOfferResults, IGitHubPluginUpdates, IBotConnection {
 		public string Name => nameof(BoosterManager);
 		public string RepositoryName => "Citrinate/BoosterManager";
 		public Version Version => typeof(BoosterManager).Assembly.GetName().Version ?? new Version("0");
@@ -130,6 +131,16 @@ namespace BoosterManager {
 			BoosterHandler.BoosterHandlers[bot.BotName].OnGemsRecieved();
 
 			return Task.CompletedTask;
+		}
+		
+		public Task OnBotLoggedOn(Bot bot) {
+			BoosterHandler.BoosterHandlers[bot.BotName].OnBotLoggedOn();
+
+			return Task.CompletedTask;
+		}
+
+		public Task OnBotDisconnected(Bot bot, EResult reason) {
+			return Task.FromResult(0);
 		}
 	}
 }

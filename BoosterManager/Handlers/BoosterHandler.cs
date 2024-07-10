@@ -342,6 +342,10 @@ namespace BoosterManager {
 			BoosterQueue.Start();
 		}
 
+		internal void OnBotLoggedOn() {
+			BoosterQueue.Start();
+		}
+
 		internal static void GetBoosterInfos(HashSet<Bot> bots, Action<Dictionary<Bot, Dictionary<uint, Steam.BoosterInfo>>> callback) {
 			ConcurrentDictionary<Bot, Dictionary<uint, Steam.BoosterInfo>> boosterInfos = new();
 
