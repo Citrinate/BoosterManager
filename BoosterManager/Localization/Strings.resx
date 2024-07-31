@@ -565,4 +565,12 @@
     <value>Failed to fetch marketable apps data</value>
     <comment/>
   </data>
+  <data name="AccountValueRemainingWithDelayed" xml:space="preserve">
+    <value>Remaining: {0} ({1}) {2}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a number, {2} will be replaced by a currency name</comment>
+  </data>
+  <data name="AccountValueWithDelayed" xml:space="preserve">
+    <value>Value: {0} ({1}) {2}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a number, {2} will be replaced by a currency name</comment>
+  </data>
 </root>

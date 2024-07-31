@@ -31,13 +31,22 @@ namespace BoosterManager {
 				return Strings.MarketListingsFetchFailed;
 			}
 
-			var value = (listingsValue + bot.WalletBalance + bot.WalletBalanceDelayed) / 100.0;
+			var value = (listingsValue + bot.WalletBalance) / 100.0;
+			var valueWithDelayed = (listingsValue + bot.WalletBalance + bot.WalletBalanceDelayed) / 100.0;
 
 			if (subtractFrom != 0) {
-				return Commands.FormatBotResponse(bot, String.Format(Strings.AccountValueRemaining, String.Format("{0:#,#0.00}", subtractFrom - value), bot.WalletCurrency.ToString()));
+				if (bot.WalletBalanceDelayed > 0) {
+					return Commands.FormatBotResponse(bot, String.Format(Strings.AccountValueRemainingWithDelayed, String.Format("{0:#,#0.00}", subtractFrom - value), String.Format("{0:#,#0.00}", subtractFrom - valueWithDelayed), bot.WalletCurrency.ToString()));
+				} else {
+					return Commands.FormatBotResponse(bot, String.Format(Strings.AccountValueRemaining, String.Format("{0:#,#0.00}", subtractFrom - value), bot.WalletCurrency.ToString()));
+				}
 			}
 
-			return Commands.FormatBotResponse(bot, String.Format(Strings.AccountValue, String.Format("{0:#,#0.00}", value), bot.WalletCurrency.ToString()));
+			if (bot.WalletBalanceDelayed > 0) {
+				return Commands.FormatBotResponse(bot, String.Format(Strings.AccountValueWithDelayed, String.Format("{0:#,#0.00}", value), String.Format("{0:#,#0.00}", valueWithDelayed), bot.WalletCurrency.ToString()));
+			} else {
+				return Commands.FormatBotResponse(bot, String.Format(Strings.AccountValue, String.Format("{0:#,#0.00}", value), bot.WalletCurrency.ToString()));
+			}
 		}
 
 		private static async Task<uint?> GetMarketListingsValue(Bot bot) {
