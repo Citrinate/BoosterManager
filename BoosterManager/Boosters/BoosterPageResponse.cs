@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using AngleSharp.Dom;
+using ArchiSteamFarm.Helpers.Json;
 using ArchiSteamFarm.Steam;
 
 namespace BoosterManager {
@@ -39,7 +40,7 @@ namespace BoosterManager {
 
 			IEnumerable<Steam.BoosterInfo>? enumerableBoosters;
 			try {
-				enumerableBoosters = JsonSerializer.Deserialize<IEnumerable<Steam.BoosterInfo>>(info.Value);
+				enumerableBoosters = info.Value.ToJsonObject<IEnumerable<Steam.BoosterInfo>>();
 			} catch (JsonException) {
 				throw;
 			}
