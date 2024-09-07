@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 namespace BoosterManager {
-	internal sealed class BoosterHandler {
+	internal sealed class BoosterHandler : IDisposable {
 		private readonly Bot Bot;
 		internal BoosterDatabase BoosterDatabase { get; private set; }
 		internal readonly BoosterQueue BoosterQueue;
@@ -24,14 +24,15 @@ namespace BoosterManager {
 			BoosterQueue = new BoosterQueue(Bot);
 		}
 
+		public void Dispose() {
+			BoosterQueue.Dispose();
+		}
+
 		internal static void AddHandler(Bot bot, BoosterDatabase boosterDatabase) {
 			if (BoosterHandlers.ContainsKey(bot.BotName)) {
-				// Bot's config was reloaded, cancel and then restore jobs
 				BoosterHandlers[bot.BotName].CancelBoosterJobs();
-				BoosterHandlers[bot.BotName].BoosterDatabase = boosterDatabase;
-				BoosterHandlers[bot.BotName].RestoreBoosterJobs();
-
-				return;
+				BoosterHandlers[bot.BotName].Dispose();
+				BoosterHandlers.TryRemove(bot.BotName, out BoosterHandler? _);
 			}
 
 			BoosterHandler handler = new BoosterHandler(bot, boosterDatabase);

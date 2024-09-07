@@ -9,7 +9,7 @@ using ArchiSteamFarm.Steam;
 using BoosterManager.Localization;
 
 namespace BoosterManager {
-	internal sealed class BoosterQueue {
+	internal sealed class BoosterQueue : IDisposable {
 		private readonly Bot Bot;
 		private readonly Timer Timer;
 		private readonly ConcurrentHashSet<Booster> Boosters = new(new BoosterComparer());
@@ -36,6 +36,10 @@ namespace BoosterManager {
 				Timeout.Infinite, 
 				Timeout.Infinite
 			);
+		}
+		
+		public void Dispose() {
+			Timer.Dispose();
 		}
 
 		internal void Start() {
