@@ -109,7 +109,7 @@ namespace BoosterManager {
 		}
 
 		internal static Booster? GetBooster(this IEnumerable<BoosterJob> jobs, uint gameID) {
-			return jobs.ToList().Select(job => job.GetBooster(gameID)).FirstOrDefault();
+			return jobs.ToList().Select(job => job.GetBooster(gameID)).FirstOrDefault(booster => booster != null);
 		}
 
 		internal static int GetNumUnqueuedBoosters(this IEnumerable<BoosterJob> jobs, uint gameID) {

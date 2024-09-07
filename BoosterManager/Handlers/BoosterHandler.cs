@@ -265,12 +265,13 @@ namespace BoosterManager {
 
 			// Short status
 			int limitedNumBoosters = Jobs.Limited().NumBoosters();
+			int limitedNumUncraftedBoosters = Jobs.Limited().NumUncrafted();
 			int limitedGemsNeeded = Jobs.Limited().GemsNeeded();
 			if (shortStatus) {
 				if (limitedLastBoosterCraftTime!.Value.Date == DateTime.Today) {
-					return Commands.FormatBotResponse(Bot, String.Format(Strings.QueueStatusShort, limitedNumBoosters, String.Format("{0:N0}", limitedGemsNeeded), String.Format("{0:t}", limitedLastBoosterCraftTime)));
+					return Commands.FormatBotResponse(Bot, String.Format(Strings.QueueStatusShort, limitedNumUncraftedBoosters, String.Format("{0:N0}", limitedGemsNeeded), String.Format("{0:t}", limitedLastBoosterCraftTime)));
 				} else {
-					return Commands.FormatBotResponse(Bot, String.Format(Strings.QueueStatusShortWithDate, limitedNumBoosters, String.Format("{0:N0}", limitedGemsNeeded), String.Format("{0:d}", limitedLastBoosterCraftTime), String.Format("{0:t}", limitedLastBoosterCraftTime)));
+					return Commands.FormatBotResponse(Bot, String.Format(Strings.QueueStatusShortWithDate, limitedNumUncraftedBoosters, String.Format("{0:N0}", limitedGemsNeeded), String.Format("{0:d}", limitedLastBoosterCraftTime), String.Format("{0:t}", limitedLastBoosterCraftTime)));
 				}
 			}
 
