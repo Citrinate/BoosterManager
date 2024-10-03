@@ -3,7 +3,7 @@
 [![Check out my other ArchiSteamFarm plugins](https://img.shields.io/badge/Check%20out%20my%20other%20ArchiSteamFarm%20plugins-blue?logo=github)](https://github.com/stars/Citrinate/lists/archisteamfarm-plugins) [![Help with translations](https://img.shields.io/badge/Help%20with%20translations-purple?logo=crowdin)](https://github.com/Citrinate/BoosterManager/tree/master/BoosterManager/Localization) ![GitHub all releases](https://img.shields.io/github/downloads/Citrinate/BoosterManager/total?logo=github&label=Downloads)
 
 ## Introduction
-This plugin provides an easy-to-use interface for turning gems into booster packs as well as various features for managing inventories and market listings.   
+This plugin provides an easy-to-use interface for turning gems into booster packs, and includes tools for managing trading cards and other related items in your inventories and on the marketplace.
 
 This project is based off of the [Booster Creator Plugin](https://github.com/Rudokhvist/BoosterCreator) by [Outzzz](https://github.com/Outzzz) and [Rudokhvist](https://github.com/Rudokhvist)
 
