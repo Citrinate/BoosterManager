@@ -5,7 +5,7 @@
 ## Introduction
 This plugin provides an easy-to-use interface for turning gems into booster packs, and includes tools for managing trading cards and other related items in your inventories and on the marketplace.
 
-This project is based off of the [Booster Creator Plugin](https://github.com/Rudokhvist/BoosterCreator) by [Outzzz](https://github.com/Outzzz) and [Rudokhvist](https://github.com/Rudokhvist)
+This project was originally based off of the [Booster Creator Plugin](https://github.com/Rudokhvist/BoosterCreator) by [Outzzz](https://github.com/Outzzz) and [Rudokhvist](https://github.com/Rudokhvist)
 
 ## Installation
 
