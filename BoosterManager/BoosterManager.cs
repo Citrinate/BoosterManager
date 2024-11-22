@@ -67,7 +67,7 @@ namespace BoosterManager {
 					}
 					case "LogDataPageDelay" or "MarketHistoryDelay" when configProperty.Value.ValueKind == JsonValueKind.Number: {
 						ASF.ArchiLogger.LogGenericInfo("Log Data Page Delay : " + configProperty.Value);
-						DataHandler.LogDataPageDelay = configProperty.Value.GetUInt32();
+						DataHandler.LogDataPageDelay = configProperty.Value.ToJsonObject<uint>();
 						break;
 					}
 					case "InventoryHistoryAppFilter" when configProperty.Value.ValueKind == JsonValueKind.Array && configProperty.Value.GetArrayLength() > 0: {

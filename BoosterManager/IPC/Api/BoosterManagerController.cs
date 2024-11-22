@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace BoosterManager {
-	[Route("Api/BoosterManager", Name = nameof(BoosterManager))]
+	[Route("Api/BoosterManager")]
 	public sealed class BoosterManagerController : ArchiController {
 		/// <summary>
 		///     Retrieves booster data for given bot.
