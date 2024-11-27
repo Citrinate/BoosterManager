@@ -68,7 +68,8 @@ namespace BoosterManager {
 					}
 				}
 
-				Reports.AddOrUpdate(reportingBot, new List<string>() { report }, (_, reports) => { reports.Add(report); return reports; });
+				Reports.TryAdd(reportingBot, new List<string>());
+				Reports[reportingBot].Add(report);
 
 				// I prefer to send all reports in as few messages as possible
 				// As long as reports continue to come in, we wait (until some limit, to avoid possibly waiting forever)
@@ -119,7 +120,7 @@ namespace BoosterManager {
 
 					if (Reports.TryRemove(bot, out List<string>? previousReports)) {
 						if (previousReports != null) {
-							PreviousReports.AddOrUpdate(bot, previousReports, (_, _) => previousReports);
+							PreviousReports[bot] = previousReports;
 						}
 					}
 				}

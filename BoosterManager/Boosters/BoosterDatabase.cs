@@ -90,12 +90,9 @@ namespace BoosterManager {
 		}
 
 		internal void SetLastCraft(uint appID, DateTime craftTime) {
-			BoosterLastCraft newCraft = new BoosterLastCraft(craftTime);
-			BoosterLastCrafts.AddOrUpdate(appID, newCraft, (key, oldCraft) => {
-				oldCraft.CraftTime = craftTime;
-
-				return oldCraft;
-			});
+			if (!BoosterLastCrafts.TryAdd(appID, new BoosterLastCraft(craftTime))) {
+				BoosterLastCrafts[appID].CraftTime = craftTime;
+			}
 			
 			Utilities.InBackground(Save);
 		}

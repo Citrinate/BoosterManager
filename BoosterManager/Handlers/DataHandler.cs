@@ -157,7 +157,7 @@ namespace BoosterManager {
 		}
 
 		public static string StopSend(Bot bot) {
-			ForceStop.AddOrUpdate(bot.BotName, DateTime.Now, (_, _) => DateTime.Now);
+			ForceStop[bot.BotName] = DateTime.Now;
 
 			return Commands.FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.Success);
 		}
