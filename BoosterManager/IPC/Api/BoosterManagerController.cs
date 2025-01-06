@@ -8,17 +8,15 @@ using ArchiSteamFarm.IPC.Controllers.Api;
 using ArchiSteamFarm.IPC.Responses;
 using ArchiSteamFarm.Steam;
 using BoosterManager.Localization;
+// using Microsoft.AspNetCore.Http;
+// EndpointSummary lines commented out temporarily to allow plugin to work with generic/non-generic ASF V6.1.2.0 and V6.1.1.3
 using Microsoft.AspNetCore.Mvc;
-using Swashbuckle.AspNetCore.Annotations;
 
 namespace BoosterManager {
 	[Route("Api/BoosterManager")]
 	public sealed class BoosterManagerController : ArchiController {
-		/// <summary>
-		///     Retrieves booster data for given bot.
-		/// </summary>
 		[HttpGet("{botName:required}/BoosterData")]
-		[SwaggerOperation (Summary = "Retrieves booster data for given bot.")]
+		// [EndpointSummary("Retrieves booster data for given bot.")]
 		[ProducesResponseType(typeof(GenericResponse<SteamData<IEnumerable<Steam.BoosterInfo>>>), (int) HttpStatusCode.OK)]
 		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.BadRequest)]
 		public async Task<ActionResult<GenericResponse>> BoosterData(string botName) {
@@ -43,11 +41,8 @@ namespace BoosterManager {
 			return Ok(new GenericResponse<SteamData<IEnumerable<Steam.BoosterInfo>>>(true, new SteamData<IEnumerable<Steam.BoosterInfo>>(bot, boosterPage.BoosterInfos, source, null, null)));
 		}
 
-		/// <summary>
-		///     Retrieves market listings data for given bot.
-		/// </summary>
 		[HttpGet("{botName:required}/MarketListings")]
-		[SwaggerOperation (Summary = "Retrieves market listings data for given bot.")]
+		// [EndpointSummary("Retrieves market listings data for given bot.")]
 		[ProducesResponseType(typeof(GenericResponse<SteamData<Steam.MarketListingsResponse>>), (int) HttpStatusCode.OK)]
 		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.BadRequest)]
 		public async Task<ActionResult<GenericResponse>> MarketListings(string botName) {
@@ -72,11 +67,8 @@ namespace BoosterManager {
 			return Ok(new GenericResponse<SteamData<Steam.MarketListingsResponse>>(true, new SteamData<Steam.MarketListingsResponse>(bot, marketListings, source, null, null)));
 		}
 
-		/// <summary>
-		///     Retrieves market history data for given bot.
-		/// </summary>
 		[HttpGet("{botName:required}/MarketHistory")]
-		[SwaggerOperation (Summary = "Retrieves market history data for given bot.")]
+		// [EndpointSummary("Retrieves market history data for given bot.")]
 		[ProducesResponseType(typeof(GenericResponse<SteamData<Steam.MarketHistoryResponse>>), (int) HttpStatusCode.OK)]
 		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.BadRequest)]
 		public async Task<ActionResult<GenericResponse>> MarketHistory(string botName, uint page = 1) {
@@ -103,11 +95,8 @@ namespace BoosterManager {
 			return Ok(new GenericResponse<SteamData<Steam.MarketHistoryResponse>>(true, new SteamData<Steam.MarketHistoryResponse>(bot, marketHistory, source, page, null)));
 		}
 
-		/// <summary>
-		///     Retrieves inventory history data for given bot.
-		/// </summary>
 		[HttpGet("{botName:required}/InventoryHistory")]
-		[SwaggerOperation (Summary = "Retrieves inventory history data for given bot.")]
+		// [EndpointSummary("Retrieves inventory history data for given bot.")]
 		[ProducesResponseType(typeof(GenericResponse<SteamData<Steam.InventoryHistoryResponse>>), (int) HttpStatusCode.OK)]
 		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.BadRequest)]
 		public async Task<ActionResult<GenericResponse>> InventoryHistory(string botName, uint? startTime = null, uint? timeFrac = null, string? s = null) {
@@ -145,11 +134,8 @@ namespace BoosterManager {
 			return Ok(new GenericResponse<SteamData<Steam.InventoryHistoryResponse>>(true, new SteamData<Steam.InventoryHistoryResponse>(bot, inventoryHistory, source!, startTime, cursor)));
 		}
 
-		/// <summary>
-		///     Retrieves badge info for given bot.
-		/// </summary>
 		[HttpGet("{botName:required}/GetBadgeInfo/{appID:required}")]
-		[SwaggerOperation (Summary = "Retrieves badge info for given bot.")]
+		// [EndpointSummary("Retrieves badge info for given bot.")]
 		[ProducesResponseType(typeof(GenericResponse<JsonDocument>), (int) HttpStatusCode.OK)]
 		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.BadRequest)]
 		public async Task<ActionResult<GenericResponse>> GetBadgeInfo(string botName, uint appID, uint border = 0) {
@@ -174,11 +160,8 @@ namespace BoosterManager {
 			return Ok(new GenericResponse<JsonDocument>(true, badgeInfo));
 		}
 
-		/// <summary>
-		///     Retrieves price history for market items.
-		/// </summary>
 		[HttpGet("{botNames:required}/GetPriceHistory/{appID:required}/{hashName:required}")]
-		[SwaggerOperation (Summary = "Retrieves price history for market items.")]
+		// [EndpointSummary("Retrieves price history for market items.")]
 		[ProducesResponseType(typeof(GenericResponse<JsonDocument>), (int) HttpStatusCode.OK)]
 		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.BadRequest)]
 		public async Task<ActionResult<GenericResponse>> GetPriceHistory(string botNames, uint appID, string hashName) {
