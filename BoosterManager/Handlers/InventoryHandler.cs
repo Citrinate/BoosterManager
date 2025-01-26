@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Steam.Data;
 using BoosterManager.Localization;
+using SteamKit2;
 
 namespace BoosterManager {
 	internal static class InventoryHandler {
@@ -56,13 +57,18 @@ namespace BoosterManager {
 			if (amountToSend == 0) {
 				return (true, Strings.SendingNoItems);
 			}
+			
+			string? tradeToken = null;
+			if (sender.SteamFriends.GetFriendRelationship(reciever.SteamID) != EFriendRelationship.Friend) {
+				tradeToken = await reciever.ArchiHandler.GetTradeToken().ConfigureAwait(false);
+			}
 
 			HashSet<Asset>? itemsToGive = GetItemsFromStacks(sender, itemStacks, amountToSend, amountToSkip);
 			if (itemsToGive == null) {
 				return (false, Strings.SendingInsufficientQuantity);
 			}
 
-			(bool success, _, HashSet<ulong>? mobileTradeOfferIDs) = await sender.ArchiWebHandler.SendTradeOffer(reciever.SteamID, itemsToGive).ConfigureAwait(false);
+			(bool success, _, HashSet<ulong>? mobileTradeOfferIDs) = await sender.ArchiWebHandler.SendTradeOffer(reciever.SteamID, itemsToGive, token: tradeToken).ConfigureAwait(false);
 			if ((mobileTradeOfferIDs?.Count > 0) && sender.HasMobileAuthenticator) {
 				(bool twoFactorSuccess, _, string message) = await sender.Actions.HandleTwoFactorAuthenticationConfirmations(true, Confirmation.EConfirmationType.Trade, mobileTradeOfferIDs, true).ConfigureAwait(false);
 
@@ -129,6 +135,11 @@ namespace BoosterManager {
 				return (false, ArchiSteamFarm.Localization.Strings.BotSendingTradeToYourself);
 			}
 
+			string? tradeToken = null;
+			if (sender.SteamFriends.GetFriendRelationship(reciever.SteamID) != EFriendRelationship.Friend) {
+				tradeToken = await reciever.ArchiHandler.GetTradeToken().ConfigureAwait(false);
+			}
+
 			HashSet<Asset> totalItemsToGive = new HashSet<Asset>();
 			HashSet<string> responses = new HashSet<string>();
 			bool completeSuccess = true;
@@ -152,7 +163,7 @@ namespace BoosterManager {
 				return (false, String.Join(Environment.NewLine, responses));
 			}
 
-			(bool success, _, HashSet<ulong>? mobileTradeOfferIDs) = await sender.ArchiWebHandler.SendTradeOffer(reciever.SteamID, totalItemsToGive).ConfigureAwait(false);
+			(bool success, _, HashSet<ulong>? mobileTradeOfferIDs) = await sender.ArchiWebHandler.SendTradeOffer(reciever.SteamID, totalItemsToGive, token: tradeToken).ConfigureAwait(false);
 			if ((mobileTradeOfferIDs?.Count > 0) && sender.HasMobileAuthenticator) {
 				(bool twoFactorSuccess, _, string message) = await sender.Actions.HandleTwoFactorAuthenticationConfirmations(true, Confirmation.EConfirmationType.Trade, mobileTradeOfferIDs, true).ConfigureAwait(false);
 
