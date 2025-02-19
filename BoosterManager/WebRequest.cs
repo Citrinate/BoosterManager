@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Text.Json;
+using System.Threading;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Steam;
@@ -112,15 +113,22 @@ namespace BoosterManager {
 			return await bot.ArchiWebHandler.UrlPostWithSession(request, referer: referer).ConfigureAwait(false);
 		}
 
+		private static SemaphoreSlim SendSteamDataSemaphore = new SemaphoreSlim(4, 4);
+
 		internal static async Task<SteamDataResponse> SendSteamData<T>(Uri request, Bot bot, T steamData, Uri source, uint? page = null, Steam.InventoryHistoryCursor? cursor = null) {
-			SteamData<T> data = new SteamData<T>(bot, steamData, source, page, cursor);
-			ObjectResponse<SteamDataResponse>? response = await bot.ArchiWebHandler.WebBrowser.UrlPostToJsonObject<SteamDataResponse, SteamData<T>>(request, data: data).ConfigureAwait(false);
+			await SendSteamDataSemaphore.WaitAsync().ConfigureAwait(false);
+			try {
+				SteamData<T> data = new SteamData<T>(bot, steamData, source, page, cursor);
+				ObjectResponse<SteamDataResponse>? response = await bot.ArchiWebHandler.WebBrowser.UrlPostToJsonObject<SteamDataResponse, SteamData<T>>(request, data: data, maxTries: 1).ConfigureAwait(false);
 
-			if (response == null || response.Content == null) {
-				return new SteamDataResponse();
+				if (response == null || response.Content == null) {
+					return new SteamDataResponse();
+				}
+
+				return response.Content;
+			} finally {
+				SendSteamDataSemaphore.Release();
 			}
-
-			return response.Content;
 		}
 
 		internal static async Task<JsonDocument?> GetBadgeInfo(Bot bot, uint appID, uint border = 0) {

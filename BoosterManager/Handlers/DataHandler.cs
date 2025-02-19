@@ -323,7 +323,7 @@ namespace BoosterManager {
 
 			// The "listings" field returned here is paginated, though I don't intend to add pagination features here.
 			// Because I personally don't use this field, but also beacuse it can be reproduced using the market history.
-			(Steam.MarketListingsResponse? marketListings, Uri source) = await WebRequest.GetMarketListings(bot).ConfigureAwait(false);
+			(Steam.MarketListingsResponse? marketListings, Uri source) = await WebRequest.GetMarketListings(bot, 0, -1).ConfigureAwait(false);
 
 			if (marketListings == null || !marketListings.Success) {
 				return String.Format("{0} :steamthumbsdown:", Strings.MarketListingsFetchFailed);

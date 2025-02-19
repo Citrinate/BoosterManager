@@ -312,7 +312,7 @@ You will need to design your API to accept requests and return responses per the
   `data`|`JObject`|The data taken directly from `source` with empty string values converted to `null`
 
   > **Note**
-  > Pagination here is not supported.  While `source` does support pagination for `data[listings]`, that information can be recreated using the Market History API.
+  > Pagination here is not supported.  While `source` does support pagination for `data[listings]`, the plugin will automatically combine all pages into one such that `data[listings]` contains all active listings for the bot.
 </details>
 
 <details>

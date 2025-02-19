@@ -59,7 +59,7 @@ namespace BoosterManager {
 				return BadRequest(new GenericResponse(false, ArchiSteamFarm.Localization.Strings.BotNotConnected));
 			}
 
-			(Steam.MarketListingsResponse? marketListings, Uri source) = await WebRequest.GetMarketListings(bot).ConfigureAwait(false);
+			(Steam.MarketListingsResponse? marketListings, Uri source) = await WebRequest.GetMarketListings(bot, 0, -1).ConfigureAwait(false);
 			if (marketListings == null || !marketListings.Success) {
 				return BadRequest(new GenericResponse(false, Strings.MarketListingsFetchFailed));
 			}
