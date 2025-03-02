@@ -1,5 +1,4 @@
 using System;
-using System.Net;
 using ArchiSteamFarm.Steam.Data;
 
 namespace BoosterManager {
@@ -99,7 +98,7 @@ namespace BoosterManager {
 				
 				if ((name == null || !name.Contains(TextID))
 					&& (marketName == null || !marketName.Contains(TextID))
-					&& (marketHashName == null || (!marketHashName.Contains(TextID) && !marketHashName.Contains(WebUtility.UrlDecode(TextID))))
+					&& (marketHashName == null || (!marketHashName.Contains(TextID) && !marketHashName.Contains(Uri.UnescapeDataString(TextID))))
 					&& (type == null || !type.Contains(TextID))
 				) {
 					return false;
@@ -134,7 +133,7 @@ namespace BoosterManager {
 				if (!item.Name.Equals(TextID)
 					&& !item.MarketName.Equals(TextID)
 					&& !item.MarketHashName.Equals(TextID)
-					&& !item.MarketHashName.Equals(WebUtility.UrlDecode(TextID))
+					&& !item.MarketHashName.Equals(Uri.UnescapeDataString(TextID))
 					&& !item.Type.Equals(TextID)
 				) {
 					return false;
