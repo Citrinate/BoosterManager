@@ -185,6 +185,9 @@ namespace BoosterManager {
 						case "MARKET2FAOK" or "M2FAOK":
 							return await Response2FAOK(bot, access, Confirmation.EConfirmationType.Market).ConfigureAwait(false);
 
+						case "PACKGEMS" or "PACKGEM":
+							return await ResponsePackGems(bot, access).ConfigureAwait(false);
+
 						case "REMOVEPENDING" or "REMOVEPENDINGLISTINGS" or "CANCELPENDING" or "CANCELPENDINGLISTINGS" or "RP":
 							return await ResponseRemovePendingListings(bot, access).ConfigureAwait(false);
 
@@ -394,6 +397,9 @@ namespace BoosterManager {
 						case "MARKET2FAOKA" or "M2FAOKA":
 							return await Response2FAOK(access, steamID, "ASF", Confirmation.EConfirmationType.Market, args[1], new StatusReporter(bot, steamID, reportDelaySeconds: 30, reportMaxDelaySeconds: 60)).ConfigureAwait(false);
 						
+						case "PACKGEMS" or "PACKGEM":
+							return await ResponsePackGems(access, steamID, Utilities.GetArgsAsText(args, 1, ",")).ConfigureAwait(false);
+
 						case "TRADE2FAOK" or "T2FAOK" when args.Length > 2:
 							return await Response2FAOK(access, steamID, args[1], Confirmation.EConfirmationType.Trade, args[2], new StatusReporter(bot, steamID, reportDelaySeconds: 30, reportMaxDelaySeconds: 60)).ConfigureAwait(false);
 						case "TRADE2FAOK" or "T2FAOK":
@@ -1469,6 +1475,36 @@ namespace BoosterManager {
 			}
 
 			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseLogMarketListings(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)))).ConfigureAwait(false);
+
+			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
+
+			return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
+		}
+
+		private static async Task<string?> ResponsePackGems(Bot bot, EAccess access) {
+			if (access < EAccess.Master) {
+				return null;
+			}
+
+			if (!bot.IsConnectedAndLoggedOn) {
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
+			}
+
+			return await GemHandler.PackGems(bot).ConfigureAwait(false);
+		}
+
+		private static async Task<string?> ResponsePackGems(EAccess access, ulong steamID, string botNames) {
+			if (String.IsNullOrEmpty(botNames)) {
+				throw new ArgumentNullException(nameof(botNames));
+			}
+
+			HashSet<Bot>? bots = Bot.GetBots(botNames);
+
+			if ((bots == null) || (bots.Count == 0)) {
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
+			}
+
+			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponsePackGems(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)))).ConfigureAwait(false);
 
 			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
 

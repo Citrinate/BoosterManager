@@ -46,10 +46,11 @@ Command | Access | Description
 `gems [Bots]`|`Master`|Displays the number of gems owned by the given bot.
 `lootgems [Bots]`|`Master`|Sends all gems from the given bot to the `Master` user.
 `lootsacks [Bots]`|`Master`|Sends all "Sack of Gems" from the given bot to the `Master` user.
+`packgems [Bots]`|`Master`|Packs all "Gems" owned by the given bot into "Sack of Gems".
 `transfergems [Bot] <TargetBots> <Amounts>`|`Master`|Sends the provided `Amounts` of unpacked gems from the given bot to the given target bot. The `Amounts` specified may be a single amount sent to all target bots, or multiple amounts sent to each target bot respectively.  You may also use `queue` or `q` as an amount to represent the number of gems needed to complete the target bot's booster queue.
 `transfergems^ [Bots] <TargetBot>`|`Master`|Sends all gems from the given bot to the given target bot.
 `transfersacks [Bots] <TargetBot>`|`Master`|Sends all "Sack of Gems" from the given bot to the given target bot.
-`unpackgems [Bots]`|`Master`|Unpacks all "Sack of Gems" owned by the given bot.
+`unpackgems [Bots]`|`Master`|Unpacks all "Sack of Gems" owned by the given bot into "Gems".
 
 #### Boosters
 
@@ -211,7 +212,7 @@ Command | Alias |
 
 ### AllowCraftUntradableBoosters
 
-`bool` type with default value of `true`.  This configuration setting can be added to your `ASF.json` config file.  If set to `false`, untradable gems will not be used to craft boosters, and the `unpackgems` command will not unpack untradable "Sack of Gems".
+`bool` type with default value of `true`.  This configuration setting can be added to your `ASF.json` config file.  If set to `false`, untradable gems will not be used to craft boosters, and the `unpackgems` and `packgems` command will not unpack untradable "Sack of Gems".
 
 ```json
 "AllowCraftUntradableBoosters": false,

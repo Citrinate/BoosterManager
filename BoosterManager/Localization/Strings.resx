@@ -641,4 +641,8 @@
     <value>Market alert already exists</value>
     <comment/>
   </data>
+  <data name="UnpackNoGemsFound" xml:space="preserve">
+    <value>No gems to pack</value>
+    <comment/>
+  </data>
 </root>

@@ -64,7 +64,31 @@ namespace BoosterManager {
 			}
 
 			foreach (Asset sack in sacks) {
-				Steam.ExchangeGooResponse? response = await WebRequest.UnpackGems(bot, sack.AssetID, sack.Amount);
+				Steam.ExchangeGooResponse? response = await WebRequest.ExchangeGoo(bot, sack.AssetID, sack.Amount, pack: true);
+
+				if (response == null || response.Success != 1) {
+					return Commands.FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.WarningFailed);
+				}
+			}
+
+			return Commands.FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.Success);
+		}
+
+		internal static async Task<string> PackGems(Bot bot) {
+			HashSet<Asset> gems;
+			try {
+				gems = await bot.ArchiHandler.GetMyInventoryAsync().Where(item => ItemIdentifier.GemIdentifier.IsItemMatch(item) && (BoosterHandler.AllowCraftUntradableBoosters || item.Tradable) && item.Amount >= 1000).ToHashSetAsync().ConfigureAwait(false);
+			} catch (Exception e) {
+				bot.ArchiLogger.LogGenericException(e);
+				return Commands.FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.WarningFailed);
+			}
+
+			if (gems.Count == 0) {
+				return Commands.FormatBotResponse(bot, Strings.UnpackNoGemsFound);
+			}
+
+			foreach (Asset gem in gems) {
+				Steam.ExchangeGooResponse? response = await WebRequest.ExchangeGoo(bot, gem.AssetID, gem.Amount, pack: false);
 
 				if (response == null || response.Success != 1) {
 					return Commands.FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.WarningFailed);

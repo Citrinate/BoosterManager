@@ -92,22 +92,40 @@ namespace BoosterManager {
 			return (inventoryHistoryResponse?.Content, request);
 		}
 
-		internal static async Task<Steam.ExchangeGooResponse?> UnpackGems(Bot bot, ulong assetID, uint amount) {
+		internal static async Task<Steam.ExchangeGooResponse?> ExchangeGoo(Bot bot, ulong assetID, uint amount, bool pack = true) {
 			Uri request = new(ArchiWebHandler.SteamCommunityURL, String.Format("/profiles/{0}/ajaxexchangegoo", bot.SteamID));
+
+			uint gooDenominationIn;
+			uint gooDenominationOut;
+			uint gooAmountOutExpected;
+			if (pack) {
+				gooDenominationIn = 1000;
+				gooDenominationOut = 1;
+				gooAmountOutExpected = amount * 1000;
+			} else {
+				if (amount < 1000) {
+					return null;
+				}
+				
+				amount -= amount % 1000;
+				gooDenominationIn = 1;
+				gooDenominationOut = 1000;
+				gooAmountOutExpected = amount / 1000;
+			}
 
 			// Extra entry for sessionID
 			Dictionary<string, string> data = new(7) {
 				{ "appid", Asset.SteamAppID.ToString() },
 				{ "assetid", assetID.ToString() },
-				{ "goo_denomination_in", "1000" },
+				{ "goo_denomination_in", gooDenominationIn.ToString() },
 				{ "goo_amount_in", amount.ToString() },
-				{ "goo_denomination_out", "1" },
-				{ "goo_amount_out_expected", (amount * 1000).ToString() }
+				{ "goo_denomination_out", gooDenominationOut.ToString() },
+				{ "goo_amount_out_expected", gooAmountOutExpected.ToString() }
 			};
 
-			ObjectResponse<Steam.ExchangeGooResponse>? unpackBoostersResponse = await bot.ArchiWebHandler.UrlPostToJsonObjectWithSession<Steam.ExchangeGooResponse>(request, data: data).ConfigureAwait(false);
+			ObjectResponse<Steam.ExchangeGooResponse>? exchangeGooResponse = await bot.ArchiWebHandler.UrlPostToJsonObjectWithSession<Steam.ExchangeGooResponse>(request, data: data).ConfigureAwait(false);
 
-			return unpackBoostersResponse?.Content;
+			return exchangeGooResponse?.Content;
 		}
 
 		internal static async Task<bool> RemoveListing(Bot bot, ulong listingID) {
