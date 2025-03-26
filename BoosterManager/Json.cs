@@ -253,6 +253,36 @@ namespace BoosterManager {
 			private ExchangeGooResponse() { }
 		}
 
+		internal sealed class ItemOrdersHistogramResponse {
+			[JsonInclude]
+			[JsonPropertyName("success")]
+			[JsonRequired]
+			internal int Success { get; private init; }
+
+			[JsonInclude]
+			[JsonPropertyName("highest_buy_order")]
+			internal string? HighestBuyOrder { get; private init; }
+
+			[JsonInclude]
+			[JsonPropertyName("lowest_sell_order")]
+			internal string? LowestSellOrder { get; private init; }
+
+			[JsonInclude]
+			[JsonPropertyName("buy_order_graph")]
+			internal List<List<JsonElement>> BuyOrderGraph { get; private init; } = new();
+
+			[JsonInclude]
+			[JsonPropertyName("sell_order_graph")]
+			internal List<List<JsonElement>> SellOrderGraph { get; private init; } = new();
+
+			[JsonExtensionData]
+			[JsonInclude]
+			internal Dictionary<string, JsonElement> AdditionalData { get; private init; } = new();
+
+			[JsonConstructor]
+			private ItemOrdersHistogramResponse() { }
+		}
+
 		internal enum TradabilityPreference {
 			Tradable = 1,
 			Default = 2,

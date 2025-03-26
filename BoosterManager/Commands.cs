@@ -8,6 +8,8 @@ using ArchiSteamFarm.Steam.Data;
 using System.ComponentModel;
 using System.Reflection;
 using BoosterManager.Localization;
+using System.Text.RegularExpressions;
+using System.Globalization;
 
 namespace BoosterManager {
 	internal static class Commands {
@@ -59,6 +61,9 @@ namespace BoosterManager {
 							return await ResponseBuyLimit(access, steamID, "ASF").ConfigureAwait(false);
 						case "BUYLIMIT" or "BL":
 							return await ResponseBuyLimit(bot, access).ConfigureAwait(false);
+
+						case "CANCELALLALERTS" or "CANCELALLMARKETALERTS":
+							return ResponseCancelMarketAlerts(bot, access);
 
 						case "CARDS" or "MCARDS" or "CARD" or "MCARD":
 							return await ResponseCountItems(bot, access, ItemIdentifier.CardIdentifier, marketable: true).ConfigureAwait(false);
@@ -207,6 +212,11 @@ namespace BoosterManager {
 							return await ResponseValue(access, steamID, "ASF").ConfigureAwait(false);
 						case "VALUE":
 							return await ResponseValue(bot, access).ConfigureAwait(false);
+
+						case "VAA":
+							return ResponseViewMarketAlerts(access, steamID, "ASF");
+						case "VIEWALERTS" or "VIEWALERT" or "VIEWMARKETALERTS" or "VIEWMARKETALERT":
+							return ResponseViewMarketAlerts(bot, access);
 						
 						default:
 							return null;
@@ -257,6 +267,19 @@ namespace BoosterManager {
 
 						case "BUYLIMIT" or "BL":
 							return await ResponseBuyLimit(access, steamID, args[1]).ConfigureAwait(false);
+
+						case "CANCELALERT" or "CANCELALERTS" or "CANCELMARKETALERT" or "CANCELMARKETALERTS" or "CMA" when args.Length > 6:
+							return ResponseCancelMarketAlerts(access, steamID, args[1], args[2], args[3], args[4], args[5], args[6]);
+						case "CANCELALERT" or "CANCELALERTS" or "CANCELMARKETALERT" or "CANCELMARKETALERTS" or "CMA" when args.Length > 5:
+							return ResponseCancelMarketAlerts(access, steamID, args[1], args[2], args[3], args[4], args[5]);
+						case "CANCELALERT" or "CANCELALERTS" or "CANCELMARKETALERT" or "CANCELMARKETALERTS" or "CMA" when args.Length > 4:
+							return ResponseCancelMarketAlerts(access, steamID, args[1], args[2], args[3], args[4]);
+						case "CANCELALERT" or "CANCELALERTS" or "CANCELMARKETALERT" or "CANCELMARKETALERTS" or "CMA" when args.Length > 3:
+							return ResponseCancelMarketAlerts(access, steamID, args[1], args[2], args[3]);
+						case "CANCELALERT" or "CANCELALERTS" or "CANCELMARKETALERT" or "CANCELMARKETALERTS" or "CMA" when args.Length > 2:
+							return ResponseCancelMarketAlerts(access, steamID, args[1], args[2]);
+						case "CANCELALLALERTS" or "CANCELALLMARKETALERTS":
+							return ResponseCancelMarketAlerts(access, steamID, args[1]);
 
 						case "CARDS" or "MCARDS" or "CARD" or "MCARD":
 							return await ResponseCountItems(access, steamID, Utilities.GetArgsAsText(args, 1, ","), ItemIdentifier.CardIdentifier, marketable: true).ConfigureAwait(false);
@@ -359,6 +382,11 @@ namespace BoosterManager {
 						case "LOOTSACKS" or "LOOTSACK":
 							return await ResponseSendItemToBot(access, steamID, Utilities.GetArgsAsText(args, 1, ","), ItemIdentifier.SackIdentifier).ConfigureAwait(false);
 						
+						case "ALERT" or "ALERTS" or "A" or "MA" or "MARKETALERT" or "MARKETALERTS" or "CREATEALERT" or "CREATEALERTS" or "CREATEMARKETALERT" or "CREATEMARKETALERTS" when args.Length > 6:
+							return await ResponseCreateMarketAlert(access, steamID, args[1], args[2], args[3], args[4], args[5], args[6], new StatusReporter(bot, steamID)).ConfigureAwait(false);
+						case "ALERT" or "ALERTS" or "A" or "MA" or "MARKETALERT" or "MARKETALERTS" or "CREATEALERT" or "CREATEALERTS" or "CREATEMARKETALERT" or "CREATEMARKETALERTS" when args.Length > 5:
+							return await ResponseCreateMarketAlert(bot, access, args[1], args[2], args[3], args[4], args[5], new StatusReporter(bot, steamID)).ConfigureAwait(false);
+
 						case "MARKET2FAOK" or "M2FAOK" when args.Length > 2:
 							return await Response2FAOK(access, steamID, args[1], Confirmation.EConfirmationType.Market, args[2], new StatusReporter(bot, steamID, reportDelaySeconds: 30, reportMaxDelaySeconds: 60)).ConfigureAwait(false);
 						case "MARKET2FAOK" or "M2FAOK":
@@ -501,6 +529,9 @@ namespace BoosterManager {
 							return await ResponseValue(access, steamID, args[1], args[2]).ConfigureAwait(false);
 						case "VALUE":
 							return await ResponseValue(access, steamID, args[1]).ConfigureAwait(false);
+
+						case "VIEWALERTS" or "VIEWALERT" or "VIEWMARKETALERTS" or "VIEWMARKETALERT":
+							return ResponseViewMarketAlerts(access, steamID, args[1]);
 						
 						default:
 							return null;
@@ -827,6 +858,90 @@ namespace BoosterManager {
 
 			return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
 		}
+
+		private static string? ResponseCancelMarketAlerts(Bot bot, EAccess access, string? appIDAsText = null, string? hashName = null, string? typeAsText = null, string? modeAsText = null, string? amountAsText = null) {
+			if (access < EAccess.Master) {
+				return null;
+			}
+
+			if (!bot.IsConnectedAndLoggedOn) {
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
+			}
+
+			uint? appID = null;
+			if (appIDAsText != null) {
+				if (uint.TryParse(appIDAsText, out uint outValue)) {
+					appID = outValue;
+				} else {
+					return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, nameof(appIDAsText)));
+				}
+			}
+
+			if (hashName != null) {
+				hashName = Uri.UnescapeDataString(hashName);
+			}
+
+			uint? amount = null;
+			if (amountAsText != null) {
+				if (decimal.TryParse(Regex.Replace(amountAsText, "[^0-9.,]", ""), CultureInfo.CurrentCulture, out decimal outValue)) {
+					if (outValue <= 0) {
+						return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, nameof(amountAsText)));
+					}
+
+					amount = (uint) (outValue * 100);
+				} else {
+					return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, nameof(amountAsText)));
+				}
+			}
+
+			MarketAlertType? type = null;
+			if (typeAsText != null) {
+				if (typeAsText.Equals("BUY", StringComparison.InvariantCultureIgnoreCase) || typeAsText.Equals(Strings.MarketAlertTypeBuy, StringComparison.InvariantCultureIgnoreCase)) {
+					type = MarketAlertType.Buy;
+				} else if (typeAsText.Equals("SELL", StringComparison.InvariantCultureIgnoreCase) || typeAsText.Equals(Strings.MarketAlertTypeSell, StringComparison.InvariantCultureIgnoreCase)) {
+					type = MarketAlertType.Sell;
+				} else {
+					return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, nameof(typeAsText)));
+				}
+			}
+
+			MarketAlertMode? mode = null;
+			if (modeAsText != null) {
+				if (modeAsText.Equals("ABOVE", StringComparison.InvariantCultureIgnoreCase) || modeAsText.Equals(Strings.MarketAlertModeAbove, StringComparison.InvariantCultureIgnoreCase)) {
+					mode = MarketAlertMode.Above;
+				} else if (modeAsText.Equals("BELOW", StringComparison.InvariantCultureIgnoreCase) || modeAsText.Equals(Strings.MarketAlertModeBelow, StringComparison.InvariantCultureIgnoreCase)) {
+					mode = MarketAlertMode.Below;
+				} else {
+					return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, nameof(modeAsText)));
+				}
+			}
+
+			IEnumerable<MarketAlert> removedAlerts = MarketHandler.DeleteMarketAlerts(bot, appID, hashName, type, mode, amount);
+
+			if (removedAlerts.Count() == 0) {
+				return FormatBotResponse(bot, Strings.MarketAlertsCancelledFail);
+			}
+
+			return FormatBotResponse(bot, String.Format(Strings.MarketAlertsCancelled, removedAlerts.Count(), MarketHandler.PrintMarketAlerts(bot, removedAlerts)));
+		}
+
+		private static string? ResponseCancelMarketAlerts(EAccess access, ulong steamID, string botNames, string? appIDAsText = null, string? hashName = null, string? typeAsText = null, string? modeAsText = null, string? amountAsText = null) {
+			if (String.IsNullOrEmpty(botNames)) {
+				throw new ArgumentNullException(nameof(botNames));
+			}
+
+			HashSet<Bot>? bots = Bot.GetBots(botNames);
+
+			if ((bots == null) || (bots.Count == 0)) {
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
+			}
+
+			IEnumerable<string?> results = bots.Select(bot => ResponseCancelMarketAlerts(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), appIDAsText, hashName, typeAsText, modeAsText, amountAsText));
+
+			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
+
+			return responses.Count > 0 ? String.Join(Environment.NewLine, responses) : null;
+		}
 		
 		private static async Task<string?> ResponseCountItems(Bot bot, EAccess access, ItemIdentifier itemIdentifier, bool? marketable = null) {
 			string? appIDAsText = itemIdentifier.AppID.ToString();
@@ -903,6 +1018,75 @@ namespace BoosterManager {
 			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
 
 			return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
+		}
+
+		private static async Task<string?> ResponseCreateMarketAlert(Bot bot, EAccess access, string appIDAsText, string hashName, string typeAsText, string modeAsText, string amountAsText, StatusReporter statusReporter) {
+			if (access < EAccess.Master) {
+				return null;
+			}
+
+			if (!bot.IsConnectedAndLoggedOn) {
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
+			}
+
+			if (!uint.TryParse(appIDAsText, out uint appID)) {
+				return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, nameof(appIDAsText)));
+			}
+
+			if (String.IsNullOrEmpty(hashName)) {
+				throw new ArgumentNullException(nameof(hashName));
+			}
+			hashName = Uri.UnescapeDataString(hashName);
+
+			uint amount;
+			if (decimal.TryParse(Regex.Replace(amountAsText, "[^0-9.,]", ""), CultureInfo.CurrentCulture, out decimal outValue)) {
+				if (outValue <= 0) {
+					return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, nameof(amountAsText)));
+				}
+
+				amount = (uint) (outValue * 100);
+			} else {
+				return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, nameof(amountAsText)));
+			}
+
+			MarketAlertType type;
+			if (typeAsText.Equals("BUY", StringComparison.InvariantCultureIgnoreCase) || typeAsText.Equals(Strings.MarketAlertTypeBuy, StringComparison.InvariantCultureIgnoreCase)) {
+				type = MarketAlertType.Buy;
+			} else if (typeAsText.Equals("SELL", StringComparison.InvariantCultureIgnoreCase) || typeAsText.Equals(Strings.MarketAlertTypeSell, StringComparison.InvariantCultureIgnoreCase)) {
+				type = MarketAlertType.Sell;
+			} else {
+				return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, nameof(typeAsText)));
+			}
+
+			MarketAlertMode mode;
+			if (modeAsText.Equals("ABOVE", StringComparison.InvariantCultureIgnoreCase) || modeAsText.Equals(Strings.MarketAlertModeAbove, StringComparison.InvariantCultureIgnoreCase)) {
+				mode = MarketAlertMode.Above;
+			} else if (modeAsText.Equals("BELOW", StringComparison.InvariantCultureIgnoreCase) || modeAsText.Equals(Strings.MarketAlertModeBelow, StringComparison.InvariantCultureIgnoreCase)) {
+				mode = MarketAlertMode.Below;
+			} else {
+				return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, nameof(modeAsText)));
+			}
+
+			MarketAlert? alert = await MarketHandler.CreateMarketAlert(bot, appID, hashName, type, mode, amount, statusReporter).ConfigureAwait(false);
+			if (alert == null) {
+				return FormatBotResponse(bot, Strings.MarketAlertCreationFail);
+			}
+
+			return FormatBotResponse(bot, String.Format(Strings.MarketAlertCreationSuccess, MarketHandler.PrintMarketAlerts(bot, new List<MarketAlert>() { alert }, showCancelCommand: true)));
+		}
+
+		private static async Task<string?> ResponseCreateMarketAlert(EAccess access, ulong steamID, string botName, string appIDAsText, string hashName, string typeAsText, string modeAsText, string amountAsText, StatusReporter statusReporter) {
+			if (String.IsNullOrEmpty(botName)) {
+				throw new ArgumentNullException(nameof(botName));
+			}
+
+			Bot? bot = Bot.GetBot(botName);
+
+			if (bot == null) {
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botName)) : null;
+			}
+
+			return await ResponseCreateMarketAlert(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID), appIDAsText, hashName, typeAsText, modeAsText, amountAsText, statusReporter).ConfigureAwait(false);
 		}
 
 		private static async Task<string?> ResponseFindListings(Bot bot, EAccess access, string itemIdentifiersAsText) {
@@ -1926,6 +2110,36 @@ namespace BoosterManager {
 			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
 
 			return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
+		}
+
+		private static string? ResponseViewMarketAlerts(Bot bot, EAccess access) {
+			if (access < EAccess.Master) {
+				return null;
+			}
+
+			if (!bot.IsConnectedAndLoggedOn) {
+				return FormatBotResponse(bot, ArchiSteamFarm.Localization.Strings.BotNotConnected);
+			}
+
+			return FormatBotResponse(bot, MarketHandler.PrintMarketAlerts(bot, showCancelCommand: true));
+		}
+
+		private static string? ResponseViewMarketAlerts(EAccess access, ulong steamID, string botNames) {
+			if (String.IsNullOrEmpty(botNames)) {
+				throw new ArgumentNullException(nameof(botNames));
+			}
+
+			HashSet<Bot>? bots = Bot.GetBots(botNames);
+
+			if ((bots == null) || (bots.Count == 0)) {
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
+			}
+
+			IEnumerable<string?> results = bots.Select(bot => ResponseViewMarketAlerts(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)));
+
+			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
+
+			return responses.Count > 0 ? String.Join(Environment.NewLine, responses) : null;
 		}
 
 		internal static string FormatStaticResponse(string response) => ArchiSteamFarm.Steam.Interaction.Commands.FormatStaticResponse(response);

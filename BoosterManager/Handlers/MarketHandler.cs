@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
+using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Helpers.Json;
 using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Steam.Data;
@@ -13,6 +15,8 @@ using BoosterManager.Localization;
 namespace BoosterManager {
 	internal static class MarketHandler {
 		private static ConcurrentDictionary<Bot, (Timer, StatusReporter?)> MarketRepeatTimers = new();
+		private static Timer MarketAlertTimer = new(async e => await CheckMarketAlerts().ConfigureAwait(false), null, Timeout.Infinite, Timeout.Infinite);
+		private static TimeSpan MarketAlertUpdateFrequence = TimeSpan.FromMinutes(15);
 
 		internal static async Task<string> GetListings(Bot bot) {
 			uint? listingsValue = await GetMarketListingsValue(bot).ConfigureAwait(false);
@@ -93,7 +97,6 @@ namespace BoosterManager {
 		internal static async Task<string> RemoveListings(Bot bot, List<ulong> listingIDs) {
 			List<ulong> failedListingIDs = new List<ulong>();
 			foreach (ulong listingID in listingIDs) {
-				await Task.Delay(100).ConfigureAwait(false);
 				if (!await WebRequest.RemoveListing(bot, listingID).ConfigureAwait(false)) {
 					failedListingIDs.Add(listingID);
 				}
@@ -139,7 +142,6 @@ namespace BoosterManager {
 			int failedToRemove = 0;
 
 			foreach (ulong listingID in pendingListingIDs) {
-				await Task.Delay(100).ConfigureAwait(false);
 				if (!await WebRequest.RemoveListing(bot, listingID).ConfigureAwait(false)) {
 					failedToRemove++;
 				}
@@ -331,6 +333,150 @@ namespace BoosterManager {
 			} else {
 				bot.ArchiLogger.LogGenericInfo(report);
 			}
+		}
+
+		internal static void StartMarketAlertTimer() {
+			MarketAlertTimer.Change(MarketAlertUpdateFrequence, MarketAlertUpdateFrequence);
+		}
+
+		internal static async Task CheckMarketAlerts() {
+			HashSet<uint> nameIDsToPriceCheck = BoosterHandler.BoosterHandlers.Values.SelectMany(handler => handler.BoosterDatabase.MarketAlerts.Select(alert => alert.NameID)).ToHashSet();
+			foreach (uint nameID in nameIDsToPriceCheck) {
+				// Select a single bot for each currency we want to do a price check on
+				List<Bot?> bots = BoosterHandler.BoosterHandlers.Values.Where(handler => handler.BoosterDatabase.MarketAlerts.FirstOrDefault(alert => alert.NameID == nameID) != null).Select(handler => handler.Bot).GroupBy(bot => bot.WalletCurrency).Select(group => group.FirstOrDefault(bot => bot.IsConnectedAndLoggedOn)).ToList();
+				foreach (Bot? bot in bots) {
+					if (bot == null) {
+						// No bots are online to check this currency
+						continue;
+					}
+					
+					Steam.ItemOrdersHistogramResponse? marketPriceHistogram = await WebRequest.GetMarketPriceHistogram(bot, nameID).ConfigureAwait(false);
+					if (marketPriceHistogram == null || marketPriceHistogram.Success != 1) {
+						ASF.ArchiLogger.LogGenericError(String.Format(Strings.ErrorBadSuccessResponse, nameof(marketPriceHistogram.Success), marketPriceHistogram?.Success));
+						continue;
+					}
+
+					// Steam uses 2 decimal places for all currencies here, regardless of how many that currency actually uses
+					// https://en.wikipedia.org/wiki/ISO_4217#List_of_ISO_4217_currency_codes
+					// https://github.com/SteamRE/SteamKit/blob/4801f739bf7958e1a7cd2f63d72bd310f49fe864/SteamKit2/SteamKit2/Base/Generated/SteamLanguage.cs#L2822
+
+					uint? sellNowPrice = null;
+					if (marketPriceHistogram.BuyOrderGraph.Count != 0) {
+						try {
+							sellNowPrice = (uint) (marketPriceHistogram.BuyOrderGraph[0][0].ToJsonObject<decimal>() * 100);
+						} catch (Exception e) {
+							ASF.ArchiLogger.LogGenericException(e);
+							continue;
+						}
+					}
+
+					uint? buyNowPrice = null;
+					if (marketPriceHistogram.SellOrderGraph.Count != 0) {
+						try {
+							buyNowPrice = (uint) (marketPriceHistogram.SellOrderGraph[0][0].ToJsonObject<decimal>() * 100);
+						} catch (Exception e) {
+							ASF.ArchiLogger.LogGenericException(e);
+							continue;
+						}
+					}
+
+					List<(MarketAlert alert, Bot alertBot)> alerts = BoosterHandler.BoosterHandlers.Values.Where(handler => handler.Bot.WalletCurrency == bot.WalletCurrency).SelectMany(handler => handler.BoosterDatabase.MarketAlerts.Where(alert => alert.NameID == nameID).Select(alert => (alert, handler.Bot))).ToList();
+					foreach ((MarketAlert alert, Bot alertBot) in alerts) {
+						alert.CheckAlert(alertBot, buyNowPrice, sellNowPrice);
+					}
+				}
+			}
+		}
+
+		internal static async Task<MarketAlert?> CreateMarketAlert(Bot bot, uint appID, string hashName, MarketAlertType type, MarketAlertMode mode, uint amount, StatusReporter statusReporter) {
+			ArgumentNullException.ThrowIfNull(BoosterManager.GlobalCache);
+
+			uint nameID;
+			if (BoosterManager.GlobalCache.TryGetNameID(appID, hashName, out uint outValue)) {
+				nameID = outValue;
+			} else {
+				MarketListingPageResponse? marketListingPage = await WebRequest.GetMarketListing(bot, appID, hashName);
+				if (marketListingPage == null) {
+					bot.ArchiLogger.LogNullError(marketListingPage);
+					
+					return null;
+				}
+
+				nameID = marketListingPage.NameID;
+				BoosterManager.GlobalCache.SetNameID(appID, hashName, nameID);
+			}
+
+			BoosterDatabase boosterDatabase = BoosterHandler.BoosterHandlers[bot.BotName].BoosterDatabase;
+			MarketAlert marketAlert = new MarketAlert(appID, hashName, nameID, type, mode, amount, statusReporter);
+			if (!boosterDatabase.AddMarketAlert(marketAlert)) {
+				bot.ArchiLogger.LogGenericError(Strings.MarketAlertAlreadyExists);
+
+				return null;
+			}
+
+			return marketAlert;
+		}
+
+		internal static IEnumerable<MarketAlert> DeleteMarketAlerts(Bot bot, uint? appID = null, string? hashName = null, MarketAlertType? type = null, MarketAlertMode? mode = null, uint? amount = null) {
+			BoosterDatabase boosterDatabase = BoosterHandler.BoosterHandlers[bot.BotName].BoosterDatabase;
+			HashSet<MarketAlert> alertsToRemove = boosterDatabase.MarketAlerts.Where(alert => {
+				if (appID != null && alert.AppID != appID) {
+					return false;
+				}
+
+				if (hashName != null && alert.HashName != hashName) {
+					return false;
+				}
+
+				if (type != null && alert.Type != type) {
+					return false;
+				}
+
+				if (mode != null && alert.Mode != mode) {
+					return false;
+				}
+
+				if (amount != null && alert.Amount != amount) {
+					return false;
+				}
+
+				return true;
+			}).ToHashSet();
+
+			foreach (MarketAlert alert in alertsToRemove) {
+				boosterDatabase.RemoveMarketAlert(alert);
+			}
+
+			return alertsToRemove;
+		}
+
+		internal static string PrintMarketAlerts(Bot bot, IEnumerable<MarketAlert>? alerts = null, bool showCancelCommand = false) {
+			if (alerts == null) {
+				alerts = BoosterHandler.BoosterHandlers[bot.BotName].BoosterDatabase.MarketAlerts;
+			}
+
+			if (alerts.Count() == 0) {
+				return Strings.MarketAlertsEmpty;
+			}
+
+			return String.Join(Environment.NewLine, alerts.Order(new MarketAlertComparer()).Select(alert => {
+				return String.Format(showCancelCommand ? Strings.MarketAlertWithCancelCommand : Strings.MarketAlert, 
+					alert.AppID, 
+					alert.HashName, 
+					alert.Type == MarketAlertType.Buy ? Strings.MarketAlertTypeBuy : Strings.MarketAlertTypeSell, 
+					alert.Mode == MarketAlertMode.Above ? Strings.MarketAlertModeAbove : Strings.MarketAlertModeBelow, 
+					String.Format(CultureInfo.CurrentCulture, "{0:#,#0.00}", alert.Amount / 100.0), 
+					bot.WalletCurrency,
+					String.Format("!cma {0} {1} {2} {3} {4} {5}", 
+						bot.BotName, 
+						alert.AppID, 
+						Uri.EscapeDataString(alert.HashName),
+						alert.Type.ToString(),
+						alert.Mode.ToString(),
+						String.Format(CultureInfo.CurrentCulture, "{0:#,#0.00}", alert.Amount / 100.0)
+					)
+				);
+			}));
 		}
 	}
 }

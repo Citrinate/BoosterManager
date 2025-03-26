@@ -13,6 +13,10 @@ using ArchiSteamFarm.Web.Responses;
 
 namespace BoosterManager {
 	internal static class WebRequest {
+		private static SemaphoreSlim SendSteamDataSemaphore = new SemaphoreSlim(4, 4);
+		private static SemaphoreSlim MarketRequestSemaphore = new SemaphoreSlim(1, 1);
+		private const int MarketRequestDelaySeconds = 3;
+
 		internal static async Task<(BoosterPageResponse?, Uri)> GetBoosterPage(Bot bot) {
 			Uri request = new(ArchiWebHandler.SteamCommunityURL, "/tradingcards/boostercreator?l=english");
 			HtmlDocumentResponse? boosterPage = await bot.ArchiWebHandler.UrlGetToHtmlDocumentWithSession(request).ConfigureAwait(false);
@@ -107,13 +111,21 @@ namespace BoosterManager {
 		}
 
 		internal static async Task<bool> RemoveListing(Bot bot, ulong listingID) {
-			Uri request = new(ArchiWebHandler.SteamCommunityURL, $"/market/removelisting/{listingID}");
-			Uri referer = new(ArchiWebHandler.SteamCommunityURL, "/market/");
+			await MarketRequestSemaphore.WaitAsync().ConfigureAwait(false);
+			try {
+				Uri request = new(ArchiWebHandler.SteamCommunityURL, $"/market/removelisting/{listingID}");
+				Uri referer = new(ArchiWebHandler.SteamCommunityURL, "/market/");
 
-			return await bot.ArchiWebHandler.UrlPostWithSession(request, referer: referer).ConfigureAwait(false);
+				return await bot.ArchiWebHandler.UrlPostWithSession(request, referer: referer).ConfigureAwait(false);
+			} finally {
+				Utilities.InBackground(
+					async() => {
+						await Task.Delay(TimeSpan.FromMilliseconds(100)).ConfigureAwait(false);
+						MarketRequestSemaphore.Release();
+					}
+				);
+			}
 		}
-
-		private static SemaphoreSlim SendSteamDataSemaphore = new SemaphoreSlim(4, 4);
 
 		internal static async Task<SteamDataResponse> SendSteamData<T>(Uri request, Bot bot, T steamData, Uri source, uint? page = null, Steam.InventoryHistoryCursor? cursor = null) {
 			await SendSteamDataSemaphore.WaitAsync().ConfigureAwait(false);
@@ -138,9 +150,65 @@ namespace BoosterManager {
 		}
 
 		internal static async Task<JsonDocument?> GetPriceHistory(Bot bot, uint appID, string hashName) {
-			Uri request = new(ArchiWebHandler.SteamCommunityURL, String.Format("/market/pricehistory/?appid={0}&market_hash_name={1}", appID, Uri.EscapeDataString(hashName)));
-			ObjectResponse<JsonDocument>? priceHistoryResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<JsonDocument>(request).ConfigureAwait(false);
-			return priceHistoryResponse?.Content;
+			await MarketRequestSemaphore.WaitAsync().ConfigureAwait(false);
+			try {
+				Uri request = new(ArchiWebHandler.SteamCommunityURL, String.Format("/market/pricehistory/?appid={0}&market_hash_name={1}", appID, Uri.EscapeDataString(hashName)));
+				ObjectResponse<JsonDocument>? priceHistoryResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<JsonDocument>(request).ConfigureAwait(false);
+				return priceHistoryResponse?.Content;
+			} finally {
+				Utilities.InBackground(
+					async() => {
+						await Task.Delay(TimeSpan.FromSeconds(MarketRequestDelaySeconds)).ConfigureAwait(false);
+						MarketRequestSemaphore.Release();
+					}
+				);
+			}
+		}
+
+		internal static async Task<MarketListingPageResponse?> GetMarketListing(Bot bot, uint appID, string hashName) {
+			await MarketRequestSemaphore.WaitAsync().ConfigureAwait(false);
+			try {
+				Uri request = new(ArchiWebHandler.SteamCommunityURL, String.Format("/market/listings/{0}/{1}", appID, Uri.EscapeDataString(hashName)));
+				HtmlDocumentResponse? marketListing = await bot.ArchiWebHandler.UrlGetToHtmlDocumentWithSession(request).ConfigureAwait(false);
+
+				try {
+					MarketListingPageResponse marketListingPage = new MarketListingPageResponse(marketListing?.Content);
+
+					return marketListingPage;
+				} catch (Exception e) {
+					ASF.ArchiLogger.LogGenericException(e);
+					ASF.ArchiLogger.LogGenericError(string.Format(ArchiSteamFarm.Localization.Strings.ErrorParsingObject, request.AbsoluteUri));
+					
+					return null;
+				}
+			} finally {
+				Utilities.InBackground(
+					async() => {
+						await Task.Delay(TimeSpan.FromSeconds(MarketRequestDelaySeconds)).ConfigureAwait(false);
+						MarketRequestSemaphore.Release();
+					}
+				);
+			}
+		}
+
+		internal static async Task<Steam.ItemOrdersHistogramResponse?> GetMarketPriceHistogram(Bot bot, uint nameID) {
+			if (bot.WalletCurrency == SteamKit2.ECurrencyCode.Invalid) {
+				return null;
+			}
+
+			await MarketRequestSemaphore.WaitAsync().ConfigureAwait(false);
+			try {
+				Uri request = new(ArchiWebHandler.SteamCommunityURL, String.Format("/market/itemordershistogram?language=english&currency={0}&item_nameid={1}", (int) bot.WalletCurrency, nameID));
+				ObjectResponse<Steam.ItemOrdersHistogramResponse>? priceHistogramResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<Steam.ItemOrdersHistogramResponse>(request).ConfigureAwait(false);
+				return priceHistogramResponse?.Content;
+			} finally {
+				Utilities.InBackground(
+					async() => {
+						await Task.Delay(TimeSpan.FromSeconds(MarketRequestDelaySeconds)).ConfigureAwait(false);
+						MarketRequestSemaphore.Release();
+					}
+				);
+			}
 		}
 	}
 }

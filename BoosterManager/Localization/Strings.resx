@@ -573,4 +573,72 @@
     <value>Value: {0} ({1}) {2}</value>
     <comment>{0} will be replaced by a number, {1} will be replaced by a number, {2} will be replaced by a currency name</comment>
   </data>
+  <data name="ErrorParsingObjectFailedValue" xml:space="preserve">
+    <value>Parsing {0} failed: {1}</value>
+    <comment>{0} will be replaced by the name of a variable, {1} will be replaced by the variable's value</comment>
+  </data>
+  <data name="ErrorBadSuccessResponse" xml:space="preserve">
+    <value>Success {0} failed: {1}</value>
+    <comment>{0} will be replaced by the name of a variable, {1} will be replaced by the variable's value</comment>
+  </data>
+  <data name="MarketAlert" xml:space="preserve">
+    <value>"{0}/{1}", {2}, {3}, {4} {5}</value>
+    <comment>{0} will be replaced by an appID, {1} will be replaced by a market item hash, {2} will be replaced with a market alert type ("BUY" or "SELL"), {3} will be replaced wit a market alert mode ("ABOVE" or "BELOW"), {4} will be replaced by a number, {5} will be replaced by a currency name</comment>
+  </data>
+  <data name="MarketAlertsEmpty" xml:space="preserve">
+    <value>Bot has no market price alerts</value>
+    <comment/>
+  </data>
+  <data name="MarketAlertsCancelled" xml:space="preserve">
+    <value>Cancelled {0} market price alerts: {1}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a list of price alerts</comment>
+  </data>
+  <data name="MarketAlertWithCancelCommand" xml:space="preserve">
+    <value>"{0}/{1}", {2}, {3}, {4} {5} (To cancel use: {6})</value>
+    <comment>{0} will be replaced by an appID, {1} will be replaced by a market item hash, {2} will be replaced with a market alert type ("BUY" or "SELL"), {3} will be replaced wit a market alert mode ("ABOVE" or "BELOW"), {4} will be replaced by a number, {5} will be replaced by a currency name, {6} will be replaced by a command</comment>
+  </data>
+  <data name="MarketAlertCreationSuccess" xml:space="preserve">
+    <value>Created the market price alert: {0}</value>
+    <comment>{0} will be replaced by a price alert</comment>
+  </data>
+  <data name="MarketAlertCreationFail" xml:space="preserve">
+    <value>Failed to create market price alert</value>
+    <comment/>
+  </data>
+  <data name="MarketAlertReached" xml:space="preserve">
+    <value>{0} {1} alert of {2} {3} for "{4}/{5}" reached! To reset use: {6}</value>
+    <comment>{0} will be replaced with a market alert type ("BUY" or "SELL"), {1} will be replaced wit a market alert mode ("ABOVE" or "BELOW"), {2} will be replaced by a number, {3} will be replaced by a currency name, {4} will be replaced by an appID, {5} will be replaced by a market item hash, {6} will be replaced by a command</comment>
+  </data>
+  <data name="MarketAlertsCancelledFail" xml:space="preserve">
+    <value>Failed to find any market alerts to cancel</value>
+    <comment/>
+  </data>
+  <data name="MarketAlertSellPriceCurrentValue" xml:space="preserve">
+    <value>Sell now for: {0} {1}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a currency name</comment>
+  </data>
+  <data name="MarketAlertBuyPriceCurrentValue" xml:space="preserve">
+    <value>Buy now for: {0} {1}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a currency name</comment>
+  </data>
+  <data name="MarketAlertTypeBuy" xml:space="preserve">
+    <value>Buy</value>
+    <comment/>
+  </data>
+  <data name="MarketAlertTypeSell" xml:space="preserve">
+    <value>Sell</value>
+    <comment/>
+  </data>
+  <data name="MarketAlertModeAbove" xml:space="preserve">
+    <value>Above</value>
+    <comment/>
+  </data>
+  <data name="MarketAlertModeBelow" xml:space="preserve">
+    <value>Below</value>
+    <comment/>
+  </data>
+  <data name="MarketAlertAlreadyExists" xml:space="preserve">
+    <value>Market alert already exists</value>
+    <comment/>
+  </data>
 </root>

@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace BoosterManager {
 	internal sealed class BoosterHandler : IDisposable {
-		private readonly Bot Bot;
+		internal readonly Bot Bot;
 		internal BoosterDatabase BoosterDatabase { get; private set; }
 		internal readonly BoosterQueue BoosterQueue;
 		internal static ConcurrentDictionary<string, BoosterHandler> BoosterHandlers = new();

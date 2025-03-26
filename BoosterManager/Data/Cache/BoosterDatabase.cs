@@ -2,8 +2,10 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
+using ArchiSteamFarm.Collections;
 using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Helpers;
 using ArchiSteamFarm.Helpers.Json;
@@ -21,6 +23,9 @@ namespace BoosterManager {
 
 		[JsonInclude]
 		internal DateTime? CraftingTime { get; private set; } = null;
+		
+		[JsonInclude]
+		internal ConcurrentHashSet<MarketAlert> MarketAlerts { get; init; } = new();
 
 		[JsonConstructor]
 		private BoosterDatabase() { }
@@ -113,6 +118,27 @@ namespace BoosterManager {
 		internal void PostCraft() {
 			CraftingGameID = null;
 			CraftingTime = null;
+
+			Utilities.InBackground(Save);
+		}
+
+		internal bool AddMarketAlert(MarketAlert alert) {
+			bool exists = MarketAlerts.FirstOrDefault(x => new MarketAlertComparer().Equals(alert, x)) != null;
+			if (exists) {
+				return false;
+			}
+
+			if (MarketAlerts.Add(alert)) {
+				Utilities.InBackground(Save);
+
+				return true;
+			}
+
+			return false;
+		}
+
+		internal void RemoveMarketAlert(MarketAlert alert) {
+			MarketAlerts.Remove(alert);
 
 			Utilities.InBackground(Save);
 		}

@@ -18,7 +18,7 @@ This project was originally based off of the [Booster Creator Plugin](https://gi
 
 ## Usage
 
-Parameters in square brackets are sometimes `[Optional]`, parameters in angle brackets are always `<Required>`. Plural parameters such as `[Bots]` can accept multiple values separated by `,` such as `A,B,C`
+Parameters in square brackets are sometimes `[Optional]`, parameters in angle brackets are always `<Required>`. When providing a command with an optional parameter, you must also provide it with all other optional parameters that come before it. Plural parameters such as `[Bots]` can accept multiple values separated by `,` such as `A,B,C` unless otherwise specified.
 
 ### Booster Commands
 
@@ -107,7 +107,10 @@ Command | Access | Description
 
 Command | Access | Description
 --- | --- | ---
+`alert [Bot] <AppID> <HashName> <Buy/Sell> <Above/Below> <Amount>`|`Master`|The given bot will check the price (in that bot's wallet currency) of the item identified by [`AppID`](/BoosterManager/Docs/ItemIDs.md#example-for-a-market-item) and [`HashName`](/BoosterManager/Docs/ItemIDs.md#example-for-a-market-item) every 15 minutes.  A message will be sent when the `Buy/Sell` now price is equal to or `Above/Below` the given `Amount`. `HashName` here should be taken directly from the URL of the item's market listing page and not include any whitespace characters.
 `buylimit <Bots>`|`Master`|Displays the value of the given bot's active buy orders, and how close the bot is to hitting the buy order limit.
+`cancelalert <Bots> <AppID> [HashName] [Buy/Sell] [Above/Below] [Amount]`|`Master`|Cancels market alerts specified by [`AppID`](/BoosterManager/Docs/ItemIDs.md#example-for-a-market-item), [`HashName`](/BoosterManager/Docs/ItemIDs.md#example-for-a-market-item), `Buy/Sell`, `Above/Below`, and `Amount` for the given bots. `HashName` here should be taken directly from the URL of the item's market listing page and not include any whitespace characters.
+`cancelallalerts [Bots]`|`Master`|Cancels all market alerts for the given bots.
 `findlistings <Bots> <ItemIdentifiers>`|`Master`|Displays the `ListingIDs` of any market listing belonging to the given bot and matching any of the [`ItemIdentifiers`](#itemidentifiers).
 `findandremovelistings <Bots> <ItemIdentifiers>`|`Master`|Removes any market listing belonging to the given bot and matching any of the [`ItemIdentifiers`](#itemidentifiers).
 `listings [Bots]`|`Master`|Displays the total value of all active market listings owned by the given bot.
@@ -115,6 +118,7 @@ Command | Access | Description
 `removepending <Bots>`|`Master`|Removes all pending market listings belonging to the given bot.
 `market2faok [Bot] [Minutes]`|`Master`|Accepts all pending 2FA market confirmations for given bot instances.  Optionally repeat this action once every `Minutes`.  To cancel any repetition, set `Minutes` to 0.
 `value [Bots] [BalanceLimit]`|`Master`|Displays the combined wallet balance and total value of all active market listings owned by the given bot.  The maximum allowed balance in your region may be provided as `BalanceLimit`, a whole number, and it will instead display how close the given bot is to reaching that limit.
+`viewalerts [Bots]`|`Master`|Lists all market alerts for the given bots.
 
 ### Log Commands
 
@@ -148,7 +152,7 @@ Format | Example |
 `AppID::ContextID::ClassID`|The identifier `753::6::667933237` will match all "Sack of Gems" items
 
 > [!NOTE]
-> Information on how to determine an item's `AppID`, `ContextID`, `ClassID`, `ItemName`, `ItemType`, and `HashName` may be found [here](https://github.com/Citrinate/BoosterManager/blob/master/BoosterManager/Docs/ItemIDs.md).
+> Information on how to determine an item's `AppID`, `ContextID`, `ClassID`, `ItemName`, `ItemType`, and `HashName` may be found [here](/BoosterManager/Docs/ItemIDs.md).
 
 ---
 
@@ -158,7 +162,9 @@ Most pluralized commands also have a non-pluralized alias; ex: `lootboosters` ha
 
 Command | Alias |
 --- | --- |
+`alert`|`a`, `ma`
 `buylimit`|`bl`
+`cancelalert`|`cma`
 `findlistings`|`fl`
 `findandremovelistings`|`frl`
 `removelistings`|`rlistings`, `removel`
@@ -199,6 +205,7 @@ Command | Alias |
 `transfercards ASF <TargetBot>`|`tca <TargetBot>`
 `transferfoils ASF <TargetBot>`|`tfa <TargetBot>`
 `value ASF [BalanceLimit]`|`va [BalanceLimit]`
+`viewalerts ASF`|`vaa`
 
 ---
 
@@ -403,7 +410,7 @@ You will need to design your API to accept requests and return responses per the
   `data`|`JObject`|The data taken directly from `source` with empty string values converted to `null`
   
   > **Note**
-  > Documentation of Steam's Inventory History API can be found [here](https://github.com/Citrinate/BoosterManager/blob/master/BoosterManager/Docs/InventoryHistory.md)
+  > Documentation of Steam's Inventory History API can be found [here](/BoosterManager/Docs/InventoryHistory.md)
   
   > **Note**
   > Multiple pages of `data` will be requested sequentially, and not in parallel.

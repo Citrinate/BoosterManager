@@ -17,6 +17,7 @@ namespace BoosterManager {
 		public string Name => nameof(BoosterManager);
 		public string RepositoryName => "Citrinate/BoosterManager";
 		public Version Version => typeof(BoosterManager).Assembly.GetName().Version ?? new Version("0");
+		internal static GlobalCache? GlobalCache;
 
 		public Task OnLoaded() {
 			ASF.ArchiLogger.LogGenericInfo("BoosterManager ASF Plugin by Citrinate");
@@ -28,9 +29,15 @@ namespace BoosterManager {
 			return await Commands.Response(bot, access, steamID, message, args).ConfigureAwait(false);
 		}
 
-		public Task OnASFInit(IReadOnlyDictionary<string, JsonElement>? additionalConfigProperties = null) {
+		public async Task OnASFInit(IReadOnlyDictionary<string, JsonElement>? additionalConfigProperties = null) {
+			if (GlobalCache == null) {
+				GlobalCache = await GlobalCache.CreateOrLoad().ConfigureAwait(false);
+			}
+
+			MarketHandler.StartMarketAlertTimer();
+
 			if (additionalConfigProperties == null) {
-				return Task.FromResult(0);
+				return;
 			}
 
 			foreach (KeyValuePair<string, JsonElement> configProperty in additionalConfigProperties) {
@@ -83,7 +90,7 @@ namespace BoosterManager {
 				}
 			}
 
-			return Task.FromResult(0);
+			return;
 		}
 
 		public Task OnBotInitModules(Bot bot, IReadOnlyDictionary<string, JsonElement>? additionalConfigProperties = null) {
