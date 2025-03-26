@@ -136,7 +136,7 @@ Command | Access | Description
 
 Command | Access | Description
 --- | --- | ---
-`boostermanager`|`FamilySharing`|Prints version of plugin.
+`boostermanager`|`Master`|Prints version of plugin.
 
 ---
 
