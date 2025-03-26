@@ -9,18 +9,18 @@ using System.Linq;
 namespace BoosterManager {
 	internal sealed class BoosterHandler : IDisposable {
 		internal readonly Bot Bot;
-		internal BoosterDatabase BoosterDatabase { get; private set; }
+		internal BotCache BotCache { get; private set; }
 		internal readonly BoosterQueue BoosterQueue;
 		internal static ConcurrentDictionary<string, BoosterHandler> BoosterHandlers = new();
 		internal ConcurrentList<BoosterJob> Jobs = new();
 		internal static bool AllowCraftUntradableBoosters = true;
 		internal static bool AllowCraftUnmarketableBoosters = true;
 
-		private BoosterHandler(Bot bot, BoosterDatabase boosterDatabase) {
-			ArgumentNullException.ThrowIfNull(boosterDatabase);
+		private BoosterHandler(Bot bot, BotCache botCache) {
+			ArgumentNullException.ThrowIfNull(botCache);
 
 			Bot = bot;
-			BoosterDatabase = boosterDatabase;
+			BotCache = botCache;
 			BoosterQueue = new BoosterQueue(Bot);
 		}
 
@@ -28,14 +28,14 @@ namespace BoosterManager {
 			BoosterQueue.Dispose();
 		}
 
-		internal static void AddHandler(Bot bot, BoosterDatabase boosterDatabase) {
+		internal static void AddHandler(Bot bot, BotCache botCache) {
 			if (BoosterHandlers.ContainsKey(bot.BotName)) {
 				BoosterHandlers[bot.BotName].CancelBoosterJobs();
 				BoosterHandlers[bot.BotName].Dispose();
 				BoosterHandlers.TryRemove(bot.BotName, out BoosterHandler? _);
 			}
 
-			BoosterHandler handler = new BoosterHandler(bot, boosterDatabase);
+			BoosterHandler handler = new BoosterHandler(bot, botCache);
 			if (BoosterHandlers.TryAdd(bot.BotName, handler)) {
 				handler.RestoreBoosterJobs();
 			}
@@ -198,7 +198,7 @@ namespace BoosterManager {
 				Jobs.Remove(job);
 			});
 
-			BoosterDatabase.UpdateBoosterJobs(Jobs.Limited().Unfinised().SaveState());
+			BotCache.UpdateBoosterJobs(Jobs.Limited().Unfinised().SaveState());
 		}
 
 		private void CancelBoosterJobs() {
@@ -210,8 +210,8 @@ namespace BoosterManager {
 		}
 
 		private void RestoreBoosterJobs() {
-			uint? craftingGameID = BoosterDatabase.CraftingGameID;
-			DateTime? craftingTime = BoosterDatabase.CraftingTime;
+			uint? craftingGameID = BotCache.CraftingGameID;
+			DateTime? craftingTime = BotCache.CraftingTime;
 			if (craftingGameID != null && craftingTime != null) {
 				// We were in the middle of crafting a booster when ASF was reset, check to see if that booster was crafted or not
 				void handler(Dictionary<uint, Steam.BoosterInfo> boosterInfos) {
@@ -230,10 +230,10 @@ namespace BoosterManager {
 							Bot.ArchiLogger.LogGenericInfo(String.Format(Strings.BoosterUnexpectedlyCrafted, craftingGameID.Value));
 
 							// Remove 1 of this booster from our jobs
-							BoosterDatabase.BoosterJobs.Any(jobState => jobState.GameIDs.Remove(craftingGameID.Value));
-							BoosterDatabase.PostCraft();
+							BotCache.BoosterJobs.Any(jobState => jobState.GameIDs.Remove(craftingGameID.Value));
+							BotCache.PostCraft();
 
-							foreach (BoosterJobState jobState in BoosterDatabase.BoosterJobs) {
+							foreach (BoosterJobState jobState in BotCache.BoosterJobs) {
 								Jobs.Add(new BoosterJob(Bot, BoosterJobType.Limited, jobState));
 							}
 						}
@@ -245,7 +245,7 @@ namespace BoosterManager {
 				BoosterQueue.OnBoosterInfosUpdated += handler;
 				BoosterQueue.Start();
 			} else {
-				foreach (BoosterJobState jobState in BoosterDatabase.BoosterJobs) {
+				foreach (BoosterJobState jobState in BotCache.BoosterJobs) {
 					Jobs.Add(new BoosterJob(Bot, BoosterJobType.Limited, jobState));
 				}
 			}

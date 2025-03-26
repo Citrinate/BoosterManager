@@ -340,10 +340,10 @@ namespace BoosterManager {
 		}
 
 		internal static async Task CheckMarketAlerts() {
-			HashSet<uint> nameIDsToPriceCheck = BoosterHandler.BoosterHandlers.Values.SelectMany(handler => handler.BoosterDatabase.MarketAlerts.Select(alert => alert.NameID)).ToHashSet();
+			HashSet<uint> nameIDsToPriceCheck = BoosterHandler.BoosterHandlers.Values.SelectMany(handler => handler.BotCache.MarketAlerts.Select(alert => alert.NameID)).ToHashSet();
 			foreach (uint nameID in nameIDsToPriceCheck) {
 				// Select a single bot for each currency we want to do a price check on
-				List<Bot?> bots = BoosterHandler.BoosterHandlers.Values.Where(handler => handler.BoosterDatabase.MarketAlerts.FirstOrDefault(alert => alert.NameID == nameID) != null).Select(handler => handler.Bot).GroupBy(bot => bot.WalletCurrency).Select(group => group.FirstOrDefault(bot => bot.IsConnectedAndLoggedOn)).ToList();
+				List<Bot?> bots = BoosterHandler.BoosterHandlers.Values.Where(handler => handler.BotCache.MarketAlerts.FirstOrDefault(alert => alert.NameID == nameID) != null).Select(handler => handler.Bot).GroupBy(bot => bot.WalletCurrency).Select(group => group.FirstOrDefault(bot => bot.IsConnectedAndLoggedOn)).ToList();
 				foreach (Bot? bot in bots) {
 					if (bot == null) {
 						// No bots are online to check this currency
@@ -380,7 +380,7 @@ namespace BoosterManager {
 						}
 					}
 
-					List<(MarketAlert alert, Bot alertBot)> alerts = BoosterHandler.BoosterHandlers.Values.Where(handler => handler.Bot.WalletCurrency == bot.WalletCurrency).SelectMany(handler => handler.BoosterDatabase.MarketAlerts.Where(alert => alert.NameID == nameID).Select(alert => (alert, handler.Bot))).ToList();
+					List<(MarketAlert alert, Bot alertBot)> alerts = BoosterHandler.BoosterHandlers.Values.Where(handler => handler.Bot.WalletCurrency == bot.WalletCurrency).SelectMany(handler => handler.BotCache.MarketAlerts.Where(alert => alert.NameID == nameID).Select(alert => (alert, handler.Bot))).ToList();
 					foreach ((MarketAlert alert, Bot alertBot) in alerts) {
 						alert.CheckAlert(alertBot, buyNowPrice, sellNowPrice);
 					}
@@ -406,9 +406,9 @@ namespace BoosterManager {
 				BoosterManager.GlobalCache.SetNameID(appID, hashName, nameID);
 			}
 
-			BoosterDatabase boosterDatabase = BoosterHandler.BoosterHandlers[bot.BotName].BoosterDatabase;
+			BotCache botCache = BoosterHandler.BoosterHandlers[bot.BotName].BotCache;
 			MarketAlert marketAlert = new MarketAlert(appID, hashName, nameID, type, mode, amount, statusReporter);
-			if (!boosterDatabase.AddMarketAlert(marketAlert)) {
+			if (!botCache.AddMarketAlert(marketAlert)) {
 				bot.ArchiLogger.LogGenericError(Strings.MarketAlertAlreadyExists);
 
 				return null;
@@ -418,8 +418,8 @@ namespace BoosterManager {
 		}
 
 		internal static IEnumerable<MarketAlert> DeleteMarketAlerts(Bot bot, uint? appID = null, string? hashName = null, MarketAlertType? type = null, MarketAlertMode? mode = null, uint? amount = null) {
-			BoosterDatabase boosterDatabase = BoosterHandler.BoosterHandlers[bot.BotName].BoosterDatabase;
-			HashSet<MarketAlert> alertsToRemove = boosterDatabase.MarketAlerts.Where(alert => {
+			BotCache botCache = BoosterHandler.BoosterHandlers[bot.BotName].BotCache;
+			HashSet<MarketAlert> alertsToRemove = botCache.MarketAlerts.Where(alert => {
 				if (appID != null && alert.AppID != appID) {
 					return false;
 				}
@@ -444,7 +444,7 @@ namespace BoosterManager {
 			}).ToHashSet();
 
 			foreach (MarketAlert alert in alertsToRemove) {
-				boosterDatabase.RemoveMarketAlert(alert);
+				botCache.RemoveMarketAlert(alert);
 			}
 
 			return alertsToRemove;
@@ -452,7 +452,7 @@ namespace BoosterManager {
 
 		internal static string PrintMarketAlerts(Bot bot, IEnumerable<MarketAlert>? alerts = null, bool showCancelCommand = false) {
 			if (alerts == null) {
-				alerts = BoosterHandler.BoosterHandlers[bot.BotName].BoosterDatabase.MarketAlerts;
+				alerts = BoosterHandler.BoosterHandlers[bot.BotName].BotCache.MarketAlerts;
 			}
 
 			if (alerts.Count() == 0) {

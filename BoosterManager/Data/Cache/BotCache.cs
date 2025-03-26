@@ -11,7 +11,7 @@ using ArchiSteamFarm.Helpers;
 using ArchiSteamFarm.Helpers.Json;
 
 namespace BoosterManager {
-	internal sealed class BoosterDatabase : SerializableFile {
+	internal sealed class BotCache : SerializableFile {
 		[JsonInclude]
 		private ConcurrentDictionary<uint, BoosterLastCraft> BoosterLastCrafts { get; init; } = new();
 
@@ -28,9 +28,9 @@ namespace BoosterManager {
 		internal ConcurrentHashSet<MarketAlert> MarketAlerts { get; init; } = new();
 
 		[JsonConstructor]
-		private BoosterDatabase() { }
+		private BotCache() { }
 
-		private BoosterDatabase(string filePath) : this() {
+		private BotCache(string filePath) : this() {
 			if (string.IsNullOrEmpty(filePath)) {
 				throw new ArgumentNullException(nameof(filePath));
 			}
@@ -40,16 +40,16 @@ namespace BoosterManager {
 
 		protected override Task Save() => Save(this);
 
-		internal static BoosterDatabase CreateOrLoad(string filePath) {
+		internal static BotCache CreateOrLoad(string filePath) {
 			if (string.IsNullOrEmpty(filePath)) {
 				throw new ArgumentNullException(nameof(filePath));
 			}
 
 			if (!File.Exists(filePath)) {
-				return new BoosterDatabase(filePath);
+				return new BotCache(filePath);
 			}
 
-			BoosterDatabase? boosterDatabase;
+			BotCache? botCache;
 
 			try {
 				string json = File.ReadAllText(filePath);
@@ -57,25 +57,25 @@ namespace BoosterManager {
 				if (string.IsNullOrEmpty(json)) {
 					ASF.ArchiLogger.LogGenericError(string.Format(ArchiSteamFarm.Localization.Strings.ErrorIsEmpty, nameof(json)));
 
-					return new BoosterDatabase(filePath);
+					return new BotCache(filePath);
 				}
 
-				boosterDatabase = json.ToJsonObject<BoosterDatabase>();
+				botCache = json.ToJsonObject<BotCache>();
 			} catch (Exception e) {
 				ASF.ArchiLogger.LogGenericException(e);
 
-				return new BoosterDatabase(filePath);
+				return new BotCache(filePath);
 			}
 
-			if (boosterDatabase == null) {
-				ASF.ArchiLogger.LogNullError(boosterDatabase);
+			if (botCache == null) {
+				ASF.ArchiLogger.LogNullError(botCache);
 
-				return new BoosterDatabase(filePath);
+				return new BotCache(filePath);
 			}
 
-			boosterDatabase.FilePath = filePath;
+			botCache.FilePath = filePath;
 
-			return boosterDatabase;
+			return botCache;
 		}
 
 		internal BoosterLastCraft? GetLastCraft(uint appID) {

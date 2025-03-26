@@ -94,8 +94,8 @@ namespace BoosterManager {
 		}
 
 		public Task OnBotInitModules(Bot bot, IReadOnlyDictionary<string, JsonElement>? additionalConfigProperties = null) {
-			string databaseFilePath = Bot.GetFilePath(String.Format("{0}_{1}", bot.BotName, nameof(BoosterManager)), Bot.EFileType.Database);
-			BoosterHandler.AddHandler(bot, BoosterDatabase.CreateOrLoad(databaseFilePath));
+			string cacheFilePath = Bot.GetFilePath(String.Format("{0}_{1}", bot.BotName, nameof(BoosterManager)), Bot.EFileType.Database);
+			BoosterHandler.AddHandler(bot, BotCache.CreateOrLoad(cacheFilePath));
 
 			if (additionalConfigProperties == null) {
 				return Task.FromResult(0);

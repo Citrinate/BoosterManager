@@ -91,7 +91,7 @@ namespace BoosterManager {
 			
 			StatusReporter.Report(bot, new Uri(ArchiWebHandler.SteamCommunityURL, String.Format("/market/listings/{0}/{1}", AppID, Uri.EscapeDataString(HashName))).AbsoluteUri);
 
-			BoosterHandler.BoosterHandlers[bot.BotName].BoosterDatabase.RemoveMarketAlert(this);
+			BoosterHandler.BoosterHandlers[bot.BotName].BotCache.RemoveMarketAlert(this);
 		}
 	}
 
