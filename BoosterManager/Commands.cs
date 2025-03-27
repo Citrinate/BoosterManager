@@ -889,7 +889,7 @@ namespace BoosterManager {
 
 			uint? amount = null;
 			if (amountAsText != null) {
-				if (decimal.TryParse(Regex.Replace(amountAsText, "[^0-9.,]", ""), CultureInfo.CurrentCulture, out decimal outValue)) {
+				if (decimal.TryParse(new Regex("[^0-9.,]").Replace(amountAsText, ""), CultureInfo.CurrentCulture, out decimal outValue)) {
 					if (outValue <= 0) {
 						return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, nameof(amountAsText)));
 					}
@@ -1045,7 +1045,7 @@ namespace BoosterManager {
 			hashName = Uri.UnescapeDataString(hashName);
 
 			uint amount;
-			if (decimal.TryParse(Regex.Replace(amountAsText, "[^0-9.,]", ""), CultureInfo.CurrentCulture, out decimal outValue)) {
+			if (decimal.TryParse(new Regex("[^0-9.,]").Replace(amountAsText, ""), CultureInfo.CurrentCulture, out decimal outValue)) {
 				if (outValue <= 0) {
 					return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, nameof(amountAsText)));
 				}
