@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <root>
-  <!--
-    Microsoft ResX Schema
-
+  <!--  
+    Microsoft ResX Schema 
+    
     Version 2.0
-
-    The primary goals of this format is to allow a simple XML format
-    that is mostly human readable. The generation and parsing of the
-    various data types are done through the TypeConverter classes
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
     associated with the data types.
-
+    
     Example:
-
+    
     ... ado.net/XML headers & schema ...
     <resheader name="resmimetype">text/microsoft-resx</resheader>
     <resheader name="version">2.0</resheader>
@@ -26,79 +26,79 @@
         <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
         <comment>This is a comment</comment>
     </data>
-
-    There are any number of "resheader" rows that contain simple
+                
+    There are any number of "resheader" rows that contain simple 
     name/value pairs.
-
-    Each data row contains a name, and value. The row also contains a
-    type or mimetype. Type corresponds to a .NET class that support
-    text/value conversion through the TypeConverter architecture.
-    Classes that don't support this are serialized and stored with the
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
     mimetype set.
-
-    The mimetype is used for serialized objects, and tells the
-    ResXResourceReader how to depersist the object. This is currently not
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
     extensible. For a given mimetype the value must be set accordingly:
-
-    Note - application/x-microsoft.net.object.binary.base64 is the format
-    that the ResXResourceWriter will generate, however the reader can
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
     read any of the formats listed below.
-
+    
     mimetype: application/x-microsoft.net.object.binary.base64
-    value   : The object must be serialized with
+    value   : The object must be serialized with 
             : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
             : and then encoded with base64 encoding.
-
+    
     mimetype: application/x-microsoft.net.object.soap.base64
-    value   : The object must be serialized with
+    value   : The object must be serialized with 
             : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
             : and then encoded with base64 encoding.
 
     mimetype: application/x-microsoft.net.object.bytearray.base64
-    value   : The object must be serialized into a byte array
+    value   : The object must be serialized into a byte array 
             : using a System.ComponentModel.TypeConverter
             : and then encoded with base64 encoding.
     -->
   <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
-    <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
     <xsd:element name="root" msdata:IsDataSet="true">
       <xsd:complexType>
         <xsd:choice maxOccurs="unbounded">
           <xsd:element name="metadata">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
               </xsd:sequence>
-              <xsd:attribute name="name" use="required" type="xsd:string"/>
-              <xsd:attribute name="type" type="xsd:string"/>
-              <xsd:attribute name="mimetype" type="xsd:string"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="assembly">
             <xsd:complexType>
-              <xsd:attribute name="alias" type="xsd:string"/>
-              <xsd:attribute name="name" type="xsd:string"/>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="data">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
-                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
-              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
-              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
-              <xsd:attribute ref="xml:space"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
             </xsd:complexType>
           </xsd:element>
           <xsd:element name="resheader">
             <xsd:complexType>
               <xsd:sequence>
-                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
               </xsd:sequence>
-              <xsd:attribute name="name" type="xsd:string" use="required"/>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
             </xsd:complexType>
           </xsd:element>
         </xsd:choice>
@@ -155,7 +155,6 @@
   </data>
   <data name="BoosterInfoUpdateSuccess" xml:space="preserve">
     <value>Booster information updated</value>
-    <comment/>
   </data>
   <data name="BoosterUnexpectedlyUncraftable" xml:space="preserve">
     <value>No longer able to craft boosters from {0} ({1})</value>
@@ -183,7 +182,6 @@
   </data>
   <data name="BoosterInfoUpdating" xml:space="preserve">
     <value>Updating booster information...</value>
-    <comment/>
   </data>
   <data name="QueueStatusShort" xml:space="preserve">
     <value>{0} boosters from {1} gems will be crafted by ~{2}</value>
@@ -191,11 +189,9 @@
   </data>
   <data name="QueueEmpty" xml:space="preserve">
     <value>Bot is not crafting any boosters</value>
-    <comment/>
   </data>
   <data name="QueueStatusNotEnoughGems" xml:space="preserve">
     <value>Not enough gems</value>
-    <comment/>
   </data>
   <data name="QueueStatusGemsNeeded" xml:space="preserve">
     <value>Need {0} more gems for the next booster!</value>
@@ -231,15 +227,12 @@
   </data>
   <data name="BoostersUncraftable" xml:space="preserve">
     <value>Bot cannot craft boosters for the requested games</value>
-    <comment/>
   </data>
   <data name="QueueRemovalByAppFail" xml:space="preserve">
     <value>Bot was not attempting to craft any of those boosters. If you're trying to remove boosters from your "GamesToBooster" config setting, you'll need to remove them from your config file.</value>
-    <comment/>
   </data>
   <data name="QueueRemovalByTimeFail" xml:space="preserve">
     <value>Didn't find any boosters that could be removed</value>
-    <comment/>
   </data>
   <data name="QueueRemovalSuccess" xml:space="preserve">
     <value>Will no longer craft these {0} boosters: {1}</value>
@@ -247,47 +240,36 @@
   </data>
   <data name="APIEndpointsUndefined" xml:space="preserve">
     <value>API endpoints not defined</value>
-    <comment/>
   </data>
   <data name="NoMessages" xml:space="preserve">
     <value>No messages to display</value>
-    <comment/>
   </data>
   <data name="BoosterEndpointUndefined" xml:space="preserve">
     <value>Booster Data API endpoint not defined</value>
-    <comment/>
   </data>
   <data name="InventoryHistoryEndpointUndefined" xml:space="preserve">
     <value>Inventory History API endpoint not defined</value>
-    <comment/>
   </data>
   <data name="MarketListingsEndpointUndefined" xml:space="preserve">
     <value>Market Listings API endpoint not defined</value>
-    <comment/>
   </data>
   <data name="MarketHistoryEndpointUndefined" xml:space="preserve">
     <value>Market History API endpoint not defined</value>
-    <comment/>
   </data>
   <data name="FinishedZeroPages" xml:space="preserve">
     <value>Finished sending no pages</value>
-    <comment/>
   </data>
   <data name="BoosterDataFetchStopped" xml:space="preserve">
     <value>Manually stopped before fetching Booster Data</value>
-    <comment/>
   </data>
   <data name="BoosterDataFetchFailed" xml:space="preserve">
     <value>Failed to fetch Booster Data</value>
-    <comment/>
   </data>
   <data name="BoosterDataEndpointFailed" xml:space="preserve">
     <value>API failed to accept Booster Data</value>
-    <comment/>
   </data>
   <data name="BoosterDataEndpointSuccess" xml:space="preserve">
     <value>Successly sent Booster Data</value>
-    <comment/>
   </data>
   <data name="InventoryHistoryFetchStopped" xml:space="preserve">
     <value>Manually stopped before fetching Inventory History for Time &lt; {0} ({1} @ {2})</value>
@@ -295,7 +277,6 @@
   </data>
   <data name="InventoryHistoryRateLimitExceeded" xml:space="preserve">
     <value>Rate limit exceeded while attempting to fetch Inventory History. Will keep trying, but it could take up to 12 hours to continue. If you'd like to stop, use the 'logstop' command.</value>
-    <comment/>
   </data>
   <data name="InventoryHistoryFetchFailed" xml:space="preserve">
     <value>Failed to fetch Inventory History for Time &lt; {0} ({1} @ {2})</value>
@@ -315,19 +296,15 @@
   </data>
   <data name="InventoryHistorySteamError" xml:space="preserve">
     <value>Please verify that your history actually ends here, as there's a bug on Steam's end which can cause the history to end early. Refer to the README for more information.</value>
-    <comment/>
   </data>
   <data name="MarketListingsFetchFailed" xml:space="preserve">
     <value>Failed to fetch Market Listings</value>
-    <comment/>
   </data>
   <data name="MarketListingsEndpointFailed" xml:space="preserve">
     <value>API failed to accept Market Listings</value>
-    <comment/>
   </data>
   <data name="MarketListingsEndpointSuccess" xml:space="preserve">
     <value>Successfully sent Market Listings</value>
-    <comment/>
   </data>
   <data name="MarketHistoryFetchStopped" xml:space="preserve">
     <value>Manually stopped before fetching Market History (Page {0})</value>
@@ -359,7 +336,6 @@
   </data>
   <data name="NoSacksFound" xml:space="preserve">
     <value>No gems to unpack</value>
-    <comment/>
   </data>
   <data name="SendingQuantityOfItemsToBot" xml:space="preserve">
     <value>Sending {0} of {1} to {2}</value>
@@ -375,11 +351,9 @@
   </data>
   <data name="SendingNoItems" xml:space="preserve">
     <value>Successfully sent nothing!</value>
-    <comment/>
   </data>
   <data name="SendingInsufficientQuantity" xml:space="preserve">
     <value>Not enough to send!</value>
-    <comment/>
   </data>
   <data name="SendingItemsSuccess" xml:space="preserve">
     <value>Sent items to {0}</value>
@@ -415,7 +389,6 @@
   </data>
   <data name="ListingsNotFound" xml:space="preserve">
     <value>No listings found</value>
-    <comment/>
   </data>
   <data name="ListingsFound" xml:space="preserve">
     <value>{0} listings found for "{1}": {2}</value>
@@ -431,27 +404,21 @@
   </data>
   <data name="InventoryHistoryInvalidCursor" xml:space="preserve">
     <value>When using 'timeFrac' or 's', all three parameters must be defined: 'startTime', 'timeFrac', and 's'</value>
-    <comment/>
   </data>
   <data name="RateLimitExceeded" xml:space="preserve">
     <value>Rate limit exceeded</value>
-    <comment/>
   </data>
   <data name="BadgeInfoFetchFailed" xml:space="preserve">
     <value>Failed to fetch badge info</value>
-    <comment/>
   </data>
   <data name="PriceHistoryFetchFailed" xml:space="preserve">
     <value>Failed to fetch price history</value>
-    <comment/>
   </data>
   <data name="RepetitionCancelled" xml:space="preserve">
     <value>Repetition cancelled</value>
-    <comment/>
   </data>
   <data name="RepetitionNotActive" xml:space="preserve">
     <value>Repetition was not running</value>
-    <comment/>
   </data>
   <data name="RepetitionNotice" xml:space="preserve">
     <value>This action will repeat again every {0} minutes. To cancel, send the command: {1}</value>
@@ -459,7 +426,6 @@
   </data>
   <data name="EligibleBoosterFetchFailed" xml:space="preserve">
     <value>Failed to get eligible boosters</value>
-    <comment/>
   </data>
   <data name="EligibleBoosterCount" xml:space="preserve">
     <value>Bot has {0} booster eligible games</value>
@@ -487,15 +453,12 @@
   </data>
   <data name="PluginError" xml:space="preserve">
     <value>Plugin error, please report this</value>
-    <comment/>
   </data>
   <data name="HandlingIncomingTrades" xml:space="preserve">
     <value>Attempting to handle any incoming trades</value>
-    <comment/>
   </data>
   <data name="IncomingTradeFetchFailed" xml:space="preserve">
     <value>Failed to fetch incoming trades</value>
-    <comment/>
   </data>
   <data name="IncomingTradeFromInvalidUser" xml:space="preserve">
     <value>'From' value is not a bot name or a SteamID: {0}</value>
@@ -511,7 +474,6 @@
   </data>
   <data name="PendingListingsNotFound" xml:space="preserve">
     <value>No pending market listings found</value>
-    <comment/>
   </data>
   <data name="PendingListingsRemovedFailed" xml:space="preserve">
     <value>Successfully removed {0} pending market listings, failed to remove {1} listings</value>
@@ -555,7 +517,6 @@
   </data>
   <data name="BoostersUnmarketable" xml:space="preserve">
     <value>The requested boosters are unmarketable and won't be crafted</value>
-    <comment/>
   </data>
   <data name="BoostersUncraftableAndUnmarketable" xml:space="preserve">
     <value>No boosters will be crafted. This bot either can't craft the requested boosters, or the requested boosters are unmarketable. The following boosters are unmarketable: {0}</value>
@@ -563,7 +524,6 @@
   </data>
   <data name="MarketableAppDataFetchFailed" xml:space="preserve">
     <value>Failed to fetch marketable apps data</value>
-    <comment/>
   </data>
   <data name="AccountValueRemainingWithDelayed" xml:space="preserve">
     <value>Remaining: {0} ({1}) {2}</value>
@@ -587,7 +547,6 @@
   </data>
   <data name="MarketAlertsEmpty" xml:space="preserve">
     <value>Bot has no market price alerts</value>
-    <comment/>
   </data>
   <data name="MarketAlertsCancelled" xml:space="preserve">
     <value>Cancelled {0} market price alerts: {1}</value>
@@ -603,7 +562,6 @@
   </data>
   <data name="MarketAlertCreationFail" xml:space="preserve">
     <value>Failed to create market price alert</value>
-    <comment/>
   </data>
   <data name="MarketAlertReached" xml:space="preserve">
     <value>{0} {1} alert of {2} {3} for "{4}/{5}" reached! To reset use: {6}</value>
@@ -611,7 +569,6 @@
   </data>
   <data name="MarketAlertsCancelledFail" xml:space="preserve">
     <value>Failed to find any market alerts to cancel</value>
-    <comment/>
   </data>
   <data name="MarketAlertSellPriceCurrentValue" xml:space="preserve">
     <value>Sell now for: {0} {1}</value>
@@ -623,26 +580,30 @@
   </data>
   <data name="MarketAlertTypeBuy" xml:space="preserve">
     <value>Buy</value>
-    <comment/>
   </data>
   <data name="MarketAlertTypeSell" xml:space="preserve">
     <value>Sell</value>
-    <comment/>
   </data>
   <data name="MarketAlertModeAbove" xml:space="preserve">
     <value>Above</value>
-    <comment/>
   </data>
   <data name="MarketAlertModeBelow" xml:space="preserve">
     <value>Below</value>
-    <comment/>
   </data>
   <data name="MarketAlertAlreadyExists" xml:space="preserve">
     <value>Market alert already exists</value>
-    <comment/>
   </data>
   <data name="UnpackNoGemsFound" xml:space="preserve">
     <value>No gems to pack</value>
-    <comment/>
+  </data>
+  <data name="MarketAlertModeBelowOrAt" xml:space="preserve">
+    <value>BelowOrAt</value>
+    <comment>
+</comment>
+  </data>
+  <data name="MarketAlertModeAboveOrAt" xml:space="preserve">
+    <value>AboveOrAt</value>
+    <comment>
+</comment>
   </data>
 </root>

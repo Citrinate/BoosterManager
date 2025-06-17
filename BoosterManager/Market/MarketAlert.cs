@@ -51,15 +51,19 @@ namespace BoosterManager {
 
 		internal void CheckAlert(Bot bot, uint? buyNowPrice, uint? sellNowPrice) {
 			if (Type == MarketAlertType.Buy && buyNowPrice != null) {
-				if (Mode == MarketAlertMode.Above && buyNowPrice >= Amount) {
-					Resolve(bot, buyNowPrice.Value);
-				} else if (Mode == MarketAlertMode.Below && buyNowPrice <= Amount) {
-					Resolve(bot, buyNowPrice.Value);
+				if ((Mode == MarketAlertMode.AboveOrAt && buyNowPrice >= Amount)
+					|| (Mode == MarketAlertMode.BelowOrAt && buyNowPrice <= Amount)
+					|| (Mode == MarketAlertMode.Above && buyNowPrice > Amount)
+					|| (Mode == MarketAlertMode.Below && buyNowPrice < Amount)
+				) {
+					Resolve(bot, buyNowPrice.Value);					
 				}
 			} else if (Type == MarketAlertType.Sell && sellNowPrice != null) {
-				if (Mode == MarketAlertMode.Above && sellNowPrice >= Amount) {
-					Resolve(bot, sellNowPrice.Value);
-				} else if (Mode == MarketAlertMode.Below && sellNowPrice <= Amount) {
+				if ((Mode == MarketAlertMode.AboveOrAt && sellNowPrice >= Amount)
+					|| (Mode == MarketAlertMode.BelowOrAt && sellNowPrice <= Amount)
+					|| (Mode == MarketAlertMode.Above && sellNowPrice > Amount)
+					|| (Mode == MarketAlertMode.Below && sellNowPrice < Amount)
+				) {
 					Resolve(bot, sellNowPrice.Value);
 				}
 			}
@@ -68,7 +72,7 @@ namespace BoosterManager {
 		internal void Resolve(Bot bot, uint currentPrice) {
 			StatusReporter.Report(bot, String.Format(Strings.MarketAlertReached, 
 				Type == MarketAlertType.Buy ? Strings.MarketAlertTypeBuy : Strings.MarketAlertTypeSell, 
-				Mode == MarketAlertMode.Above ? Strings.MarketAlertModeAbove : Strings.MarketAlertModeBelow, 
+				Mode == MarketAlertMode.AboveOrAt ? Strings.MarketAlertModeAbove : Strings.MarketAlertModeBelow, 
 				String.Format(CultureInfo.CurrentCulture, "{0:#,#0.00}", Amount / 100.0), 
 				bot.WalletCurrency, 
 				AppID, 
@@ -101,6 +105,8 @@ namespace BoosterManager {
 	}
 
 	internal enum MarketAlertMode {
+		AboveOrAt,
+		BelowOrAt,
 		Above,
 		Below
 	}

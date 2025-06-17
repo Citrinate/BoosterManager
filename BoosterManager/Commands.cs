@@ -917,6 +917,10 @@ namespace BoosterManager {
 					mode = MarketAlertMode.Above;
 				} else if (modeAsText.Equals("BELOW", StringComparison.InvariantCultureIgnoreCase) || modeAsText.Equals(Strings.MarketAlertModeBelow, StringComparison.InvariantCultureIgnoreCase)) {
 					mode = MarketAlertMode.Below;
+				} else if (modeAsText.Equals("ABOVEORAT", StringComparison.InvariantCultureIgnoreCase) || modeAsText.Equals(Strings.MarketAlertModeAboveOrAt, StringComparison.InvariantCultureIgnoreCase)) {
+					mode = MarketAlertMode.AboveOrAt;
+				} else if (modeAsText.Equals("BELOWORAT", StringComparison.InvariantCultureIgnoreCase) || modeAsText.Equals(Strings.MarketAlertModeBelowOrAt, StringComparison.InvariantCultureIgnoreCase)) {
+					mode = MarketAlertMode.BelowOrAt;
 				} else {
 					return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, nameof(modeAsText)));
 				}
@@ -1069,6 +1073,10 @@ namespace BoosterManager {
 				mode = MarketAlertMode.Above;
 			} else if (modeAsText.Equals("BELOW", StringComparison.InvariantCultureIgnoreCase) || modeAsText.Equals(Strings.MarketAlertModeBelow, StringComparison.InvariantCultureIgnoreCase)) {
 				mode = MarketAlertMode.Below;
+			} else if (modeAsText.Equals("ABOVEORAT", StringComparison.InvariantCultureIgnoreCase) || modeAsText.Equals(Strings.MarketAlertModeAboveOrAt, StringComparison.InvariantCultureIgnoreCase)) {
+				mode = MarketAlertMode.AboveOrAt;
+			} else if (modeAsText.Equals("BELOWORAT", StringComparison.InvariantCultureIgnoreCase) || modeAsText.Equals(Strings.MarketAlertModeBelowOrAt, StringComparison.InvariantCultureIgnoreCase)) {
+				mode = MarketAlertMode.BelowOrAt;
 			} else {
 				return FormatBotResponse(bot, String.Format(ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, nameof(modeAsText)));
 			}
