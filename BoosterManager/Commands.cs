@@ -1565,18 +1565,22 @@ namespace BoosterManager {
 			return await MarketHandler.RemovePendingListings(bot).ConfigureAwait(false);
 		}
 
-		private static async Task<string?> ResponseRemovePendingListings(EAccess access, ulong steamID, string botName) {
-			if (String.IsNullOrEmpty(botName)) {
-				throw new ArgumentNullException(nameof(botName));
+		private static async Task<string?> ResponseRemovePendingListings(EAccess access, ulong steamID, string botNames) {
+			if (String.IsNullOrEmpty(botNames)) {
+				throw new ArgumentNullException(nameof(botNames));
 			}
 
-			Bot? bot = Bot.GetBot(botName);
+			HashSet<Bot>? bots = Bot.GetBots(botNames);
 
-			if (bot == null) {
-				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botName)) : null;
+			if ((bots == null) || (bots.Count == 0)) {
+				return access >= EAccess.Owner ? FormatStaticResponse(String.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)) : null;
 			}
 
-			return await ResponseRemovePendingListings(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)).ConfigureAwait(false);
+			IList<string?> results = await Utilities.InParallel(bots.Select(bot => ResponseRemovePendingListings(bot, ArchiSteamFarm.Steam.Interaction.Commands.GetProxyAccess(bot, access, steamID)))).ConfigureAwait(false);
+
+			List<string?> responses = new(results.Where(result => !String.IsNullOrEmpty(result)));
+
+			return responses.Count > 0 ? string.Join(Environment.NewLine, responses) : null;
 		}
 
 		private static async Task<string?> ResponseSendItemToBot(Bot bot, EAccess access, ItemIdentifier itemIdentifier, bool? marketable = null, string? recieverBotName = null) {
