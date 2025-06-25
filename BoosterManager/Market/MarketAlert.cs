@@ -112,6 +112,13 @@ namespace BoosterManager {
 	}
 
 	internal class MarketAlertComparer : IEqualityComparer<MarketAlert>, IComparer<MarketAlert> {
+		private static readonly Dictionary<MarketAlertMode, int> ModeOrder = new() {
+			{ MarketAlertMode.AboveOrAt, 0 },
+			{ MarketAlertMode.BelowOrAt, 1 },
+			{ MarketAlertMode.Above, 0 },
+			{ MarketAlertMode.Below, 1 },
+		};
+
 		public bool Equals(MarketAlert? x, MarketAlert? y) {
 			if (x == null && y == null) {
 				return true;
@@ -151,9 +158,9 @@ namespace BoosterManager {
 				return -1;
 			}
 
-			if ((int) x.Mode > (int) y.Mode) {
+			if (ModeOrder[x.Mode] > ModeOrder[y.Mode]) {
 				return 1;
-			} else if ((int) x.Mode < (int) y.Mode) {
+			} else if (ModeOrder[x.Mode] < ModeOrder[y.Mode]) {
 				return -1;
 			}
 
@@ -161,6 +168,12 @@ namespace BoosterManager {
 				return -1;
 			} else if (x.Amount < y.Amount) {
 				return 1;
+			}
+
+			if ((int) x.Mode > (int) y.Mode) {
+				return 1;
+			} else if ((int) x.Mode < (int) y.Mode) {
+				return -1;
 			}
 
 			return 0;
