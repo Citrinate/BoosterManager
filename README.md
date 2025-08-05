@@ -54,7 +54,7 @@ Command | Access | Description
 
 #### Boosters
 
-The below commands only aplly to marketable boosters.  To have them apply to only unmarketable boosters, add `u` to the start of the command (ex: `ulootboosters`).  To have them apply to all boosters, add `a` to the start of the command (ex: `alootboosters`)
+The below commands only apply to marketable boosters.  To have them apply to only unmarketable boosters, add `u` to the start of the command (ex: `ulootboosters`).  To have them apply to all boosters, add `a` to the start of the command (ex: `alootboosters`)
 
 Command | Access | Description
 --- | --- | ---
