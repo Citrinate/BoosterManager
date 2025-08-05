@@ -54,7 +54,7 @@ Command | Access | Description
 
 #### Boosters
 
-These commands only operate on marketable boosters.  To loot or transfer only unmarketable boosters, add `u` to the start of the command, ex: `ulootboosters`.  To loot or transfer all boosters, add `a` to the start of the command, ex: `alootboosters`
+The below commands only aplly to marketable boosters.  To have them apply to only unmarketable boosters, add `u` to the start of the command (ex: `ulootboosters`).  To have them apply to all boosters, add `a` to the start of the command (ex: `alootboosters`)
 
 Command | Access | Description
 --- | --- | ---
@@ -64,7 +64,7 @@ Command | Access | Description
 
 #### Cards
 
-These commands only operate on marketable cards.  To loot or transfer only unmarketable cards, add `u` to the start of the command, ex: `ulootcards`.  To loot or transfer all cards, add `a` to the start of the command, ex: `alootcards`
+The bellow commands only apply to marketable cards.  To have them apply to only unmarketable cards, add `u` to the start of the command (ex: `ulootcards`).  To have them apply to all cards, add `a` to the start of the command (ex: `alootcards`)
 
 Command | Access | Description
 --- | --- | ---
@@ -86,7 +86,7 @@ Command | Access | Description
 
 #### Other Items
 
-These commands ignore marketability.  To loot or transfer only marketable items, add `m` to the start of the command, ex: `mlootitems`.  To loot or transfer only unmarketable items, add `u` to the start of the command, ex: `ulootitems`.
+The below commands apply to all items.  To have them apply to only marketable items, add `m` to the start of the command (ex: `mlootitems`).  To have them apply to only unmarketable items, add `u` to the start of the command (ex: `ulootitems`).
 
 Command | Access | Description
 --- | --- | ---
