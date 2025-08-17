@@ -106,12 +106,11 @@ Command | Access | Description
 
 ### Market Commands
 
+#### Listings & Orders
+
 Command | Access | Description
 --- | --- | ---
-`alert [Bot] <AppID> <HashName> <Buy/Sell> <Above/Below/AboveOrAt/BelowOrAt> <Amount>`|`Master`|The given bot will check the price (in that bot's wallet currency) of the item identified by [`AppID`](/BoosterManager/Docs/ItemIDs.md#example-for-a-market-item) and [`HashName`](/BoosterManager/Docs/ItemIDs.md#example-for-a-market-item) every 15 minutes.  A message will be sent when the `Buy/Sell` now price is `Above/Below/AboveOrAt/BelowOrAt` the given `Amount`. `HashName` here should be taken directly from the URL of the item's market listing page and not include any whitespace characters.
 `buylimit <Bots>`|`Master`|Displays the value of the given bot's active buy orders, and how close the bot is to hitting the buy order limit.
-`cancelalert <Bots> <AppID> [HashName] [Buy/Sell] [Above/Below/AboveOrAt/BelowOrAt] [Amount]`|`Master`|Cancels market alerts specified by [`AppID`](/BoosterManager/Docs/ItemIDs.md#example-for-a-market-item), [`HashName`](/BoosterManager/Docs/ItemIDs.md#example-for-a-market-item), `Buy/Sell`, `Above/Below/AboveOrAt/BelowOrAt`, and `Amount` for the given bots. `HashName` here should be taken directly from the URL of the item's market listing page and not include any whitespace characters.
-`cancelallalerts [Bots]`|`Master`|Cancels all market alerts for the given bots.
 `findlistings <Bots> <ItemIdentifiers>`|`Master`|Displays the `ListingIDs` of any market listing belonging to the given bot and matching any of the [`ItemIdentifiers`](#itemidentifiers).
 `findandremovelistings <Bots> <ItemIdentifiers>`|`Master`|Removes any market listing belonging to the given bot and matching any of the [`ItemIdentifiers`](#itemidentifiers).
 `listings [Bots]`|`Master`|Displays the total value of all active market listings owned by the given bot.
@@ -119,6 +118,14 @@ Command | Access | Description
 `removepending <Bots>`|`Master`|Removes all pending market listings belonging to the given bot.
 `market2faok [Bot] [Minutes]`|`Master`|Accepts all pending 2FA market confirmations for given bot instances.  Optionally repeat this action once every `Minutes`.  To cancel any repetition, set `Minutes` to 0.
 `value [Bots] [BalanceLimit]`|`Master`|Displays the combined wallet balance and total value of all active market listings owned by the given bot.  The maximum allowed balance in your region may be provided as `BalanceLimit`, a whole number, and it will instead display how close the given bot is to reaching that limit.
+
+#### Price Alerts
+
+Command | Access | Description
+--- | --- | ---
+`alert [Bot] <AppID> <HashName> <Buy/Sell> <Above/Below/AboveOrAt/BelowOrAt> <Amount>`|`Master`|The given bot will check the price (in that bot's wallet currency) of the item identified by [`AppID`](/BoosterManager/Docs/ItemIDs.md#example-for-a-market-item) and [`HashName`](/BoosterManager/Docs/ItemIDs.md#example-for-a-market-item) every 15 minutes.  A message will be sent when the `Buy/Sell` now price is `Above/Below/AboveOrAt/BelowOrAt` the given `Amount`. `HashName` here should be taken directly from the URL of the item's market listing page and not include any whitespace characters.
+`cancelalert <Bots> <AppID> [HashName] [Buy/Sell] [Above/Below/AboveOrAt/BelowOrAt] [Amount]`|`Master`|Cancels market alerts specified by [`AppID`](/BoosterManager/Docs/ItemIDs.md#example-for-a-market-item), [`HashName`](/BoosterManager/Docs/ItemIDs.md#example-for-a-market-item), `Buy/Sell`, `Above/Below/AboveOrAt/BelowOrAt`, and `Amount` for the given bots. `HashName` here should be taken directly from the URL of the item's market listing page and not include any whitespace characters.
+`cancelallalerts [Bots]`|`Master`|Cancels all market alerts for the given bots.
 `viewalerts [Bots]`|`Master`|Lists all market alerts for the given bots.
 
 ### Log Commands
