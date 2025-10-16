@@ -1,0 +1,609 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!--  
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata" id="root">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace"/>
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0"/>
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string"/>
+              <xsd:attribute name="type" type="xsd:string"/>
+              <xsd:attribute name="mimetype" type="xsd:string"/>
+              <xsd:attribute ref="xml:space"/>
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string"/>
+              <xsd:attribute name="name" type="xsd:string"/>
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2"/>
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1"/>
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3"/>
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4"/>
+              <xsd:attribute ref="xml:space"/>
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1"/>
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required"/>
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="BoosterInfoUpdateFailed" xml:space="preserve">
+    <value>更新补充包信息失败，将在 {0} 分钟后重试</value>
+    <comment>{0} will be replaced by a number</comment>
+  </data>
+  <data name="NotEnoughGems" xml:space="preserve">
+    <value>还需要 {0} 个宝石才能继续制作补充包。当有更多宝石时，制作将继续。</value>
+    <comment>{0} will be replaced by a number of gems</comment>
+  </data>
+  <data name="BoosterCreationFailed" xml:space="preserve">
+    <value>为 {0} 创建补充包失败</value>
+    <comment>{0} will be replaced by an appID</comment>
+  </data>
+  <data name="BoosterCreationSuccess" xml:space="preserve">
+    <value>成功为 {0} 创建补充包</value>
+    <comment>{0} will be replaced by an appID</comment>
+  </data>
+  <data name="NextBoosterCraft" xml:space="preserve">
+    <value>下一个补充包将在 {0} 制作</value>
+    <comment>{0} will be replaced by a time</comment>
+  </data>
+  <data name="BoosterUncraftable" xml:space="preserve">
+    <value>无法为 {0} 制作补充包</value>
+    <comment>{0} will be replaced by an appID</comment>
+  </data>
+  <data name="BoosterQueued" xml:space="preserve">
+    <value>已将 {0} 添加到补充包队列</value>
+    <comment>{0} will be replaced by an appID</comment>
+  </data>
+  <data name="BoosterUnqueued" xml:space="preserve">
+    <value>已从补充包队列中移除 {0}</value>
+    <comment>{0} will be replaced by an appID</comment>
+  </data>
+  <data name="PermanentBoosterRequeued" xml:space="preserve">
+    <value>正在将永久性的 {0} 重新添加到补充包队列</value>
+    <comment>{0} will be replaced by an appID</comment>
+  </data>
+  <data name="BoosterInfoUpdateSuccess" xml:space="preserve">
+    <value>补充包信息已更新</value>
+  </data>
+  <data name="BoosterUnexpectedlyUncraftable" xml:space="preserve">
+    <value>无法再从 {0} ({1}) 制作补充包</value>
+    <comment>{0} will be replaced by a game name, {1} will be replaced by an appID</comment>
+  </data>
+  <data name="BoosterUnexpectedlyCrafted" xml:space="preserve">
+    <value>来自 {0} 的补充包最近由我们或用户创建</value>
+    <comment>{0} will be replaced by an appID</comment>
+  </data>
+  <data name="BoosterCreationError" xml:space="preserve">
+    <value>尝试从 {0} 制作补充包时遇到错误，正在尝试解决</value>
+    <comment>{0} will be replaced by an appID</comment>
+  </data>
+  <data name="BoosterCreationRetry" xml:space="preserve">
+    <value>来自 {0} 的补充包未创建，正在重试</value>
+    <comment>{0} will be replaced by an appID</comment>
+  </data>
+  <data name="BoosterCreationFinished" xml:space="preserve">
+    <value>完成了 {0} 个补充包的制作！</value>
+    <comment>{0} will be replaced by a number of boosters</comment>
+  </data>
+  <data name="BoosterUnqueuedByUser" xml:space="preserve">
+    <value>用户已从补充包队列中移除 {0}</value>
+    <comment>{0} will be replaced by an appID</comment>
+  </data>
+  <data name="BoosterInfoUpdating" xml:space="preserve">
+    <value>正在更新补充包信息……</value>
+  </data>
+  <data name="QueueStatusShort" xml:space="preserve">
+    <value>将于 ~{2} 前使用 {1} 个宝石制作 {0} 个补充包</value>
+    <comment>{0} will be replaced by a number of boosters, {1} will be replaced by a number of gems, {2} will be replaced by a time</comment>
+  </data>
+  <data name="QueueEmpty" xml:space="preserve">
+    <value>机器人当前未制作任何补充包</value>
+  </data>
+  <data name="QueueStatusNotEnoughGems" xml:space="preserve">
+    <value>宝石不足</value>
+  </data>
+  <data name="QueueStatusGemsNeeded" xml:space="preserve">
+    <value>制作下一个补充包还需要 {0} 个宝石！</value>
+    <comment>{0} will be replaced by a number of gems</comment>
+  </data>
+  <data name="QueueStatusTotalGemsNeeded" xml:space="preserve">
+    <value>完成所有补充包的制作还需要 {0} 个宝石！</value>
+    <comment>{0} will be replaced by a number of gems</comment>
+  </data>
+  <data name="QueueStatusLimitedBoosters" xml:space="preserve">
+    <value>已制作 {0}/{1} 个补充包。制作将于 ~{2} 完成，并将使用 {3} 个宝石。</value>
+    <comment>{0} will be replaced by a number of boosters, {1} will be replaced by a number of boosters, {2} will be replaced by a time, {3} will be replaced by a number of gems</comment>
+  </data>
+  <data name="QueueStatusLimitedBoosterList" xml:space="preserve">
+    <value>等待制作的补充包：{0}</value>
+    <comment>{0} will be replaced by a list of appIDs</comment>
+  </data>
+  <data name="QueueStatusPermanentBoosters" xml:space="preserve">
+    <value>将持续制作的永久性补充包（每个消耗 {0} 宝石）：{1}</value>
+    <comment>{0} will be replaced by a number of gems, {1} will be replaced by a list of appIDs</comment>
+  </data>
+  <data name="QueueStatusNextBoosterCraftingNow" xml:space="preserve">
+    <value>现在将制作下一个补充包：{0} ({1})</value>
+    <comment>{0} will be replaced by a game name, {1} will be replaced by an appID</comment>
+  </data>
+  <data name="QueueStatusNextBoosterCraftingLater" xml:space="preserve">
+    <value>下一个补充包将在 {0} 制作：{1} ({2})</value>
+    <comment>{0} will be replaced by a time, {1} will be replaced by a game name, {2} will be replaced by an appID</comment>
+  </data>
+  <data name="BoosterCreationStarting" xml:space="preserve">
+    <value>正在尝试制作 {0} 个补充包……</value>
+    <comment>{0} will be replaced by a number of boosters</comment>
+  </data>
+  <data name="BoostersUncraftable" xml:space="preserve">
+    <value>机器人无法为请求的游戏制作补充包</value>
+  </data>
+  <data name="QueueRemovalByAppFail" xml:space="preserve">
+    <value>机器人并未尝试制作任何这些补充包。如果您试图从您的 "GamesToBooster" 配置设置中移除补充包，您需要直接从配置文件中移除它们。</value>
+  </data>
+  <data name="QueueRemovalByTimeFail" xml:space="preserve">
+    <value>未找到任何可以移除的补充包</value>
+  </data>
+  <data name="QueueRemovalSuccess" xml:space="preserve">
+    <value>将不再制作这 {0} 个补充包：{1}</value>
+    <comment>{0} will be replaced by a number of boosters, {1} will be replaced by a list of appIDs</comment>
+  </data>
+  <data name="APIEndpointsUndefined" xml:space="preserve">
+    <value>API 端点未定义</value>
+  </data>
+  <data name="NoMessages" xml:space="preserve">
+    <value>没有可显示的消息</value>
+  </data>
+  <data name="BoosterEndpointUndefined" xml:space="preserve">
+    <value>补充包数据 API 端点未定义</value>
+  </data>
+  <data name="InventoryHistoryEndpointUndefined" xml:space="preserve">
+    <value>库存历史 API 端点未定义</value>
+  </data>
+  <data name="MarketListingsEndpointUndefined" xml:space="preserve">
+    <value>市场列表 API 端点未定义</value>
+  </data>
+  <data name="MarketHistoryEndpointUndefined" xml:space="preserve">
+    <value>市场历史 API 端点未定义</value>
+  </data>
+  <data name="FinishedZeroPages" xml:space="preserve">
+    <value>完成发送，没有页面</value>
+  </data>
+  <data name="BoosterDataFetchStopped" xml:space="preserve">
+    <value>在获取补充包数据前手动停止</value>
+  </data>
+  <data name="BoosterDataFetchFailed" xml:space="preserve">
+    <value>获取补充包数据失败</value>
+  </data>
+  <data name="BoosterDataEndpointFailed" xml:space="preserve">
+    <value>API 未能接受补充包数据</value>
+  </data>
+  <data name="BoosterDataEndpointSuccess" xml:space="preserve">
+    <value>成功发送补充包数据</value>
+  </data>
+  <data name="InventoryHistoryFetchStopped" xml:space="preserve">
+    <value>在获取时间 &lt; {0} ({1} @ {2}) 的库存历史前手动停止</value>
+    <comment>{0} will be replaced by a unix timestamp, {1} will be replaced by a date, {2} will be replaced by a time</comment>
+  </data>
+  <data name="InventoryHistoryRateLimitExceeded" xml:space="preserve">
+    <value>尝试获取库存历史时超出速率限制。将继续尝试，但可能需要长达12小时才能继续。如果您想停止，请使用 'logstop' 命令。</value>
+  </data>
+  <data name="InventoryHistoryFetchFailed" xml:space="preserve">
+    <value>获取时间 &lt; {0} ({1} @ {2}) 的库存历史失败</value>
+    <comment>{0} will be replaced by a unix timestamp, {1} will be replaced by a date, {2} will be replaced by a time</comment>
+  </data>
+  <data name="InventoryHistoryEndpointFailed" xml:space="preserve">
+    <value>API 未能接受时间 &lt; {0} ({1} @ {2}) 的库存历史</value>
+    <comment>{0} will be replaced by a unix timestamp, {1} will be replaced by a date, {2} will be replaced by a time</comment>
+  </data>
+  <data name="InventoryHistoryEndpointSuccess" xml:space="preserve">
+    <value>成功发送时间 &lt; {0} ({1} @ {2}) 的库存历史</value>
+    <comment>{0} will be replaced by a unix timestamp, {1} will be replaced by a date, {2} will be replaced by a time</comment>
+  </data>
+  <data name="InventoryHistoryEnded" xml:space="preserve">
+    <value>库存历史在从 {0} @ {1} 开始的页面处结束</value>
+    <comment>{0} will be replaced by a date, {1} will be replaced by a time</comment>
+  </data>
+  <data name="InventoryHistorySteamError" xml:space="preserve">
+    <value>请验证您的历史记录是否确实在此处结束，因为 Steam 方面存在一个可能导致历史记录提前结束的错误。有关更多信息，请参阅 README。</value>
+  </data>
+  <data name="MarketListingsFetchFailed" xml:space="preserve">
+    <value>获取市场上架物品失败</value>
+  </data>
+  <data name="MarketListingsEndpointFailed" xml:space="preserve">
+    <value>API 未能接受市场上架物品</value>
+  </data>
+  <data name="MarketListingsEndpointSuccess" xml:space="preserve">
+    <value>成功发送市场上架物品</value>
+  </data>
+  <data name="MarketHistoryFetchStopped" xml:space="preserve">
+    <value>在获取市场历史（第 {0} 页）前手动停止</value>
+    <comment>{0} will be replaced by a page number</comment>
+  </data>
+  <data name="MarketHistoryFetchFailed" xml:space="preserve">
+    <value>获取市场历史（第 {0} 页）失败</value>
+    <comment>{0} will be replaced by a page number</comment>
+  </data>
+  <data name="MarketHistoryEndpointFailed" xml:space="preserve">
+    <value>API 未能接受市场历史（第 {0} 页）</value>
+    <comment>{0} will be replaced by a page number</comment>
+  </data>
+  <data name="MarketHistoryEndpointSuccess" xml:space="preserve">
+    <value>成功发送市场历史（第 {0} 页）</value>
+    <comment>{0} will be replaced by a page number</comment>
+  </data>
+  <data name="ItemsCountTradable" xml:space="preserve">
+    <value>可交易：{0}</value>
+    <comment>{0} will be replaced by a number</comment>
+  </data>
+  <data name="ItemsCountUntradable" xml:space="preserve">
+    <value>不可交易：{0}</value>
+    <comment>{0} will be replaced by a number</comment>
+  </data>
+  <data name="GemSacksCount" xml:space="preserve">
+    <value>{0} 个宝石袋</value>
+    <comment>{0} will be replaced by a number</comment>
+  </data>
+  <data name="NoSacksFound" xml:space="preserve">
+    <value>没有可打开的宝石</value>
+  </data>
+  <data name="SendingQuantityOfItemsToBot" xml:space="preserve">
+    <value>正在发送 {0} 个 {1} 给 {2}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by an item string, {2} will be replaced by a bot name</comment>
+  </data>
+  <data name="SendingQuantityOfItemsToBotSuccess" xml:space="preserve">
+    <value>已发送 {0} 个 {1} 给 {2}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by an item string, {2} will be replaced by a bot name</comment>
+  </data>
+  <data name="SendingQuantityOfItemsToBotFailed" xml:space="preserve">
+    <value>发送 {0} 个 {1} 给 {2} 失败</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by an item string, {2} will be replaced by a bot name</comment>
+  </data>
+  <data name="SendingNoItems" xml:space="preserve">
+    <value>成功发送了“无”！</value>
+  </data>
+  <data name="SendingInsufficientQuantity" xml:space="preserve">
+    <value>数量不足，无法发送！</value>
+  </data>
+  <data name="SendingItemsSuccess" xml:space="preserve">
+    <value>已将物品发送给 {0}</value>
+    <comment>{0} will be replaced by a bot name</comment>
+  </data>
+  <data name="SendingItemsFailed" xml:space="preserve">
+    <value>发送物品给 {0} 失败</value>
+    <comment>{0} will be replaced by a bot name</comment>
+  </data>
+  <data name="SendingInsufficientQuantityOfItems" xml:space="preserve">
+    <value>物品 {0} 数量不足，无法发送！</value>
+    <comment>{0} will be replaced by an item string</comment>
+  </data>
+  <data name="SendingQuantityOfItemsSuccess" xml:space="preserve">
+    <value>成功发送 {0} 个 {1}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by an item string</comment>
+  </data>
+  <data name="SendingQuantityOfItemsFailed" xml:space="preserve">
+    <value>可用数量不足，无法发送，需要 {0}，但只有 {1} 可用</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
+  </data>
+  <data name="ListingsValue" xml:space="preserve">
+    <value>上架物品价值：{0} {1}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a currency name</comment>
+  </data>
+  <data name="AccountValueRemaining" xml:space="preserve">
+    <value>剩余：{0} {1}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a currency name</comment>
+  </data>
+  <data name="AccountValue" xml:space="preserve">
+    <value>价值：{0} {1}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a currency name</comment>
+  </data>
+  <data name="ListingsNotFound" xml:space="preserve">
+    <value>未找到上架物品</value>
+  </data>
+  <data name="ListingsFound" xml:space="preserve">
+    <value>为“{1}”找到 {0} 个上架物品：{2}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by an item string, {2} will be replaced by a list of numbers</comment>
+  </data>
+  <data name="ListingsRemovedFailed" xml:space="preserve">
+    <value>已取消 {0}/{1} 个上架物品，取消失败的有：{2}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a number, {2} will be replaced by a list of numbers</comment>
+  </data>
+  <data name="ListingsRemovedSuccess" xml:space="preserve">
+    <value>已移除 {0} 个上架物品</value>
+    <comment>{0} will be replaced by a number</comment>
+  </data>
+  <data name="InventoryHistoryInvalidCursor" xml:space="preserve">
+    <value>使用 'timeFrac' 或 's' 时，必须定义所有三个参数：'startTime'、'timeFrac' 和 's'</value>
+  </data>
+  <data name="RateLimitExceeded" xml:space="preserve">
+    <value>超出速率限制</value>
+  </data>
+  <data name="BadgeInfoFetchFailed" xml:space="preserve">
+    <value>获取徽章信息失败</value>
+  </data>
+  <data name="PriceHistoryFetchFailed" xml:space="preserve">
+    <value>获取价格历史失败</value>
+  </data>
+  <data name="RepetitionCancelled" xml:space="preserve">
+    <value>重复操作已取消</value>
+  </data>
+  <data name="RepetitionNotActive" xml:space="preserve">
+    <value>重复操作未在运行</value>
+  </data>
+  <data name="RepetitionNotice" xml:space="preserve">
+    <value>此操作将每 {0} 分钟重复一次。要取消，请发送命令：{1}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a command</comment>
+  </data>
+  <data name="EligibleBoosterFetchFailed" xml:space="preserve">
+    <value>获取符合条件的补充包失败</value>
+  </data>
+  <data name="EligibleBoosterCount" xml:space="preserve">
+    <value>机器人有 {0} 个符合补充包掉落资格的游戏</value>
+    <comment>{0} will be replaced by a number</comment>
+  </data>
+  <data name="BoosterRateHours" xml:space="preserve">
+    <value>一个 {0} 级的帐户可以每 {1:0.##} 小时获得一个补充包掉落</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
+  </data>
+  <data name="BoosterRateDays" xml:space="preserve">
+    <value>一个 {0} 级的帐户可以每 {1:0.##} 天获得一个补充包掉落</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
+  </data>
+  <data name="InvalidItemIdentifier" xml:space="preserve">
+    <value>无效的物品标识符：{0}</value>
+    <comment>{0} will be replaced by an item string</comment>
+  </data>
+  <data name="BotCountDoesNotEqualAmountCount" xml:space="preserve">
+    <value>接收机器人的数量 ({0}) 与物品数量 ({1}) 不匹配</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
+  </data>
+  <data name="ItemCountDoesNotEqualAmountCount" xml:space="preserve">
+    <value>物品种类数量 ({0}) 与物品数量 ({1}) 不匹配</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
+  </data>
+  <data name="PluginError" xml:space="preserve">
+    <value>插件错误，请报告此问题</value>
+  </data>
+  <data name="HandlingIncomingTrades" xml:space="preserve">
+    <value>正在尝试处理任何收到的交易报价</value>
+  </data>
+  <data name="IncomingTradeFetchFailed" xml:space="preserve">
+    <value>获取收到的交易报价失败</value>
+  </data>
+  <data name="IncomingTradeFromInvalidUser" xml:space="preserve">
+    <value>'From' 值不是机器人名称或 SteamID：{0}</value>
+    <comment>{0} will be replaced by a string</comment>
+  </data>
+  <data name="IncomingTradeCountFromUser" xml:space="preserve">
+    <value>机器人有 {0} 个来自 {1} 的交易报价</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a bot name or a Steam ID</comment>
+  </data>
+  <data name="IncomingTradeCount" xml:space="preserve">
+    <value>机器人有 {0} 个收到的交易报价</value>
+    <comment>{0} will be replaced by a number</comment>
+  </data>
+  <data name="PendingListingsNotFound" xml:space="preserve">
+    <value>未找到待处理的市场列表</value>
+  </data>
+  <data name="PendingListingsRemovedFailed" xml:space="preserve">
+    <value>成功移除了 {0} 个待处理的市场列表，移除失败 {1} 个</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
+  </data>
+  <data name="PendingListingsRemovedSuccess" xml:space="preserve">
+    <value>成功移除了 {0} 个待处理的市场列表</value>
+    <comment>{0} will be replaced by a number</comment>
+  </data>
+  <data name="BoosterUnmarketable" xml:space="preserve">
+    <value>不会为 {0} 制作不可在市场上销售的补充包</value>
+    <comment>{0} will be replaced by an appID</comment>
+  </data>
+  <data name="MarketBuyLimit" xml:space="preserve">
+    <value>已使用：{0} {4}，共 {1} {4} ({2})；剩余：{3} {4}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a number, {2} will be replaced by a percentage, {3} will be replaced by a number, {4} will be replaced by a currency name</comment>
+  </data>
+  <data name="QueueStatusShortWithDate" xml:space="preserve">
+    <value>将于 {2} 的 ~{3} 前使用 {1} 个宝石制作 {0} 个补充包</value>
+    <comment>{0} will be replaced by a number of boosters, {1} will be replaced by a number of gems, {2} will be replaced by a date, {3} will be replaced by a time</comment>
+  </data>
+  <data name="QueueStatusNextBoosterCraftingLaterWithDate" xml:space="preserve">
+    <value>下一个补充包将于 {0} {1} 制作：{2} ({3})</value>
+    <comment>{2} will be replaced by a date, {1} will be replaced by a time, {2} will be replaced by a game name, {3} will be replaced by an appID</comment>
+  </data>
+  <data name="QueueStatusLimitedBoostersWithDate" xml:space="preserve">
+    <value>已制作 {0}/{1} 个补充包。制作将于 {2} 的 ~{3} 完成，并将使用 {4} 个宝石。</value>
+    <comment>{0} will be replaced by a number of boosters, {1} will be replaced by a number of boosters, {2} will be replaced by a date, {3} will be replaced by a time, {4} will be replaced by a number of gems</comment>
+  </data>
+  <data name="AppIDCountDoesNotEqualAmountCount" xml:space="preserve">
+    <value>AppID 的数量 ({0}) 与物品数量 ({1}) 不匹配</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a number</comment>
+  </data>
+  <data name="BoosterAssignmentStarting" xml:space="preserve">
+    <value>正在尝试分配 {0} 个补充包……</value>
+    <comment>{0} will be replaced by a number of boosters</comment>
+  </data>
+  <data name="QueueStatusShortWithoutTime" xml:space="preserve">
+    <value>将使用 {1} 个宝石制作 {0} 个补充包</value>
+    <comment>{0} will be replaced by a number of boosters, {1} will be replaced by a number of gems</comment>
+  </data>
+  <data name="BoostersUnmarketable" xml:space="preserve">
+    <value>请求的补充包不可在市场上销售，将不会被制作</value>
+  </data>
+  <data name="BoostersUncraftableAndUnmarketable" xml:space="preserve">
+    <value>不会制作任何补充包。此机器人无法制作请求的补充包，或者请求的补充包不可在市场上销售。以下补充包不可在市场上销售：{0}</value>
+    <comment>{0} will be replaced by a list of appIDs</comment>
+  </data>
+  <data name="MarketableAppDataFetchFailed" xml:space="preserve">
+    <value>获取可在市场上销售的应用数据失败</value>
+  </data>
+  <data name="AccountValueRemainingWithDelayed" xml:space="preserve">
+    <value>剩余：{0} ({1}) {2}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a number, {2} will be replaced by a currency name</comment>
+  </data>
+  <data name="AccountValueWithDelayed" xml:space="preserve">
+    <value>价值：{0} ({1}) {2}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a number, {2} will be replaced by a currency name</comment>
+  </data>
+  <data name="ErrorParsingObjectFailedValue" xml:space="preserve">
+    <value>解析 {0} 失败：{1}</value>
+    <comment>{0} will be replaced by the name of a variable, {1} will be replaced by the variable's value</comment>
+  </data>
+  <data name="ErrorBadSuccessResponse" xml:space="preserve">
+    <value>成功 {0} 失败：{1}</value>
+    <comment>{0} will be replaced by the name of a variable, {1} will be replaced by the variable's value</comment>
+  </data>
+  <data name="MarketAlert" xml:space="preserve">
+    <value>"{0}/{1}", {2}, {3}, {4} {5}</value>
+    <comment>{0} will be replaced by an appID, {1} will be replaced by a market item hash, {2} will be replaced with a market alert type ("BUY" or "SELL"), {3} will be replaced wit a market alert mode ("ABOVE" or "BELOW"), {4} will be replaced by a number, {5} will be replaced by a currency name</comment>
+  </data>
+  <data name="MarketAlertsEmpty" xml:space="preserve">
+    <value>机器人没有市场价格提醒</value>
+  </data>
+  <data name="MarketAlertsCancelled" xml:space="preserve">
+    <value>已取消 {0} 个市场价格提醒：{1}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a list of price alerts</comment>
+  </data>
+  <data name="MarketAlertWithCancelCommand" xml:space="preserve">
+    <value>"{0}/{1}", {2}, {3}, {4} {5} (使用 {6} 来取消)</value>
+    <comment>{0} will be replaced by an appID, {1} will be replaced by a market item hash, {2} will be replaced with a market alert type ("BUY" or "SELL"), {3} will be replaced wit a market alert mode ("ABOVE" or "BELOW"), {4} will be replaced by a number, {5} will be replaced by a currency name, {6} will be replaced by a command</comment>
+  </data>
+  <data name="MarketAlertCreationSuccess" xml:space="preserve">
+    <value>已创建市场价格提醒：{0}</value>
+    <comment>{0} will be replaced by a price alert</comment>
+  </data>
+  <data name="MarketAlertCreationFail" xml:space="preserve">
+    <value>创建市场价格提醒失败</value>
+  </data>
+  <data name="MarketAlertReached" xml:space="preserve">
+    <value>"{4}/{5}" 的 {0} {1} {2} {3} 提醒已达到！使用 {6} 重置</value>
+    <comment>{0} will be replaced with a market alert type ("BUY" or "SELL"), {1} will be replaced wit a market alert mode ("ABOVE" or "BELOW"), {2} will be replaced by a number, {3} will be replaced by a currency name, {4} will be replaced by an appID, {5} will be replaced by a market item hash, {6} will be replaced by a command</comment>
+  </data>
+  <data name="MarketAlertsCancelledFail" xml:space="preserve">
+    <value>未找到任何可以取消的市场提醒</value>
+  </data>
+  <data name="MarketAlertSellPriceCurrentValue" xml:space="preserve">
+    <value>立即出售价格：{0} {1}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a currency name</comment>
+  </data>
+  <data name="MarketAlertBuyPriceCurrentValue" xml:space="preserve">
+    <value>立即购买价格：{0} {1}</value>
+    <comment>{0} will be replaced by a number, {1} will be replaced by a currency name</comment>
+  </data>
+  <data name="MarketAlertTypeBuy" xml:space="preserve">
+    <value>购买</value>
+  </data>
+  <data name="MarketAlertTypeSell" xml:space="preserve">
+    <value>出售</value>
+  </data>
+  <data name="MarketAlertModeAbove" xml:space="preserve">
+    <value>高于</value>
+  </data>
+  <data name="MarketAlertModeBelow" xml:space="preserve">
+    <value>低于</value>
+  </data>
+  <data name="MarketAlertAlreadyExists" xml:space="preserve">
+    <value>市场提醒已存在</value>
+  </data>
+  <data name="UnpackNoGemsFound" xml:space="preserve">
+    <value>没有宝石可以打包</value>
+  </data>
+  <data name="MarketAlertModeBelowOrAt" xml:space="preserve">
+    <value>低于或等于</value>
+    <comment>
+</comment>
+  </data>
+  <data name="MarketAlertModeAboveOrAt" xml:space="preserve">
+    <value>高于或等于</value>
+    <comment>
+</comment>
+  </data>
+</root>
