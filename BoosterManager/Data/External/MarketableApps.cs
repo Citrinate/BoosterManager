@@ -110,9 +110,9 @@ namespace BoosterManager {
 				ASF.ArchiLogger.LogGenericException(e);
 
 				return;
+			} finally {
+				LastSteamUpdate = DateTime.Now;
 			}
-
-			LastSteamUpdate = DateTime.Now;
 
 			// Steam's ISteamApps/GetAppList API is unreliable (more details: https://github.com/Citrinate/Steam-MarketableApps/blob/main/update.py)
 			// Due to this, we should only add apps from this API to our existing list of AppIDs, and should never remove apps just because they don't appear in this API's response
