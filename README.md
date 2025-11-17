@@ -236,7 +236,7 @@ Command | Alias |
 ```
 
 > [!NOTE]
-> The plugin cannot immediately detect when a game's boosters switch from being marketable to unmarketable.  It will usually take ~4 hours to detect this change.
+> The plugin cannot immediately detect when a game's boosters switch from being marketable to unmarketable.  It will usually take ~1 hour to detect this change.
 
 ---
 
