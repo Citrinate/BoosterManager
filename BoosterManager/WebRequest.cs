@@ -15,7 +15,7 @@ namespace BoosterManager {
 	internal static class WebRequest {
 		private static SemaphoreSlim SendSteamDataSemaphore = new SemaphoreSlim(4, 4);
 		private static SemaphoreSlim MarketRequestSemaphore = new SemaphoreSlim(1, 1);
-		private const int MarketRequestDelaySeconds = 3;
+		private const double MarketRequestDelaySeconds = 2.5;
 		private const double MarketRemovalRequestDelaySeconds = 0.25;
 
 		internal static async Task<(BoosterPageResponse?, Uri)> GetBoosterPage(Bot bot) {
@@ -210,7 +210,7 @@ namespace BoosterManager {
 			}
 		}
 
-		internal static async Task<Steam.ItemOrdersHistogramResponse?> GetMarketPriceHistogram(Bot bot, uint nameID) {
+		internal static async Task<JsonDocument?> GetMarketPriceHistogram(Bot bot, uint nameID) {
 			if (bot.WalletCurrency == SteamKit2.ECurrencyCode.Invalid) {
 				return null;
 			}
@@ -218,7 +218,7 @@ namespace BoosterManager {
 			await MarketRequestSemaphore.WaitAsync().ConfigureAwait(false);
 			try {
 				Uri request = new(ArchiWebHandler.SteamCommunityURL, String.Format("/market/itemordershistogram?language=english&currency={0}&item_nameid={1}", (int) bot.WalletCurrency, nameID));
-				ObjectResponse<Steam.ItemOrdersHistogramResponse>? priceHistogramResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<Steam.ItemOrdersHistogramResponse>(request).ConfigureAwait(false);
+				ObjectResponse<JsonDocument>? priceHistogramResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<JsonDocument>(request).ConfigureAwait(false);
 				return priceHistogramResponse?.Content;
 			} finally {
 				Utilities.InBackground(

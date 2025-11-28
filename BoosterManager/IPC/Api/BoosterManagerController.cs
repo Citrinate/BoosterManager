@@ -215,5 +215,36 @@ namespace BoosterManager {
 
 			return Ok(new GenericResponse(true, string.Format(Strings.ListingsRemovedSuccess, 1)));
 		}
+
+		[HttpGet("{botNames:required}/GetPriceHistogram/{nameID:required}")]
+		[EndpointSummary("Retrieves price histogram for market items.")]
+		[ProducesResponseType(typeof(GenericResponse<JsonDocument>), (int) HttpStatusCode.OK)]
+		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.BadRequest)]
+		public async Task<ActionResult<GenericResponse>> GetPriceHistogram(string botNames, uint nameID) {
+			if (string.IsNullOrEmpty(botNames)) {
+				throw new ArgumentNullException(nameof(botNames));
+			}
+
+			HashSet<Bot>? bots = Bot.GetBots(botNames);
+			if ((bots == null) || (bots.Count == 0)) {
+				return BadRequest(new GenericResponse(false, string.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)));
+			}
+
+			Bot? bot = bots.FirstOrDefault(static bot => bot.IsConnectedAndLoggedOn);
+			if (bot == null) {
+				return BadRequest(new GenericResponse(false, ArchiSteamFarm.Localization.Strings.BotNotConnected));
+			}
+			
+			if (!bot.IsConnectedAndLoggedOn) {
+				return BadRequest(new GenericResponse(false, ArchiSteamFarm.Localization.Strings.BotNotConnected));
+			}
+
+			JsonDocument? response = await WebRequest.GetMarketPriceHistogram(bot, nameID).ConfigureAwait(false);
+			if (response == null) {
+				return BadRequest(new GenericResponse(false, Strings.PriceHistogramFetchFailed));
+			}
+
+			return Ok(new GenericResponse<JsonDocument>(true, response));
+		}
 	}
 }

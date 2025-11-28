@@ -606,4 +606,9 @@
     <comment>
 </comment>
   </data>
+  <data name="PriceHistogramFetchFailed" xml:space="preserve">
+    <value>Failed to fetch price histogram</value>
+    <comment>
+</comment>
+  </data>
 </root>

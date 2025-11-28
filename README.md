@@ -470,8 +470,9 @@ API | Method | Parameters | Description
 `/API/BoosterManager/{botName}/MarketListings`|`GET`||Retrieves market listings data for given bot
 `/API/BoosterManager/{botName}/MarketHistory`|`GET`|`page`|Retrieves market history data for given bot
 `/API/BoosterManager/{botName}/InventoryHistory`|`GET`|`startTime`, `timeFrac`, `s`|Retrieves inventory history data for given bot
-`/API/BoosterManager/{botName}/RemoveListing/{listingID}`|`GET`||Removes the given market listing for the given bot
-`/API/BoosterManager/{botName}/GetBadgeInfo/{appID}`|`GET`|`border`|Retrieves badge info for given bot
 `/API/BoosterManager/{botNames}/GetPriceHistory/{appID}/{hashName}`|`GET`||Retrieves price history for market items [^1]
+`/API/BoosterManager/{botNames}/GetPriceHistogram/{nameID}`|`GET`||Retrieves price histogram for market items [^1]
+`/API/BoosterManager/{botName}/GetBadgeInfo/{appID}`|`GET`|`border`|Retrieves badge info for given bot
+`/API/BoosterManager/{botName}/RemoveListing/{listingID}`|`GET`||Removes the given market listing for the given bot
 
 [^1]: Responses are not dependent on the account used to make these requests.  You may provide multiple `botNames`, and the first available bot will be used to make the request.
