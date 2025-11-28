@@ -189,5 +189,31 @@ namespace BoosterManager {
 
 			return Ok(new GenericResponse<JsonDocument>(true, priceHistory));
 		}
+
+		[HttpGet("{botName:required}/RemoveListing/{listingID:required}")]
+		[EndpointSummary("Removes the given listing for the given bot.")]
+		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.OK)]
+		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.BadRequest)]
+		public async Task<ActionResult<GenericResponse>> MarketListings(string botName, ulong listingID) {
+			if (string.IsNullOrEmpty(botName)) {
+				throw new ArgumentNullException(nameof(botName));
+			}
+
+			Bot? bot = Bot.GetBot(botName);
+			if (bot == null) {
+				return BadRequest(new GenericResponse(false, string.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botName)));
+			}
+
+			if (!bot.IsConnectedAndLoggedOn) {
+				return BadRequest(new GenericResponse(false, ArchiSteamFarm.Localization.Strings.BotNotConnected));
+			}
+
+			bool success = await WebRequest.RemoveListing(bot, listingID).ConfigureAwait(false);
+			if (!success) {
+				return BadRequest(new GenericResponse(false, string.Format(Strings.ListingsRemovedFailed, 0, 1, listingID)));
+			}
+
+			return Ok(new GenericResponse(true, string.Format(Strings.ListingsRemovedSuccess, 1)));
+		}
 	}
 }

@@ -16,6 +16,7 @@ namespace BoosterManager {
 		private static SemaphoreSlim SendSteamDataSemaphore = new SemaphoreSlim(4, 4);
 		private static SemaphoreSlim MarketRequestSemaphore = new SemaphoreSlim(1, 1);
 		private const int MarketRequestDelaySeconds = 3;
+		private const double MarketRemovalRequestDelaySeconds = 0.25;
 
 		internal static async Task<(BoosterPageResponse?, Uri)> GetBoosterPage(Bot bot) {
 			Uri request = new(ArchiWebHandler.SteamCommunityURL, "/tradingcards/boostercreator?l=english");
@@ -134,11 +135,11 @@ namespace BoosterManager {
 				Uri request = new(ArchiWebHandler.SteamCommunityURL, $"/market/removelisting/{listingID}");
 				Uri referer = new(ArchiWebHandler.SteamCommunityURL, "/market/");
 
-				return await bot.ArchiWebHandler.UrlPostWithSession(request, referer: referer).ConfigureAwait(false);
+				return await bot.ArchiWebHandler.UrlPostWithSession(request, referer: referer, maxTries: 1).ConfigureAwait(false);
 			} finally {
 				Utilities.InBackground(
 					async() => {
-						await Task.Delay(TimeSpan.FromMilliseconds(100)).ConfigureAwait(false);
+						await Task.Delay(TimeSpan.FromSeconds(MarketRemovalRequestDelaySeconds)).ConfigureAwait(false);
 						MarketRequestSemaphore.Release();
 					}
 				);
