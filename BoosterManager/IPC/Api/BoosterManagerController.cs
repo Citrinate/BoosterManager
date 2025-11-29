@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using ArchiSteamFarm.IPC.Controllers.Api;
 using ArchiSteamFarm.IPC.Responses;
 using ArchiSteamFarm.Steam;
+using BoosterManager.IPC;
 using BoosterManager.Localization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -194,7 +195,7 @@ namespace BoosterManager {
 		[EndpointSummary("Removes the given listing for the given bot.")]
 		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.OK)]
 		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.BadRequest)]
-		public async Task<ActionResult<GenericResponse>> MarketListings(string botName, ulong listingID) {
+		public async Task<ActionResult<GenericResponse>> RemoveListing(string botName, ulong listingID) {
 			if (string.IsNullOrEmpty(botName)) {
 				throw new ArgumentNullException(nameof(botName));
 			}
@@ -210,7 +211,7 @@ namespace BoosterManager {
 
 			bool success = await WebRequest.RemoveListing(bot, listingID).ConfigureAwait(false);
 			if (!success) {
-				return BadRequest(new GenericResponse(false, string.Format(Strings.ListingsRemovedFailed, 0, 1, listingID)));
+				return BadRequest(new GenericResponse(false, Strings.RemoveListingFailed));
 			}
 
 			return Ok(new GenericResponse(true, string.Format(Strings.ListingsRemovedSuccess, 1)));
@@ -242,6 +243,33 @@ namespace BoosterManager {
 			JsonDocument? response = await WebRequest.GetMarketPriceHistogram(bot, nameID).ConfigureAwait(false);
 			if (response == null) {
 				return BadRequest(new GenericResponse(false, Strings.PriceHistogramFetchFailed));
+			}
+
+			return Ok(new GenericResponse<JsonDocument>(true, response));
+		}
+
+
+		[HttpPost("{botName:required}/CreateListing/")]
+		[EndpointSummary("Create a listing for the given bot.")]
+		[ProducesResponseType(typeof(GenericResponse<JsonDocument>), (int) HttpStatusCode.OK)]
+		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.BadRequest)]
+		public async Task<ActionResult<GenericResponse>> CreateListing(string botName, [FromBody] CreateListingRequest request) {
+			if (string.IsNullOrEmpty(botName)) {
+				throw new ArgumentNullException(nameof(botName));
+			}
+
+			Bot? bot = Bot.GetBot(botName);
+			if (bot == null) {
+				return BadRequest(new GenericResponse(false, string.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botName)));
+			}
+
+			if (!bot.IsConnectedAndLoggedOn) {
+				return BadRequest(new GenericResponse(false, ArchiSteamFarm.Localization.Strings.BotNotConnected));
+			}
+
+			JsonDocument? response = await WebRequest.CreateListing(bot, request.AppID, request.ContextID, request.AssetID, request.Price, request.Amount).ConfigureAwait(false);
+			if (response == null) {
+				return BadRequest(new GenericResponse(false, Strings.CreateListingFailed));
 			}
 
 			return Ok(new GenericResponse<JsonDocument>(true, response));

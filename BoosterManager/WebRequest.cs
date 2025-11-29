@@ -15,8 +15,8 @@ namespace BoosterManager {
 	internal static class WebRequest {
 		private static SemaphoreSlim SendSteamDataSemaphore = new SemaphoreSlim(4, 4);
 		private static SemaphoreSlim MarketRequestSemaphore = new SemaphoreSlim(1, 1);
-		private const double MarketRequestDelaySeconds = 2.5;
-		private const double MarketRemovalRequestDelaySeconds = 0.25;
+		private const double MarketRequestDelaySeconds = 3.5;
+		private const double MarketRemovalRequestDelaySeconds = 0.5;
 
 		internal static async Task<(BoosterPageResponse?, Uri)> GetBoosterPage(Bot bot) {
 			Uri request = new(ArchiWebHandler.SteamCommunityURL, "/tradingcards/boostercreator?l=english");
@@ -220,6 +220,33 @@ namespace BoosterManager {
 				Uri request = new(ArchiWebHandler.SteamCommunityURL, String.Format("/market/itemordershistogram?language=english&currency={0}&item_nameid={1}", (int) bot.WalletCurrency, nameID));
 				ObjectResponse<JsonDocument>? priceHistogramResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<JsonDocument>(request).ConfigureAwait(false);
 				return priceHistogramResponse?.Content;
+			} finally {
+				Utilities.InBackground(
+					async() => {
+						await Task.Delay(TimeSpan.FromSeconds(MarketRequestDelaySeconds)).ConfigureAwait(false);
+						MarketRequestSemaphore.Release();
+					}
+				);
+			}
+		}
+
+		internal static async Task<JsonDocument?> CreateListing(Bot bot, uint appID, ulong contextID, ulong assetID, uint price, uint amount) {
+			await MarketRequestSemaphore.WaitAsync().ConfigureAwait(false);
+			try {
+				Uri request = new(ArchiWebHandler.SteamCommunityURL, $"/market/sellitem/");
+				Uri referer = new(ArchiWebHandler.SteamCommunityURL, "/market/");
+
+				// Extra entry for sessionID
+				Dictionary<string, string> data = new(6) {
+					{ "appid", appID.ToString() },
+					{ "contextid", contextID.ToString() },
+					{ "assetid", assetID.ToString() },
+					{ "amount", amount.ToString() },
+					{ "price", price.ToString() }
+				};
+
+				ObjectResponse<JsonDocument>? createListingResponse = await bot.ArchiWebHandler.UrlPostToJsonObjectWithSession<JsonDocument>(request, data: data, referer: referer, maxTries: 1).ConfigureAwait(false);
+				return createListingResponse?.Content;
 			} finally {
 				Utilities.InBackground(
 					async() => {
