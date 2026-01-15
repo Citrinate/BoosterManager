@@ -186,6 +186,11 @@ namespace BoosterManager {
 						case "MARKET2FAOK" or "M2FAOK":
 							return await Response2FAOK(bot, access, EMobileConfirmationType.MarketListing).ConfigureAwait(false);
 
+						case "MP2FAOKA":
+							return await Response2FAOK(access, steamID, "ASF", EMobileConfirmationType.MarketPurchase).ConfigureAwait(false);
+						case "MARKETPURCHASE2FAOK" or "MP2FAOK":
+							return await Response2FAOK(bot, access, EMobileConfirmationType.MarketPurchase).ConfigureAwait(false);
+
 						case "PACKGEMS" or "PACKGEM":
 							return await ResponsePackGems(bot, access).ConfigureAwait(false);
 
@@ -397,6 +402,9 @@ namespace BoosterManager {
 							return await Response2FAOK(access, steamID, args[1], EMobileConfirmationType.MarketListing).ConfigureAwait(false);
 						case "MARKET2FAOKA" or "M2FAOKA":
 							return await Response2FAOK(access, steamID, "ASF", EMobileConfirmationType.MarketListing, args[1], new StatusReporter(bot, steamID, reportDelaySeconds: 30, reportMaxDelaySeconds: 60)).ConfigureAwait(false);
+
+						case "MARKETPURCHASE2FAOK" or "MP2FAOK":
+							return await Response2FAOK(access, steamID, args[1], EMobileConfirmationType.MarketPurchase).ConfigureAwait(false);
 						
 						case "PACKGEMS" or "PACKGEM":
 							return await ResponsePackGems(access, steamID, Utilities.GetArgsAsText(args, 1, ",")).ConfigureAwait(false);
