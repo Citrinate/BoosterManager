@@ -10,6 +10,7 @@ using System.Reflection;
 using BoosterManager.Localization;
 using System.Text.RegularExpressions;
 using System.Globalization;
+using SteamKit2;
 
 namespace BoosterManager {
 	internal static class Commands {
@@ -181,9 +182,14 @@ namespace BoosterManager {
 							return await ResponseSendItemToBot(bot, access, ItemIdentifier.SackIdentifier).ConfigureAwait(false);
 						
 						case "M2FAOKA":
-							return await Response2FAOK(access, steamID, "ASF", Confirmation.EConfirmationType.Market).ConfigureAwait(false);
+							return await Response2FAOK(access, steamID, "ASF", EMobileConfirmationType.MarketListing).ConfigureAwait(false);
 						case "MARKET2FAOK" or "M2FAOK":
-							return await Response2FAOK(bot, access, Confirmation.EConfirmationType.Market).ConfigureAwait(false);
+							return await Response2FAOK(bot, access, EMobileConfirmationType.MarketListing).ConfigureAwait(false);
+
+						case "MP2FAOKA":
+							return await Response2FAOK(access, steamID, "ASF", EMobileConfirmationType.MarketPurchase).ConfigureAwait(false);
+						case "MARKETPURCHASE2FAOK" or "MP2FAOK":
+							return await Response2FAOK(bot, access, EMobileConfirmationType.MarketPurchase).ConfigureAwait(false);
 
 						case "PACKGEMS" or "PACKGEM":
 							return await ResponsePackGems(bot, access).ConfigureAwait(false);
@@ -192,9 +198,9 @@ namespace BoosterManager {
 							return await ResponseRemovePendingListings(bot, access).ConfigureAwait(false);
 
 						case "T2FAOKA":
-							return await Response2FAOK(access, steamID, "ASF", Confirmation.EConfirmationType.Trade).ConfigureAwait(false);
+							return await Response2FAOK(access, steamID, "ASF", EMobileConfirmationType.Trade).ConfigureAwait(false);
 						case "TRADE2FAOK" or "T2FAOK":
-							return await Response2FAOK(bot, access, Confirmation.EConfirmationType.Trade).ConfigureAwait(false);
+							return await Response2FAOK(bot, access, EMobileConfirmationType.Trade).ConfigureAwait(false);
 
 						case "TCA" or "TCHECKA" or "TRADECHECKA":
 							return ResponseTradeCheck(access, steamID, "ASF");
@@ -391,21 +397,24 @@ namespace BoosterManager {
 							return await ResponseCreateMarketAlert(bot, access, args[1], args[2], args[3], args[4], args[5], new StatusReporter(bot, steamID)).ConfigureAwait(false);
 
 						case "MARKET2FAOK" or "M2FAOK" when args.Length > 2:
-							return await Response2FAOK(access, steamID, args[1], Confirmation.EConfirmationType.Market, args[2], new StatusReporter(bot, steamID, reportDelaySeconds: 30, reportMaxDelaySeconds: 60)).ConfigureAwait(false);
+							return await Response2FAOK(access, steamID, args[1], EMobileConfirmationType.MarketListing, args[2], new StatusReporter(bot, steamID, reportDelaySeconds: 30, reportMaxDelaySeconds: 60)).ConfigureAwait(false);
 						case "MARKET2FAOK" or "M2FAOK":
-							return await Response2FAOK(access, steamID, args[1], Confirmation.EConfirmationType.Market).ConfigureAwait(false);
+							return await Response2FAOK(access, steamID, args[1], EMobileConfirmationType.MarketListing).ConfigureAwait(false);
 						case "MARKET2FAOKA" or "M2FAOKA":
-							return await Response2FAOK(access, steamID, "ASF", Confirmation.EConfirmationType.Market, args[1], new StatusReporter(bot, steamID, reportDelaySeconds: 30, reportMaxDelaySeconds: 60)).ConfigureAwait(false);
+							return await Response2FAOK(access, steamID, "ASF", EMobileConfirmationType.MarketListing, args[1], new StatusReporter(bot, steamID, reportDelaySeconds: 30, reportMaxDelaySeconds: 60)).ConfigureAwait(false);
+
+						case "MARKETPURCHASE2FAOK" or "MP2FAOK":
+							return await Response2FAOK(access, steamID, args[1], EMobileConfirmationType.MarketPurchase).ConfigureAwait(false);
 						
 						case "PACKGEMS" or "PACKGEM":
 							return await ResponsePackGems(access, steamID, Utilities.GetArgsAsText(args, 1, ",")).ConfigureAwait(false);
 
 						case "TRADE2FAOK" or "T2FAOK" when args.Length > 2:
-							return await Response2FAOK(access, steamID, args[1], Confirmation.EConfirmationType.Trade, args[2], new StatusReporter(bot, steamID, reportDelaySeconds: 30, reportMaxDelaySeconds: 60)).ConfigureAwait(false);
+							return await Response2FAOK(access, steamID, args[1], EMobileConfirmationType.Trade, args[2], new StatusReporter(bot, steamID, reportDelaySeconds: 30, reportMaxDelaySeconds: 60)).ConfigureAwait(false);
 						case "TRADE2FAOK" or "T2FAOK":
-							return await Response2FAOK(access, steamID, args[1], Confirmation.EConfirmationType.Trade).ConfigureAwait(false);
+							return await Response2FAOK(access, steamID, args[1], EMobileConfirmationType.Trade).ConfigureAwait(false);
 						case "TRADE2FAOKA" or "T2FAOKA":
-							return await Response2FAOK(access, steamID, "ASF", Confirmation.EConfirmationType.Trade, args[1], new StatusReporter(bot, steamID, reportDelaySeconds: 30, reportMaxDelaySeconds: 60)).ConfigureAwait(false);
+							return await Response2FAOK(access, steamID, "ASF", EMobileConfirmationType.Trade, args[1], new StatusReporter(bot, steamID, reportDelaySeconds: 30, reportMaxDelaySeconds: 60)).ConfigureAwait(false);
 
 						case "TRADECHECK" or "TCHECK" or "TC":
 							return ResponseTradeCheck(access, steamID, args[1]);
@@ -545,7 +554,7 @@ namespace BoosterManager {
 			}
 		}
 
-		private static async Task<string?> Response2FAOK(Bot bot, EAccess access, Confirmation.EConfirmationType acceptedType, string? minutesAsText = null, StatusReporter? statusReporter = null) {
+		private static async Task<string?> Response2FAOK(Bot bot, EAccess access, EMobileConfirmationType acceptedType, string? minutesAsText = null, StatusReporter? statusReporter = null) {
 			if (access < EAccess.Master) {
 				return null;
 			}
@@ -559,24 +568,24 @@ namespace BoosterManager {
 			}
 
 			string? repeatMessage = null;
-			if (minutesAsText != null && (acceptedType == Confirmation.EConfirmationType.Market || acceptedType == Confirmation.EConfirmationType.Trade)) {
+			if (minutesAsText != null && (acceptedType == EMobileConfirmationType.MarketListing || acceptedType == EMobileConfirmationType.Trade)) {
 				if (!uint.TryParse(minutesAsText, out uint minutes)) {
 					return String.Format(ArchiSteamFarm.Localization.Strings.ErrorParsingObject, nameof(minutesAsText));
 				}
 
 				if (minutes == 0) {
-					if ((acceptedType == Confirmation.EConfirmationType.Market && MarketHandler.StopMarketRepeatTimer(bot))
-						|| (acceptedType == Confirmation.EConfirmationType.Trade && InventoryHandler.StopTradeRepeatTimer(bot))
+					if ((acceptedType == EMobileConfirmationType.MarketListing && MarketHandler.StopMarketRepeatTimer(bot))
+						|| (acceptedType == EMobileConfirmationType.Trade && InventoryHandler.StopTradeRepeatTimer(bot))
 					) {
 						return FormatBotResponse(bot, Strings.RepetitionCancelled);
 					} else {
 						return FormatBotResponse(bot, Strings.RepetitionNotActive);
 					}
 				} else {
-					if (acceptedType == Confirmation.EConfirmationType.Market) {
+					if (acceptedType == EMobileConfirmationType.MarketListing) {
 						MarketHandler.StartMarketRepeatTimer(bot, minutes, statusReporter);
 						repeatMessage = String.Format(Strings.RepetitionNotice, minutes, String.Format("!m2faok {0} 0", bot.BotName));
-					} else if (acceptedType == Confirmation.EConfirmationType.Trade) {
+					} else if (acceptedType == EMobileConfirmationType.Trade) {
 						InventoryHandler.StartTradeRepeatTimer(bot, minutes, statusReporter);
 						repeatMessage = String.Format(Strings.RepetitionNotice, minutes, String.Format("!t2faok {0} 0", bot.BotName));
 					}
@@ -593,7 +602,7 @@ namespace BoosterManager {
 			return FormatBotResponse(bot, twofacMessage);
 		}
 
-		private static async Task<string?> Response2FAOK(EAccess access, ulong steamID, string botNames, Confirmation.EConfirmationType acceptedType, string? minutesAsText = null, StatusReporter? statusReporter = null) {
+		private static async Task<string?> Response2FAOK(EAccess access, ulong steamID, string botNames, EMobileConfirmationType acceptedType, string? minutesAsText = null, StatusReporter? statusReporter = null) {
 			if (String.IsNullOrEmpty(botNames)) {
 				throw new ArgumentNullException(nameof(botNames));
 			}

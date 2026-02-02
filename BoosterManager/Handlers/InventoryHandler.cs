@@ -70,7 +70,7 @@ namespace BoosterManager {
 
 			(bool success, _, HashSet<ulong>? mobileTradeOfferIDs) = await sender.ArchiWebHandler.SendTradeOffer(reciever.SteamID, itemsToGive, token: tradeToken).ConfigureAwait(false);
 			if ((mobileTradeOfferIDs?.Count > 0) && sender.HasMobileAuthenticator) {
-				(bool twoFactorSuccess, _, string message) = await sender.Actions.HandleTwoFactorAuthenticationConfirmations(true, Confirmation.EConfirmationType.Trade, mobileTradeOfferIDs, true).ConfigureAwait(false);
+				(bool twoFactorSuccess, _, string message) = await sender.Actions.HandleTwoFactorAuthenticationConfirmations(true, EMobileConfirmationType.Trade, mobileTradeOfferIDs, true).ConfigureAwait(false);
 
 				if (!twoFactorSuccess) {
 					sender.ArchiLogger.LogGenericError(message);
@@ -165,7 +165,7 @@ namespace BoosterManager {
 
 			(bool success, _, HashSet<ulong>? mobileTradeOfferIDs) = await sender.ArchiWebHandler.SendTradeOffer(reciever.SteamID, totalItemsToGive, token: tradeToken).ConfigureAwait(false);
 			if ((mobileTradeOfferIDs?.Count > 0) && sender.HasMobileAuthenticator) {
-				(bool twoFactorSuccess, _, string message) = await sender.Actions.HandleTwoFactorAuthenticationConfirmations(true, Confirmation.EConfirmationType.Trade, mobileTradeOfferIDs, true).ConfigureAwait(false);
+				(bool twoFactorSuccess, _, string message) = await sender.Actions.HandleTwoFactorAuthenticationConfirmations(true, EMobileConfirmationType.Trade, mobileTradeOfferIDs, true).ConfigureAwait(false);
 
 				if (!twoFactorSuccess) {
 					sender.ArchiLogger.LogGenericError(message);
@@ -276,7 +276,7 @@ namespace BoosterManager {
 		}
 
 		private static async Task AcceptTradeConfirmations(Bot bot, StatusReporter? statusReporter) {
-			(bool success, _, string message) = await bot.Actions.HandleTwoFactorAuthenticationConfirmations(true, Confirmation.EConfirmationType.Trade).ConfigureAwait(false);
+			(bool success, _, string message) = await bot.Actions.HandleTwoFactorAuthenticationConfirmations(true, EMobileConfirmationType.Trade).ConfigureAwait(false);
 
 			string report = success ? message : String.Format(ArchiSteamFarm.Localization.Strings.WarningFailedWithError, message);
 			if (statusReporter != null) {
