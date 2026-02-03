@@ -12,6 +12,7 @@ using ArchiSteamFarm.Helpers.Json;
 using ArchiSteamFarm.Steam;
 using ArchiSteamFarm.Steam.Data;
 using BoosterManager.Localization;
+using SteamKit2;
 
 namespace BoosterManager {
 	internal static class MarketHandler {
@@ -326,7 +327,7 @@ namespace BoosterManager {
 		}
 
 		private static async Task AcceptMarketConfirmations(Bot bot, StatusReporter? statusReporter) {
-			(bool success, _, string message) = await bot.Actions.HandleTwoFactorAuthenticationConfirmations(true, Confirmation.EConfirmationType.Market).ConfigureAwait(false);
+			(bool success, _, string message) = await bot.Actions.HandleTwoFactorAuthenticationConfirmations(true, EMobileConfirmationType.MarketListing).ConfigureAwait(false);
 
 			string report = success ? message : String.Format(ArchiSteamFarm.Localization.Strings.WarningFailedWithError, message);
 			if (statusReporter != null) {

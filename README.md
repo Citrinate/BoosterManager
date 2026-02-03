@@ -116,7 +116,8 @@ Command | Access | Description
 `listings [Bots]`|`Master`|Displays the total value of all active market listings owned by the given bot.
 `removelistings [Bot] <ListingIDs>`|`Master`|Removes market `ListingIDs` belonging to the given bot.
 `removepending <Bots>`|`Master`|Removes all pending market listings belonging to the given bot.
-`market2faok [Bot] [Minutes]`|`Master`|Accepts all pending 2FA market confirmations for given bot instances.  Optionally repeat this action once every `Minutes`.  To cancel any repetition, set `Minutes` to 0.
+`market2faok [Bot] [Minutes]`|`Master`|Accepts all pending 2FA market listing confirmations for given bot instances.  Optionally repeat this action once every `Minutes`.  To cancel any repetition, set `Minutes` to 0.
+`marketpurchase2faok [Bot]`|`Master`|Accepts all pending 2FA market purchase confirmations for given bot instances.
 `value [Bots] [BalanceLimit]`|`Master`|Displays the combined wallet balance and total value of all active market listings owned by the given bot.  The maximum allowed balance in your region may be provided as `BalanceLimit`, a whole number, and it will instead display how close the given bot is to reaching that limit.
 
 #### Price Alerts
@@ -182,6 +183,7 @@ Command | Alias |
 `logmarketlistings`|`logml`
 `logmarkethistory`|`logmh`
 `market2faok`|`m2faok`
+`marketpurchase2faok`|`mp2faok`
 `trade2faok`|`t2faok`
 `tradecheck`|`tc`
 `tradesincoming`|`ti`
@@ -205,6 +207,7 @@ Command | Alias |
 `lootkeys ASF`|`lka`
 `lootsacks ASF`|`lsa`
 `market2faok ASF [Minutes]`|`m2faoka [Minutes]`
+`marketpurchase2faok ASF`|`mp2faoka`
 `trade2faok ASF [Minutes]`|`t2faoka [Minutes]`
 `tradecheck ASF`|`tca`
 `tradesincoming ASF [From]`|`tia [From]`
