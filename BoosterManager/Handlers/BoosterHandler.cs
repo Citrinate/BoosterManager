@@ -271,7 +271,7 @@ namespace BoosterManager {
 				if (limitedLastBoosterCraftTime!.Value.Date == DateTime.Today) {
 					return Commands.FormatBotResponse(Bot, String.Format(Strings.QueueStatusShort, limitedNumUncraftedBoosters, String.Format("{0:N0}", limitedGemsNeeded), String.Format("{0:t}", limitedLastBoosterCraftTime)));
 				} else {
-					return Commands.FormatBotResponse(Bot, String.Format(Strings.QueueStatusShortWithDate, limitedNumUncraftedBoosters, String.Format("{0:N0}", limitedGemsNeeded), String.Format("{0:d}", limitedLastBoosterCraftTime), String.Format("{0:t}", limitedLastBoosterCraftTime)));
+					return Commands.FormatBotResponse(Bot, String.Format(Strings.QueueStatusShortWithDate, new object?[] { limitedNumUncraftedBoosters, String.Format("{0:N0}", limitedGemsNeeded), String.Format("{0:d}", limitedLastBoosterCraftTime), String.Format("{0:t}", limitedLastBoosterCraftTime) }));
 				}
 			}
 
@@ -300,9 +300,9 @@ namespace BoosterManager {
 			// One-time booster status
 			if (limitedNumBoosters > 0 && limitedLastBoosterCraftTime != null) {
 				if (limitedLastBoosterCraftTime.Value.Date == DateTime.Today) {
-					responses.Add(String.Format(Strings.QueueStatusLimitedBoosters, Jobs.Limited().NumCrafted(), limitedNumBoosters, String.Format("{0:t}", limitedLastBoosterCraftTime), String.Format("{0:N0}", limitedGemsNeeded)));
+					responses.Add(String.Format(Strings.QueueStatusLimitedBoosters, new object?[] { Jobs.Limited().NumCrafted(), limitedNumBoosters, String.Format("{0:t}", limitedLastBoosterCraftTime), String.Format("{0:N0}", limitedGemsNeeded) }));
 				} else {
-					responses.Add(String.Format(Strings.QueueStatusLimitedBoostersWithDate, Jobs.Limited().NumCrafted(), limitedNumBoosters, String.Format("{0:d}", limitedLastBoosterCraftTime), String.Format("{0:t}", limitedLastBoosterCraftTime), String.Format("{0:N0}", limitedGemsNeeded)));
+					responses.Add(String.Format(Strings.QueueStatusLimitedBoostersWithDate, new object?[] { Jobs.Limited().NumCrafted(), limitedNumBoosters, String.Format("{0:d}", limitedLastBoosterCraftTime), String.Format("{0:t}", limitedLastBoosterCraftTime), String.Format("{0:N0}", limitedGemsNeeded) }));
 				}
 				IEnumerable<string> gameIDStringsWithMultiples = Jobs.Limited().UncraftedGameIDs().GroupBy(x => x).Select(group => group.Count() == 1 ? group.Key.ToString() : String.Format("{0} (x{1})", group.Key, group.Count()));
 				responses.Add(String.Format(Strings.QueueStatusLimitedBoosterList, String.Join(", ", gameIDStringsWithMultiples)));

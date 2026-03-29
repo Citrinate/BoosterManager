@@ -70,7 +70,7 @@ namespace BoosterManager {
 		}
 
 		internal void Resolve(Bot bot, uint currentPrice) {
-			StatusReporter.Report(bot, String.Format(Strings.MarketAlertReached, 
+			StatusReporter.Report(bot, String.Format(Strings.MarketAlertReached, new object?[] {
 				Type == MarketAlertType.Buy ? Strings.MarketAlertTypeBuy : Strings.MarketAlertTypeSell, 
 				Mode == MarketAlertMode.AboveOrAt ? Strings.MarketAlertModeAbove : Strings.MarketAlertModeBelow, 
 				String.Format(CultureInfo.CurrentCulture, "{0:#,#0.00}", Amount / 100.0), 
@@ -85,7 +85,7 @@ namespace BoosterManager {
 					Mode.ToString(),
 					String.Format(CultureInfo.CurrentCulture, "{0:#,#0.00}", Amount / 100.0)
 				)
-			));
+			}));
 
 			if (Type == MarketAlertType.Buy) {
 				StatusReporter.Report(bot, String.Format(Strings.MarketAlertBuyPriceCurrentValue, String.Format(CultureInfo.CurrentCulture, "{0:#,#0.00}", currentPrice / 100.0), bot.WalletCurrency));
