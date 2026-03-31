@@ -77,14 +77,14 @@ namespace BoosterManager {
 				bot.WalletCurrency, 
 				AppID, 
 				HashName,
-				String.Format("!a {0} {1} {2} {3} {4} {5}", 
+				String.Format("!a {0} {1} {2} {3} {4} {5}", new object?[] { 
 					bot.BotName,
 					AppID,
 					Uri.EscapeDataString(HashName),
 					Type.ToString(),
 					Mode.ToString(),
 					String.Format(CultureInfo.CurrentCulture, "{0:#,#0.00}", Amount / 100.0)
-				)
+				})
 			}));
 
 			if (Type == MarketAlertType.Buy) {

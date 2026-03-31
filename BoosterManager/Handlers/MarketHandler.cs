@@ -482,14 +482,14 @@ namespace BoosterManager {
 					modeString,
 					String.Format(CultureInfo.CurrentCulture, "{0:#,#0.00}", alert.Amount / 100.0),
 					bot.WalletCurrency,
-					String.Format("!cma {0} {1} {2} {3} {4} {5}",
+					String.Format("!cma {0} {1} {2} {3} {4} {5}", new object?[] {
 						bot.BotName,
 						alert.AppID,
 						Uri.EscapeDataString(alert.HashName),
 						alert.Type.ToString(),
 						alert.Mode.ToString(),
 						String.Format(CultureInfo.CurrentCulture, "{0:#,#0.00}", alert.Amount / 100.0)
-					)
+					})
 				});
 			}));
 		}
