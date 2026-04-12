@@ -198,7 +198,7 @@ namespace BoosterManager {
 				} else if (lastBoosterCraftTime.Value.Date == DateTime.Today) {
 					StatusReporter.Report(Bot, String.Format(Strings.QueueStatusShort, NumBoosters, String.Format("{0:N0}", GemsNeeded), String.Format("{0:t}", lastBoosterCraftTime)), log: CreatedFromSaveState);
 				} else {
-					StatusReporter.Report(Bot, String.Format(Strings.QueueStatusShortWithDate, NumBoosters, String.Format("{0:N0}", GemsNeeded), String.Format("{0:d}", lastBoosterCraftTime), String.Format("{0:t}", lastBoosterCraftTime)), log: CreatedFromSaveState);
+					StatusReporter.Report(Bot, String.Format(Strings.QueueStatusShortWithDate, new object?[] { NumBoosters, String.Format("{0:N0}", GemsNeeded), String.Format("{0:d}", lastBoosterCraftTime), String.Format("{0:t}", lastBoosterCraftTime) }), log: CreatedFromSaveState);
 				}
 			} finally {
 				BoosterQueue.OnBoosterInfosUpdated -= OnBoosterInfosUpdated;

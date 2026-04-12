@@ -290,7 +290,7 @@ namespace BoosterManager {
 			long remainingBuyOrderLimit = buyOrderValue > buyOrderLimit ? 0 : buyOrderLimit - buyOrderValue;
 			double buyOrderUsagePercent = buyOrderLimit == 0 ? (buyOrderValue == 0 ? 1 : Double.PositiveInfinity) : (double) buyOrderValue / buyOrderLimit;
 
-			return Commands.FormatBotResponse(bot, String.Format(Strings.MarketBuyLimit, String.Format("{0:#,#0.00}", buyOrderValue / 100.0), String.Format("{0:#,#0.00}", buyOrderLimit / 100.0), String.Format("{0:0%}", buyOrderUsagePercent), String.Format("{0:#,#0.00}", remainingBuyOrderLimit / 100.0), bot.WalletCurrency.ToString()));
+			return Commands.FormatBotResponse(bot, String.Format(Strings.MarketBuyLimit, new object?[] { String.Format("{0:#,#0.00}", buyOrderValue / 100.0), String.Format("{0:#,#0.00}", buyOrderLimit / 100.0), String.Format("{0:0%}", buyOrderUsagePercent), String.Format("{0:#,#0.00}", remainingBuyOrderLimit / 100.0), bot.WalletCurrency.ToString() }));
 		}
 
 		internal static bool StopMarketRepeatTimer(Bot bot) {
@@ -481,22 +481,22 @@ namespace BoosterManager {
 					_ => throw new ArgumentOutOfRangeException()
 				};
 
-				return String.Format(showCancelCommand ? Strings.MarketAlertWithCancelCommand : Strings.MarketAlert,
+				return String.Format(showCancelCommand ? Strings.MarketAlertWithCancelCommand : Strings.MarketAlert, new object?[] {
 					alert.AppID,
 					alert.HashName,
 					typeString,
 					modeString,
 					String.Format(CultureInfo.CurrentCulture, "{0:#,#0.00}", alert.Amount / 100.0),
 					bot.WalletCurrency,
-					String.Format("!cma {0} {1} {2} {3} {4} {5}",
+					String.Format("!cma {0} {1} {2} {3} {4} {5}", new object?[] {
 						bot.BotName,
 						alert.AppID,
 						Uri.EscapeDataString(alert.HashName),
 						alert.Type.ToString(),
 						alert.Mode.ToString(),
 						String.Format(CultureInfo.CurrentCulture, "{0:#,#0.00}", alert.Amount / 100.0)
-					)
-				);
+					})
+				});
 			}));
 		}
 	}

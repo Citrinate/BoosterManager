@@ -60,7 +60,7 @@ namespace BoosterManager {
 
 			if (AppID != null && ContextID != null) {
 				if (ClassID != null) {
-					return String.Format("{1}{0}{2}{0}{3}", Separator, AppID, ContextID, ClassID);
+					return String.Format("{1}{0}{2}{0}{3}", new object?[] { Separator, AppID, ContextID, ClassID });
 				} else {
 					return String.Format("{1}{0}{2}", Separator, AppID, ContextID);
 				}
