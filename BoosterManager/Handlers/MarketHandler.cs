@@ -3,13 +3,13 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Helpers.Json;
 using ArchiSteamFarm.Steam;
-using ArchiSteamFarm.Steam.Data;
 using BoosterManager.Localization;
 using SteamKit2;
 
@@ -351,7 +351,13 @@ namespace BoosterManager {
 						continue;
 					}
 					
-					Steam.ItemOrdersHistogramResponse? marketPriceHistogram = await WebRequest.GetMarketPriceHistogram(bot, nameID).ConfigureAwait(false);
+					JsonDocument? marketPriceHistogramResponse = await WebRequest.GetMarketPriceHistogram(bot, nameID).ConfigureAwait(false);
+					if (marketPriceHistogramResponse == null) {
+						ASF.ArchiLogger.LogGenericError(Strings.PriceHistogramFetchFailed);
+						continue;
+					}
+
+					Steam.ItemOrdersHistogramResponse? marketPriceHistogram = marketPriceHistogramResponse.ToJsonText().ToJsonObject<Steam.ItemOrdersHistogramResponse>();
 					if (marketPriceHistogram == null || marketPriceHistogram.Success != 1) {
 						ASF.ArchiLogger.LogGenericError(String.Format(Strings.ErrorBadSuccessResponse, nameof(marketPriceHistogram.Success), marketPriceHistogram?.Success));
 						continue;

@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using ArchiSteamFarm.IPC.Controllers.Api;
 using ArchiSteamFarm.IPC.Responses;
 using ArchiSteamFarm.Steam;
+using BoosterManager.IPC;
 using BoosterManager.Localization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -188,6 +189,120 @@ namespace BoosterManager {
 			}
 
 			return Ok(new GenericResponse<JsonDocument>(true, priceHistory));
+		}
+
+		[HttpPost("{botName:required}/RemoveListing/{listingID:required}")]
+		[EndpointSummary("Removes the given listing for the given bot.")]
+		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.OK)]
+		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.BadRequest)]
+		public async Task<ActionResult<GenericResponse>> RemoveListing(string botName, ulong listingID) {
+			if (string.IsNullOrEmpty(botName)) {
+				throw new ArgumentNullException(nameof(botName));
+			}
+
+			Bot? bot = Bot.GetBot(botName);
+			if (bot == null) {
+				return BadRequest(new GenericResponse(false, string.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botName)));
+			}
+
+			if (!bot.IsConnectedAndLoggedOn) {
+				return BadRequest(new GenericResponse(false, ArchiSteamFarm.Localization.Strings.BotNotConnected));
+			}
+
+			bool success = await WebRequest.RemoveListing(bot, listingID).ConfigureAwait(false);
+			if (!success) {
+				return BadRequest(new GenericResponse(false, Strings.RemoveListingFailed));
+			}
+
+			return Ok(new GenericResponse(true, string.Format(Strings.ListingsRemovedSuccess, 1)));
+		}
+
+		[HttpGet("{botNames:required}/GetPriceHistogram/{nameID:required}")]
+		[EndpointSummary("Retrieves price histogram for market items.")]
+		[ProducesResponseType(typeof(GenericResponse<JsonDocument>), (int) HttpStatusCode.OK)]
+		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.BadRequest)]
+		public async Task<ActionResult<GenericResponse>> GetPriceHistogram(string botNames, uint nameID) {
+			if (string.IsNullOrEmpty(botNames)) {
+				throw new ArgumentNullException(nameof(botNames));
+			}
+
+			HashSet<Bot>? bots = Bot.GetBots(botNames);
+			if ((bots == null) || (bots.Count == 0)) {
+				return BadRequest(new GenericResponse(false, string.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)));
+			}
+
+			Bot? bot = bots.FirstOrDefault(static bot => bot.IsConnectedAndLoggedOn);
+			if (bot == null) {
+				return BadRequest(new GenericResponse(false, ArchiSteamFarm.Localization.Strings.BotNotConnected));
+			}
+			
+			if (!bot.IsConnectedAndLoggedOn) {
+				return BadRequest(new GenericResponse(false, ArchiSteamFarm.Localization.Strings.BotNotConnected));
+			}
+
+			JsonDocument? response = await WebRequest.GetMarketPriceHistogram(bot, nameID).ConfigureAwait(false);
+			if (response == null) {
+				return BadRequest(new GenericResponse(false, Strings.PriceHistogramFetchFailed));
+			}
+
+			return Ok(new GenericResponse<JsonDocument>(true, response));
+		}
+
+		[HttpPost("{botName:required}/CreateListing/")]
+		[EndpointSummary("Create a listing for the given bot.")]
+		[ProducesResponseType(typeof(GenericResponse<JsonDocument>), (int) HttpStatusCode.OK)]
+		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.BadRequest)]
+		public async Task<ActionResult<GenericResponse>> CreateListing(string botName, [FromBody] CreateListingRequest request) {
+			if (string.IsNullOrEmpty(botName)) {
+				throw new ArgumentNullException(nameof(botName));
+			}
+
+			Bot? bot = Bot.GetBot(botName);
+			if (bot == null) {
+				return BadRequest(new GenericResponse(false, string.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botName)));
+			}
+
+			if (!bot.IsConnectedAndLoggedOn) {
+				return BadRequest(new GenericResponse(false, ArchiSteamFarm.Localization.Strings.BotNotConnected));
+			}
+
+			JsonDocument? response = await WebRequest.CreateListing(bot, request.AppID, request.ContextID, request.AssetID, request.Price, request.Amount).ConfigureAwait(false);
+			if (response == null) {
+				return BadRequest(new GenericResponse(false, Strings.CreateListingFailed));
+			}
+
+			return Ok(new GenericResponse<JsonDocument>(true, response));
+		}
+
+		[HttpGet("{botNames:required}/GetMarketItemInfo/{appID:required}/{hashName:required}")]
+		[EndpointSummary("Retrieves info about a market item.")]
+		[ProducesResponseType(typeof(GenericResponse<MarketListingPageResponse>), (int) HttpStatusCode.OK)]
+		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.BadRequest)]
+		public async Task<ActionResult<GenericResponse>> GetMarketListing(string botNames, uint appID, string hashName) {
+			if (string.IsNullOrEmpty(botNames)) {
+				throw new ArgumentNullException(nameof(botNames));
+			}
+
+			HashSet<Bot>? bots = Bot.GetBots(botNames);
+			if ((bots == null) || (bots.Count == 0)) {
+				return BadRequest(new GenericResponse(false, string.Format(ArchiSteamFarm.Localization.Strings.BotNotFound, botNames)));
+			}
+
+			Bot? bot = bots.FirstOrDefault(static bot => bot.IsConnectedAndLoggedOn);
+			if (bot == null) {
+				return BadRequest(new GenericResponse(false, ArchiSteamFarm.Localization.Strings.BotNotConnected));
+			}
+			
+			if (!bot.IsConnectedAndLoggedOn) {
+				return BadRequest(new GenericResponse(false, ArchiSteamFarm.Localization.Strings.BotNotConnected));
+			}
+
+			MarketListingPageResponse? marketListing = await WebRequest.GetMarketListing(bot, appID, hashName).ConfigureAwait(false);
+			if (marketListing == null) {
+				return BadRequest(new GenericResponse(false, Strings.MarketListingFetchFailed));
+			}
+
+			return Ok(new GenericResponse<MarketListingPageResponse>(true, marketListing));
 		}
 	}
 }

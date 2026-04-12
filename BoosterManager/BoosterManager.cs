@@ -87,6 +87,24 @@ namespace BoosterManager {
 						}
 						break;
 					}
+					case "MaxConcurrentMarketRequests" when configProperty.Value.ValueKind == JsonValueKind.Number: {
+						if (configProperty.Value.TryGetUInt32(out uint value)) {
+							ASF.ArchiLogger.LogGenericInfo("Max Concurrent Market Requests : " + configProperty.Value);
+							WebRequest.MaxConcurrentMarketRequests = value;
+						} else {
+							ASF.ArchiLogger.LogGenericError(string.Format(ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, configProperty.Key));
+						}
+						break;
+					}
+					case "MarketRequestSpacing" when configProperty.Value.ValueKind == JsonValueKind.Number: {
+						if (configProperty.Value.TryGetUInt32(out uint value)) {
+							ASF.ArchiLogger.LogGenericInfo("Market Request Spacing : " + configProperty.Value);
+							WebRequest.MarketRequestSpacingMilliseconds = value;
+						} else {
+							ASF.ArchiLogger.LogGenericError(string.Format(ArchiSteamFarm.Localization.Strings.ErrorIsInvalid, configProperty.Key));
+						}
+						break;
+					}
 				}
 			}
 

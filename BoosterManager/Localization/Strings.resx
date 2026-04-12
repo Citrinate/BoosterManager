@@ -606,4 +606,24 @@
     <comment>
 </comment>
   </data>
+  <data name="PriceHistogramFetchFailed" xml:space="preserve">
+    <value>Failed to fetch price histogram</value>
+    <comment>
+</comment>
+  </data>
+  <data name="RemoveListingFailed" xml:space="preserve">
+    <value>Failed to remove listing</value>
+    <comment>
+</comment>
+  </data>
+  <data name="CreateListingFailed" xml:space="preserve">
+    <value>Failed to create listing</value>
+    <comment>
+</comment>
+  </data>
+  <data name="MarketListingFetchFailed" xml:space="preserve">
+    <value>Failed to fetch market listings page</value>
+    <comment>
+</comment>
+  </data>
 </root>
