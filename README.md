@@ -497,17 +497,30 @@ Example:
 
 ### IPC Interface
 
+#### Account Info
+
 API | Method | Parameters | Description
 --- | --- | --- | ---
-`/API/BoosterManager/{botName}/BoosterData`|`GET`||Retrieves booster data for given bot
-`/API/BoosterManager/{botName}/MarketListings`|`GET`||Retrieves market listings data for given bot
-`/API/BoosterManager/{botName}/MarketHistory`|`GET`|`page`|Retrieves market history data for given bot
-`/API/BoosterManager/{botName}/InventoryHistory`|`GET`|`startTime`, `timeFrac`, `s`|Retrieves inventory history data for given bot
-`/API/BoosterManager/{botNames}/GetPriceHistory/{appID}/{hashName}`|`GET`||Retrieves price history for a market item [^1]
-`/API/BoosterManager/{botNames}/GetPriceHistogram/{nameID}`|`GET`||Retrieves price histogram for a market item [^1]
-`/API/BoosterManager/{botNames}/GetMarketItemInfo/{appID}/{hashName}`|`GET`||Retrieves info about a market item [^1]
-`/API/BoosterManager/{botName}/GetBadgeInfo/{appID}`|`GET`|`border`|Retrieves badge info for given bot
-`/API/BoosterManager/{botName}/RemoveListing/{listingID}`|`POST`||Removes the given market listing for the given bot
-`/API/BoosterManager/{botName}/CreateListing`|`POST`|`appID`, `contextID`, `assetID`, `price`, `amount`|Create a listing for the given bot
+`/Api/BoosterManager/{botName}/BoosterData`|`GET`||Retrieves booster data for given bot
+`/Api/BoosterManager/{botName}/MarketListings`|`GET`||Retrieves market listings data for given bot
+`/Api/BoosterManager/{botName}/MarketHistory`|`GET`|`page`|Retrieves market history data for given bot
+`/Api/BoosterManager/{botName}/InventoryHistory`|`GET`|`startTime`, `timeFrac`, `s`|Retrieves inventory history data for given bot
+`/Api/BoosterManager/{botName}/GetBadgeInfo/{appID}`|`GET`|`border`|Retrieves badge info for given bot
 
-[^1]: Responses are not dependent on the account used to make these requests.  You may provide multiple `botNames`, and the first available bot will be used to make the request.
+#### Market Info
+
+Responses from these APIs aren't dependent on the account provided.  You may provide multiple `botNames`, and the first available bot will be used to make the request
+
+API | Method | Parameters | Description
+--- | --- | --- | ---
+`/Api/BoosterManager/{botNames}/GetMarketItemInfo/{appID}/{hashName}`|`GET`||Retrieves info about a market item [^1]
+`/Api/BoosterManager/{botNames}/GetPriceHistory/{appID}/{hashName}`|`GET`||Retrieves price history for a market item [^1]
+`/Api/BoosterManager/{botNames}/GetPriceHistogram/{nameID}`|`GET`||Retrieves price histogram for a market item [^1]
+
+#### Market Actions
+
+
+API | Method | Parameters | Description
+--- | --- | --- | ---
+`/Api/BoosterManager/{botName}/CreateListing`|`POST`|`appID`, `contextID`, `assetID`, `price`, `amount`|Create a listing for the given bot
+`/Api/BoosterManager/{botName}/RemoveListing/{listingID}`|`POST`||Removes the given market listing for the given bot
