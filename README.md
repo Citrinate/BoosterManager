@@ -513,9 +513,9 @@ Responses from these APIs aren't dependent on the account provided.  You may pro
 
 API | Method | Parameters | Description
 --- | --- | --- | ---
-`/Api/BoosterManager/{botNames}/GetMarketItemInfo/{appID}/{hashName}`|`GET`||Retrieves info about a market item [^1]
-`/Api/BoosterManager/{botNames}/GetPriceHistory/{appID}/{hashName}`|`GET`||Retrieves price history for a market item [^1]
-`/Api/BoosterManager/{botNames}/GetPriceHistogram/{nameID}`|`GET`||Retrieves price histogram for a market item [^1]
+`/Api/BoosterManager/{botNames}/GetMarketItemInfo/{appID}/{hashName}`|`GET`||Retrieves info about a market item
+`/Api/BoosterManager/{botNames}/GetPriceHistory/{appID}/{hashName}`|`GET`||Retrieves price history for a market item
+`/Api/BoosterManager/{botNames}/GetPriceHistogram/{nameID}`|`GET`||Retrieves price histogram for a market item
 
 #### Market Actions
 
