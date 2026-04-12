@@ -621,4 +621,9 @@
     <comment>
 </comment>
   </data>
+  <data name="MarketListingFetchFailed" xml:space="preserve">
+    <value>Failed to fetch market listings page</value>
+    <comment>
+</comment>
+  </data>
 </root>
