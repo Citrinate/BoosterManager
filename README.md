@@ -255,6 +255,36 @@ Example:
 
 ---
 
+### MaxConcurrentMarketRequests
+
+`uint` type with default value of `1`.  This configuration setting can be added to your `ASF.json` config file.  It will set the maximum number of simultaneous requests the plugin can make to the Steam marketplace.  This can be disabled by setting the value to `0`.
+
+Example:
+
+```json
+"MaxConcurrentMarketRequests": 1,
+```
+
+> [!NOTE]
+> This configuration setting effects the following IPC APIs: `MarketListings`, `MarketHistory`, `GetPriceHistory`, `GetPriceHistogram`, `RemoveListing`, `CreateListing`
+
+---
+
+### MarketRequestSpacing
+
+`uint` type with default value of `1000`.  This configuration setting can be added to your `ASF.json` config file.  It will set the minimum number of milliseconds between each request the plugin makes to the Steam marketplace.
+
+Example:
+
+```json
+"MarketRequestSpacing": 1000,
+```
+
+> [!NOTE]
+> This configuration setting effects the following IPC APIs: `MarketListings`, `MarketHistory`, `GetPriceHistory`, `GetPriceHistogram`, `RemoveListing`, `CreateListing`
+
+---
+
 ### BoosterDataAPI
 
 `string` type with no default value.  This configuration setting can be added to your `ASF.json` config file.  When the `logboosterdata` command is used, booster data will be gathered and sent to the API located at the specified url.

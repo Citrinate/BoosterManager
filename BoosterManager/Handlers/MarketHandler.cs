@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Helpers.Json;
 using ArchiSteamFarm.Steam;
-using ArchiSteamFarm.Steam.Data;
 using BoosterManager.Localization;
 using SteamKit2;
 

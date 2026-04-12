@@ -191,7 +191,7 @@ namespace BoosterManager {
 			return Ok(new GenericResponse<JsonDocument>(true, priceHistory));
 		}
 
-		[HttpGet("{botName:required}/RemoveListing/{listingID:required}")]
+		[HttpPost("{botName:required}/RemoveListing/{listingID:required}")]
 		[EndpointSummary("Removes the given listing for the given bot.")]
 		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.OK)]
 		[ProducesResponseType(typeof(GenericResponse), (int) HttpStatusCode.BadRequest)]
