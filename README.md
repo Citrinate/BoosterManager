@@ -287,7 +287,7 @@ Example:
 
 ### BoosterDataAPI
 
-`string` type with no default value.  This configuration setting can be added to your `ASF.json` config file.  When the `logboosterdata` command is used, booster data will be gathered and sent to the API located at the specified url.
+`string` type with no default value.  This configuration setting can be added to your `ASF.json` config file.  When the `logboosterdata` command is used, booster data will be gathered and sent to the API located at the specified url.  This API should be designed per the [following specifications](/BoosterManager/Docs/LoggingAPIs/BoosterData.md).
 
 Example:
 
@@ -295,45 +295,11 @@ Example:
 "BoosterDataAPI": "http://localhost/api/boosters",
 ```
 
-You will need to design your API to accept requests and return responses per the following specifications:
-
-<details>
-  <summary>Request</summary>
-  
-  **Method**: `POST`
-  
-  **Content-Type**: `application/json`
-  
-  Name | Type | Description
-  --- | --- | ---
-  `steamid`|`ulong`|SteamID of the bot that `data` belongs to
-  `source`|`string`|`https://steamcommunity.com/tradingcards/boostercreator/`
-  `data`|`JArray`|The data parsed from `source` and sent as an array of objects.  Detailed below.
-  `data[][appid]`|`uint`|Booster game AppID
-  `data[][name]`|`string`|Booster game name
-  `data[][series]`|`uint`|Booster series number
-  `data[][price]`|`uint`|Price of booster in gems
-  `data[][unavailable]`|`bool`|Set to `true` when the booster is on a 24 hour cooldown
-  `data[][available_at_time]`|`string?`|A date and time string in ISO 8601 format, if `unavailable` is `false` then this will be `null`|
-</details>
-
-<details>
-  <summary>Response</summary>
-  
-  **Content-Type**: `application/json`
-  
-  Name | Type | Required | Description
-  --- | --- | --- | ---
-  `success`|`bool`|Yes|Whether your operations succeeded or failed.
-  `message`|`string`|No|A custom message that will be displayed in place of the default succeed/fail message
-  `show_message`|`bool`|No|Whether or not to show any message
-</details>
-
 ---
 
 ### MarketListingsAPI
 
-`string` type with no default value.  This configuration setting can be added to your `ASF.json` config file.  When the `logmarketlistings` command is used, market listing data will be gathered and sent to the API located at the specified url.
+`string` type with no default value.  This configuration setting can be added to your `ASF.json` config file.  When the `logmarketlistings` command is used, market listing data will be gathered and sent to the API located at the specified url.  This API should be designed per the [following specifications](/BoosterManager/Docs/LoggingAPIs/MarketListings.md).
 
 Example:
 
@@ -341,42 +307,11 @@ Example:
 "MarketListingsAPI": "http://localhost/api/listings",
 ```
 
-You will need to design your API to accept requests and return responses per the following specifications:
-
-<details>
-  <summary>Request</summary>
-
-  **Method**: `POST`
-  
-  **Content-Type**: `application/json`
-  
-  Name | Type | Description
-  --- | --- | ---
-  `steamid`|`ulong`|SteamID of the bot that `data` belongs to
-  `source`|`string`|`https://steamcommunity.com/market/mylistings?norender=1`
-  `data`|`JObject`|The data taken directly from `source` with empty string values converted to `null`
-
-  > **Note**
-  > Pagination here is not supported.  While `source` does support pagination for `data[listings]`, the plugin will automatically combine all pages into one such that `data[listings]` contains all active listings for the bot.
-</details>
-
-<details>
-  <summary>Response</summary>
-  
-  **Content-Type**: `application/json`
-   
-  Name | Type | Required | Description
-  --- | --- | --- | ---
-  `success`|`bool`|Yes|Whether your operations succeeded or failed.
-  `message`|`string`|No|A custom message that will be displayed in place of the default succeed/fail message
-  `show_message`|`bool`|No|Whether or not to show any message
-</details>
-
 ---
 
 ### MarketHistoryAPI
 
-`string` type with no default value.  This configuration setting can be added to your `ASF.json` config file.  When the `logmarkethistory` command is used, market history data will be gathered and sent to the API located at the specified url.
+`string` type with no default value.  This configuration setting can be added to your `ASF.json` config file.  When the `logmarkethistory` command is used, market history data will be gathered and sent to the API located at the specified url.  This API should be designed per the [following specifications](/BoosterManager/Docs/LoggingAPIs/MarketHistory.md).
 
 Example:
 
@@ -384,90 +319,17 @@ Example:
 "MarketHistoryAPI": "http://localhost/api/markethistory",
 ```
 
-You will need to design your API to accept requests and return responses per the following specifications:
-
-<details>
-  <summary>Request</summary>
-  
-  **Method**: `POST`
-  
-  **Content-Type**: `application/json`
-  
-  Name | Type | Description
-  --- | --- | ---
-  `steamid`|`ulong`|SteamID of the bot that `data` belongs to
-  `source`|`string`|`https://steamcommunity.com/market/myhistory?norender=1&count=500`
-  `page`|`uint`|Page number, defined as `floor(data[start] / 500) + 1`
-  `data`|`JObject`|The data taken directly from `source` with empty string values converted to `null`
-
-  > **Note**
-  > Multiple pages of `data` will be requested sequentially, and not in parallel.
-</details>
-
-<details>
-  <summary>Response</summary>
-  
-  **Content-Type**: `application/json`
-  
-  Name | Type | Required | Description
-  --- | --- | --- | ---
-  `success`|`bool`|Yes|Whether your operations succeeded or failed.  If there's more pages to fetch, the plugin will only continue when `success` is `true`
-  `message`|`string`|No|A custom message that will be displayed in place of the default succeed/fail message
-  `show_message`|`bool`|No|Whether or not to show any message
-  `get_next_page`|`bool`|No|Whether or not to fetch the next page.  If the plugin was already going to fetch the next page anyway, this does nothing.
-  `next_page`|`uint`|No|If `get_next_page` is set to `true`, the next page will be fetched using this page number
-</details>
-
 ---
 
 ### InventoryHistoryAPI
 
-`string` type with no default value.  This configuration setting can be added to your `ASF.json` config file.  When the `loginventoryhistory` command is used, inventory history data will be gathered and sent to the API located at the specified url.
+`string` type with no default value.  This configuration setting can be added to your `ASF.json` config file.  When the `loginventoryhistory` command is used, inventory history data will be gathered and sent to the API located at the specified url.  This API should be designed per the [following specifications](/BoosterManager/Docs/LoggingAPIs/InventoryHistory.md).
 
 Example:
 
 ```json
 "InventoryHistoryAPI": "http://localhost/api/inventoryhistory",
 ```
-
-You will need to design your API to accept requests and return responses per the following specifications:
-
-<details>
-  <summary>Request</summary>
-  
-  **Method**: `POST`
-  
-  **Content-Type**: `application/json`
-  
-  Name | Type | Description
-  --- | --- | ---
-  `steamid`|`ulong`|SteamID of the bot that `data` belongs to
-  `source`|`string`|`https://steamcommunity.com/my/inventoryhistory/?ajax=1`
-  `page`|`uint`|The value of the `start_time` query parameter used to request `source`.  If a cursor object was used to request `source` instead, this will be equal to `cursor[time]`
-  `cursor`|`JObject`|The value of the `cursor` object query parameter used to request `source`
-  `data`|`JObject`|The data taken directly from `source` with empty string values converted to `null`
-  
-  > **Note**
-  > Documentation of Steam's Inventory History API can be found [here](/BoosterManager/Docs/InventoryHistory.md)
-  
-  > **Note**
-  > Multiple pages of `data` will be requested sequentially, and not in parallel.
-</details>
-
-<details>
-  <summary>Response</summary>
-  
-  **Content-Type**: `application/json`
-  
-  Name | Type | Required | Description
-  --- | --- | --- | ---
-  `success`|`bool`|Yes|Whether your operations succeeded or failed.  If there's more pages to fetch, the plugin will only continue when `success` is `true`
-  `message`|`string`|No|A custom message that will be displayed in place of the default succeed/fail message
-  `show_message`|`bool`|No|Whether or not to show any message
-  `get_next_page`|`bool`|No|Whether or not to fetch the next page.  If the plugin was already going to fetch the next page anyway, this does nothing.
-  `next_page`|`uint`|No|If `get_next_page` is set to `true`, the next page will be fetched using this page number
-  `next_cursor`|`JObject`|No|If `get_next_page` is set to `true`, the next page will be fetched using this cursor object
-</details>
 
 ---
 
