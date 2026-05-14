@@ -50,6 +50,29 @@ namespace BoosterManager {
 			return Commands.FormatBotResponse(bot, response);
 		}
 
+		internal static async Task<(uint, uint)?> GetUnpackedGemCount(Bot bot) {
+			HashSet<Asset> inventory;
+			try {
+				inventory = await bot.ArchiHandler.GetMyInventoryAsync().Where(item => ItemIdentifier.GemIdentifier.IsItemMatch(item)).ToHashSetAsync().ConfigureAwait(false);
+			} catch (Exception e) {
+				bot.ArchiLogger.LogGenericException(e);
+
+				return null;
+			}
+
+			(uint tradable, uint untradable) gems = (0,0);
+
+			foreach (Asset item in inventory) {
+				switch (item.ClassID, item.Tradable) {
+					case (GemsClassID, true): gems.tradable += item.Amount; break;
+					case (GemsClassID, false): gems.untradable += item.Amount; break;
+					default: break;
+				}
+			}
+
+			return gems;
+		}
+
 		internal static async Task<string> UnpackGems(Bot bot) {
 			HashSet<Asset> sacks;
 			try {

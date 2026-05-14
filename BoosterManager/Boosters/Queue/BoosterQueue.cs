@@ -238,16 +238,31 @@ namespace BoosterManager {
 			if (!BoosterHandler.AllowCraftUntradableBoosters) {
 				nTp = Steam.TradabilityPreference.Tradable;
 			} else if (UntradableGooAmount > 0) {
-				nTp = TradableGooAmount >= booster.Info?.Price ? Steam.TradabilityPreference.Tradable : Steam.TradabilityPreference.Untradable;
+				nTp = TradableGooAmount >= booster.Info.Price ? Steam.TradabilityPreference.Tradable : Steam.TradabilityPreference.Untradable;
 			} else {
 				nTp = Steam.TradabilityPreference.Default;
 			}
 			
 			Steam.BoostersResponse? result = await booster.Craft(nTp).ConfigureAwait(false);
 
-			GooAmount = result?.GooAmount ?? GooAmount;
-			TradableGooAmount = result?.TradableGooAmount ?? TradableGooAmount;
-			UntradableGooAmount = result?.UntradableGooAmount ?? UntradableGooAmount;
+			if (result != null) {
+				if (result.GooAmount == 0 && GooAmount > booster.Info.Price) {					
+					// This result will sometimes incorrectly report the bot as having 0 gems
+					// Ex: {"goo_amount":0,"tradable_goo_amount":0,"untradable_goo_amount":0,"purchase_result":{"success":1},"purchase_eresult":0}
+					// If this seems unlikely to be true, then query the bot's inventory for the true gem amounts
+					await Task.Delay(TimeSpan.FromSeconds(5)).ConfigureAwait(false);
+					(uint tradable, uint untradable)? gems = await GemHandler.GetUnpackedGemCount(Bot).ConfigureAwait(false);
+					if (gems.HasValue) {
+						GooAmount = gems.Value.tradable + gems.Value.untradable;
+						TradableGooAmount = gems.Value.tradable;
+						UntradableGooAmount = gems.Value.untradable;
+					}
+				} else {
+					GooAmount = result.GooAmount;
+					TradableGooAmount = result.TradableGooAmount;
+					UntradableGooAmount = result.UntradableGooAmount;
+				}
+			}
 
 			return booster.WasCrafted;
 		}
