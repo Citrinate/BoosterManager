@@ -217,7 +217,12 @@ namespace BoosterManager {
 		internal static async Task<MarketListingPageResponse?> GetMarketListing(Bot bot, uint appID, string hashName) {
 			return await ExecuteMarketRequest(async() => {
 				Uri request = new(ArchiWebHandler.SteamCommunityURL, String.Format("/market/listings/{0}/{1}", appID, Uri.EscapeDataString(hashName)));
-				HtmlDocumentResponse? marketListing = await bot.ArchiWebHandler.UrlGetToHtmlDocumentWithSession(request, maxTries: 1, requestOptions: WebBrowser.ERequestOptions.ReturnClientErrors | WebBrowser.ERequestOptions.AllowInvalidBodyOnErrors).ConfigureAwait(false);
+
+				Dictionary<string, string> headers = new(1) {
+					{ "Cookie", "bMarketOptOut=1" }
+				};
+
+				HtmlDocumentResponse? marketListing = await bot.ArchiWebHandler.UrlGetToHtmlDocumentWithSession(request, headers, maxTries: 1, requestOptions: WebBrowser.ERequestOptions.ReturnClientErrors | WebBrowser.ERequestOptions.AllowInvalidBodyOnErrors).ConfigureAwait(false);
 
 				try {
 					MarketListingPageResponse marketListingPage = new MarketListingPageResponse(marketListing?.Content);
