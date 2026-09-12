@@ -179,7 +179,7 @@ namespace BoosterManager {
 				Uri request = new(ArchiWebHandler.SteamCommunityURL, $"/market/removelisting/{listingID}");
 				Uri referer = new(ArchiWebHandler.SteamCommunityURL, "/market/");
 
-				return await bot.ArchiWebHandler.UrlPostWithSession(request, referer: referer, maxTries: 1).ConfigureAwait(false);
+				return await bot.ArchiWebHandler.UrlPostWithSession(request, referer: referer, maxTries: 1, requestOptions: WebBrowser.ERequestOptions.SteamWafWorkarounds).ConfigureAwait(false);
 			}).ConfigureAwait(false);
 		}
 
@@ -209,7 +209,7 @@ namespace BoosterManager {
 		internal static async Task<JsonDocument?> GetPriceHistory(Bot bot, uint appID, string hashName) {
 			return await ExecuteMarketRequest(async() => {
 				Uri request = new(ArchiWebHandler.SteamCommunityURL, String.Format("/market/pricehistory/?appid={0}&market_hash_name={1}", appID, Uri.EscapeDataString(hashName)));
-				ObjectResponse<JsonDocument>? priceHistoryResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<JsonDocument>(request, maxTries: 1, requestOptions: WebBrowser.ERequestOptions.ReturnClientErrors | WebBrowser.ERequestOptions.AllowInvalidBodyOnErrors).ConfigureAwait(false);
+				ObjectResponse<JsonDocument>? priceHistoryResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<JsonDocument>(request, maxTries: 1, requestOptions: WebBrowser.ERequestOptions.ReturnClientErrors | WebBrowser.ERequestOptions.AllowInvalidBodyOnErrors | WebBrowser.ERequestOptions.SteamWafWorkarounds).ConfigureAwait(false);
 				return priceHistoryResponse?.Content;
 			}).ConfigureAwait(false);
 		}
@@ -265,7 +265,7 @@ namespace BoosterManager {
 					{ "price", price.ToString() }
 				};
 
-				ObjectResponse<JsonDocument>? createListingResponse = await bot.ArchiWebHandler.UrlPostToJsonObjectWithSession<JsonDocument>(request, data: data, referer: referer, maxTries: 1, requestOptions: WebBrowser.ERequestOptions.ReturnClientErrors | WebBrowser.ERequestOptions.AllowInvalidBodyOnErrors).ConfigureAwait(false);
+				ObjectResponse<JsonDocument>? createListingResponse = await bot.ArchiWebHandler.UrlPostToJsonObjectWithSession<JsonDocument>(request, data: data, referer: referer, maxTries: 1, requestOptions: WebBrowser.ERequestOptions.ReturnClientErrors | WebBrowser.ERequestOptions.AllowInvalidBodyOnErrors | WebBrowser.ERequestOptions.SteamWafWorkarounds).ConfigureAwait(false);
 				
 				return createListingResponse?.Content;
 			}).ConfigureAwait(false);
