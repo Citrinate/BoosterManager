@@ -375,12 +375,15 @@ Responses from these APIs aren't dependent on the account provided.  You may pro
 
 API | Method | Parameters | Description
 --- | --- | --- | ---
-`/Api/BoosterManager/{botNames}/GetMarketItemInfo/{appID}/{hashName}`|`GET`||Retrieves info about a market item
-`/Api/BoosterManager/{botNames}/GetPriceHistory/{appID}/{hashName}`|`GET`||Retrieves price history for a market item
-`/Api/BoosterManager/{botNames}/GetPriceHistogram/{nameID}`|`GET`||Retrieves price histogram for a market item
+`/Api/BoosterManager/{botNames}/GetMarketListingInfo/{appID}/{hashName}`|`GET`||Retrieves info about a market item
+`/Api/BoosterManager/{botNames}/GetOrderBook/{appID}/{hashName}`|`GET`||Retrieves price histogram for a market item
+`/Api/BoosterManager/{botNames}/GetMarketItemInfo/{appID}/{hashName}`|`GET`||Retrieves info about a market item [^1]
+`/Api/BoosterManager/{botNames}/GetPriceHistory/{appID}/{hashName}`|`GET`||Retrieves price history for a market item [^1]
+`/Api/BoosterManager/{botNames}/GetPriceHistogram/{nameID}`|`GET`||Retrieves price histogram for a market item [^1]
+
+[^1]: These APIs aren't used by the Steam Marketplace Beta, and may stop working at any point.
 
 #### Market Actions
-
 
 API | Method | Parameters | Description
 --- | --- | --- | ---

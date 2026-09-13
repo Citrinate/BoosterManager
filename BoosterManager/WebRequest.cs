@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Core;
@@ -268,6 +269,34 @@ namespace BoosterManager {
 				ObjectResponse<JsonDocument>? createListingResponse = await bot.ArchiWebHandler.UrlPostToJsonObjectWithSession<JsonDocument>(request, data: data, referer: referer, maxTries: 1, requestOptions: WebBrowser.ERequestOptions.ReturnClientErrors | WebBrowser.ERequestOptions.AllowInvalidBodyOnErrors | WebBrowser.ERequestOptions.SteamWafWorkarounds).ConfigureAwait(false);
 				
 				return createListingResponse?.Content;
+			}).ConfigureAwait(false);
+		}
+
+		internal static async Task<JsonDocument?> GetOrderBook(Bot bot, uint appID, string hashName) {
+			return await ExecuteMarketRequest(async() => {
+				Uri request = new(ArchiWebHandler.SteamCommunityURL, String.Format("/market/orderbook?q=Load&qp=[{0},\"{1}\"]", appID, Uri.EscapeDataString(hashName)));
+				ObjectResponse<JsonDocument>? orderbookResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<JsonDocument>(request, maxTries: 1, requestOptions: WebBrowser.ERequestOptions.ReturnClientErrors | WebBrowser.ERequestOptions.AllowInvalidBodyOnErrors).ConfigureAwait(false);
+				return orderbookResponse?.Content;
+			}).ConfigureAwait(false);
+		}
+
+		internal static async Task<JsonObject?> GetMarketListingNew(Bot bot, uint appID, string hashName) {
+			return await ExecuteMarketRequest(async() => {
+				Uri request = new(ArchiWebHandler.SteamCommunityURL, String.Format("/market/listings/{0}/{1}", appID, Uri.EscapeDataString(hashName)));
+
+				HtmlDocumentResponse? marketListing = await bot.ArchiWebHandler.UrlGetToHtmlDocumentWithSession(request, maxTries: 1, requestOptions: WebBrowser.ERequestOptions.ReturnClientErrors | WebBrowser.ERequestOptions.AllowInvalidBodyOnErrors).ConfigureAwait(false);
+
+				try {
+					// JsonObject marketListingPage = null;
+					JsonObject marketListingPage = MarketListingPageNewResponse.Parse(marketListing?.Content);
+
+					return marketListingPage;
+				} catch (Exception e) {
+					ASF.ArchiLogger.LogGenericException(e);
+					ASF.ArchiLogger.LogGenericError(string.Format(ArchiSteamFarm.Localization.Strings.ErrorParsingObject, request.AbsoluteUri));
+					
+					return null;
+				}
 			}).ConfigureAwait(false);
 		}
 	}
