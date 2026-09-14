@@ -1672,7 +1672,10 @@ namespace BoosterManager {
 				}
 			}
 
-			(bool success, string message) = await bot.Actions.SendInventory(appID: appID, contextID: contextID, targetSteamID: targetSteamID, filterFunction: item => itemIdentifiers.Any(itemIdentifier => itemIdentifier.IsItemMatch(item))).ConfigureAwait(false);
+			(bool success, string message) = await bot.Actions.SendInventory(appID: appID, contextID: contextID, targetSteamID: targetSteamID, 
+				filterFunction: item => itemIdentifiers.Any(itemIdentifier => itemIdentifier.IsItemMatch(item)) 
+					&& !(item.AppID == Asset.SteamAppID && InventoryHandler.TransferExcludedAppIDs.Contains(item.RealAppID))
+			).ConfigureAwait(false);
 
 			return FormatBotResponse(bot, success ? message : String.Format(ArchiSteamFarm.Localization.Strings.WarningFailedWithError, message));
 		}

@@ -240,6 +240,18 @@ Command | Alias |
 
 ---
 
+### TransferExcludedAppIDs
+
+`HashSet<uint>` type with defalt value of `[]`.  This configuration setting can be added to your `ASF.json` config file.  When using any of the transfer/loot card/booster commands, items from any of these `AppIDs` will not be sent in the trades.
+
+Example:
+
+```json
+"TransferExcludedAppIDs": [730, 570],
+```
+
+---
+
 ### GamesToBooster
 
 `HashSet<uint>` type with default value of `[]`.  This configuration setting can be added to your individual bot config files.  It will automatically add all of the `AppIDs` to that bot's booster queue, and will automatically re-queue them after they've been crafted.

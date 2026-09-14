@@ -105,6 +105,16 @@ namespace BoosterManager {
 						}
 						break;
 					}
+					case "TransferExcludedAppIDs" when configProperty.Value.ValueKind == JsonValueKind.Array && configProperty.Value.GetArrayLength() > 0: {
+						ASF.ArchiLogger.LogGenericInfo("Transfer Excluded App IDs : " + string.Join(",", configProperty.Value));
+						List<uint>? appIDs = configProperty.Value.ToJsonObject<List<uint>>();
+						if (appIDs == null) {
+							ASF.ArchiLogger.LogNullError(appIDs);
+						} else {
+							InventoryHandler.TransferExcludedAppIDs = appIDs;
+						}
+						break;
+					}
 				}
 			}
 

@@ -11,6 +11,7 @@ using SteamKit2;
 
 namespace BoosterManager {
 	internal static class InventoryHandler {
+		internal static List<uint> TransferExcludedAppIDs = new();
 		private static ConcurrentDictionary<Bot, (Timer, StatusReporter?)> TradeRepeatTimers = new();
 
 		internal static async Task<string> SendItemToMultipleBots(Bot sender, List<(Bot reciever, uint amount)> recievers, uint appID, ulong contextID, ItemIdentifier itemIdentifier) {
