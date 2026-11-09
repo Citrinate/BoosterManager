@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Composition;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Steam;
@@ -13,23 +14,23 @@ using SteamKit2;
 
 namespace BoosterManager {
 	[Export(typeof(IPlugin))]
-	public sealed class BoosterManager : IASF, IBotModules, IBotCommand2, IBotTradeOfferResults, IGitHubPluginUpdates, IBotConnection {
+	public sealed class BoosterManager : IASF, IBotModules, IBotCommand, IBotTradeOfferResults, IGitHubPluginUpdates, IBotConnection {
 		public string Name => nameof(BoosterManager);
 		public string RepositoryName => "Citrinate/BoosterManager";
 		public Version Version => typeof(BoosterManager).Assembly.GetName().Version ?? new Version("0");
 		internal static GlobalCache? GlobalCache;
 
-		public Task OnLoaded() {
+		public Task OnLoaded(CancellationToken cancellationToken = default) {
 			ASF.ArchiLogger.LogGenericInfo("BoosterManager ASF Plugin by Citrinate");
 
 			return Task.CompletedTask;
 		}
 
-		public async Task<string?> OnBotCommand(Bot bot, EAccess access, string message, string[] args, ulong steamID = 0) {
+		public async Task<string?> OnBotCommand(Bot bot, EBotUserAccess access, string message, string[] args, ulong steamID = 0, CancellationToken cancellationToken = default) {
 			return await Commands.Response(bot, access, steamID, message, args).ConfigureAwait(false);
 		}
 
-		public async Task OnASFInit(IReadOnlyDictionary<string, JsonElement>? additionalConfigProperties = null) {
+		public async Task OnASFInit(IReadOnlyDictionary<string, JsonElement>? additionalConfigProperties = null, CancellationToken cancellationToken = default) {
 			if (GlobalCache == null) {
 				GlobalCache = await GlobalCache.CreateOrLoad().ConfigureAwait(false);
 			}
@@ -121,8 +122,8 @@ namespace BoosterManager {
 			return;
 		}
 
-		public Task OnBotInitModules(Bot bot, IReadOnlyDictionary<string, JsonElement>? additionalConfigProperties = null) {
-			string cacheFilePath = Bot.GetFilePath(String.Format("{0}_{1}", bot.BotName, nameof(BoosterManager)), Bot.EFileType.Database);
+		public Task OnBotInitModules(Bot bot, IReadOnlyDictionary<string, JsonElement>? additionalConfigProperties = null, CancellationToken cancellationToken = default) {
+			string cacheFilePath = Bot.GetFilePath(String.Format("{0}_{1}", bot.BotName, nameof(BoosterManager)), EBotFileType.Database);
 			BoosterHandler.AddHandler(bot, BotCache.CreateOrLoad(cacheFilePath));
 
 			if (additionalConfigProperties == null) {
@@ -147,7 +148,7 @@ namespace BoosterManager {
 			return Task.FromResult(0);
 		}
 
-		public Task OnBotTradeOfferResults(Bot bot, IReadOnlyCollection<ParseTradeResult> tradeResults) {
+		public Task OnBotTradeOfferResults(Bot bot, IReadOnlyCollection<ParseTradeResult> tradeResults, CancellationToken cancellationToken = default) {
 			ArgumentNullException.ThrowIfNull(bot);
 
 			if ((tradeResults == null) || (tradeResults.Count == 0)) {
@@ -156,7 +157,7 @@ namespace BoosterManager {
 
 			// Only trigger when recieving gems
 			if (!tradeResults.Any(
-				tradeResult => tradeResult is { Result: ParseTradeResult.EResult.Accepted, Confirmed: true } 
+				tradeResult => tradeResult is { Result: ETradeResult.Accepted, Confirmed: true } 
 					&& tradeResult.ItemsToReceive?.Any(item => ItemIdentifier.GemIdentifier.IsItemMatch(item)) == true
 				)
 			) {
@@ -168,13 +169,13 @@ namespace BoosterManager {
 			return Task.CompletedTask;
 		}
 		
-		public Task OnBotLoggedOn(Bot bot) {
+		public Task OnBotLoggedOn(Bot bot, CancellationToken cancellationToken = default) {
 			BoosterHandler.BoosterHandlers[bot.BotName].OnBotLoggedOn();
 
 			return Task.CompletedTask;
 		}
 
-		public Task OnBotDisconnected(Bot bot, EResult reason) {
+		public Task OnBotDisconnected(Bot bot, EResult reason, CancellationToken cancellationToken = default) {
 			return Task.FromResult(0);
 		}
 	}

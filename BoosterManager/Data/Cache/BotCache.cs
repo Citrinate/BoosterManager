@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.Json.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Collections;
 using ArchiSteamFarm.Core;
@@ -38,7 +39,7 @@ namespace BoosterManager {
 			FilePath = filePath;
 		}
 
-		protected override Task Save() => Save(this);
+		protected override Task Save(CancellationToken cancellationToken = default) => Save(this, cancellationToken);
 
 		internal static BotCache CreateOrLoad(string filePath) {
 			if (string.IsNullOrEmpty(filePath)) {
@@ -83,7 +84,7 @@ namespace BoosterManager {
 				if ((DateTime.Now - lastCraft.CraftTime).TotalHours >= 24) {
 					// Stored data is too old, delete it
 					BoosterLastCrafts.TryRemove(appID, out _);
-					Utilities.InBackground(Save);
+					Utilities.InBackground(() => Save());
 
 					return null;
 				}
@@ -99,13 +100,13 @@ namespace BoosterManager {
 				BoosterLastCrafts[appID].CraftTime = craftTime;
 			}
 			
-			Utilities.InBackground(Save);
+			Utilities.InBackground(() => Save());
 		}
 
 		internal void UpdateBoosterJobs(List<BoosterJobState> boosterJobs) {
 			BoosterJobs = boosterJobs;
 
-			Utilities.InBackground(Save);
+			Utilities.InBackground(() => Save());
 		}
 
 		internal async Task PreCraft(Booster booster) {
@@ -119,7 +120,7 @@ namespace BoosterManager {
 			CraftingGameID = null;
 			CraftingTime = null;
 
-			Utilities.InBackground(Save);
+			Utilities.InBackground(() => Save());
 		}
 
 		internal bool AddMarketAlert(MarketAlert alert) {
@@ -129,7 +130,7 @@ namespace BoosterManager {
 			}
 
 			if (MarketAlerts.Add(alert)) {
-				Utilities.InBackground(Save);
+				Utilities.InBackground(() => Save());
 
 				return true;
 			}
@@ -140,7 +141,7 @@ namespace BoosterManager {
 		internal void RemoveMarketAlert(MarketAlert alert) {
 			MarketAlerts.Remove(alert);
 
-			Utilities.InBackground(Save);
+			Utilities.InBackground(() => Save());
 		}
 	}
 }

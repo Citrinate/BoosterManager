@@ -2,6 +2,7 @@ using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Text.Json.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
 using ArchiSteamFarm.Core;
 using ArchiSteamFarm.Helpers;
@@ -19,7 +20,7 @@ namespace BoosterManager {
 			FilePath = SharedFilePath;
 		}
 
-		protected override Task Save() => Save(this);
+		protected override Task Save(CancellationToken cancellationToken = default) => Save(this, cancellationToken);
 
 		internal static async Task<GlobalCache> CreateOrLoad() {
 			if (!File.Exists(SharedFilePath)) {
@@ -56,7 +57,7 @@ namespace BoosterManager {
 			NameIDs.TryAdd(appID, new());
 			NameIDs[appID][hashName] = nameID;
 			
-			Utilities.InBackground(Save);
+			Utilities.InBackground(() => Save());
 		}
 
 		internal bool TryGetNameID(uint appID, string hashName, out uint nameID) {

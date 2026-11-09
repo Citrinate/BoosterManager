@@ -130,7 +130,7 @@ namespace BoosterManager {
 				}
 			}
 			Uri request = new(ArchiWebHandler.SteamCommunityURL, String.Format("/profiles/{0}/inventoryhistory/?{1}", bot.SteamID, String.Join("&", parameters)));
-			ObjectResponse<Steam.InventoryHistoryResponse>? inventoryHistoryResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<Steam.InventoryHistoryResponse>(request, requestOptions: WebBrowser.ERequestOptions.ReturnClientErrors | WebBrowser.ERequestOptions.AllowInvalidBodyOnErrors).ConfigureAwait(false);
+			ObjectResponse<Steam.InventoryHistoryResponse>? inventoryHistoryResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<Steam.InventoryHistoryResponse>(request, requestOptions: EWebRequestOptions.ReturnClientErrors | EWebRequestOptions.AllowInvalidBodyOnErrors).ConfigureAwait(false);
 			
 			if (inventoryHistoryResponse?.StatusCode == HttpStatusCode.TooManyRequests) {
 				throw new InventoryHistoryException();
@@ -180,7 +180,7 @@ namespace BoosterManager {
 				Uri request = new(ArchiWebHandler.SteamCommunityURL, $"/market/removelisting/{listingID}");
 				Uri referer = new(ArchiWebHandler.SteamCommunityURL, "/market/");
 
-				return await bot.ArchiWebHandler.UrlPostWithSession(request, referer: referer, maxTries: 1, requestOptions: WebBrowser.ERequestOptions.SteamWafWorkarounds).ConfigureAwait(false);
+				return await bot.ArchiWebHandler.UrlPostWithSession(request, referer: referer, maxTries: 1, requestOptions: EWebRequestOptions.SteamWafWorkarounds).ConfigureAwait(false);
 			}).ConfigureAwait(false);
 		}
 
@@ -210,7 +210,7 @@ namespace BoosterManager {
 		internal static async Task<JsonDocument?> GetPriceHistory(Bot bot, uint appID, string hashName) {
 			return await ExecuteMarketRequest(async() => {
 				Uri request = new(ArchiWebHandler.SteamCommunityURL, String.Format("/market/pricehistory/?appid={0}&market_hash_name={1}", appID, Uri.EscapeDataString(hashName)));
-				ObjectResponse<JsonDocument>? priceHistoryResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<JsonDocument>(request, maxTries: 1, requestOptions: WebBrowser.ERequestOptions.ReturnClientErrors | WebBrowser.ERequestOptions.AllowInvalidBodyOnErrors | WebBrowser.ERequestOptions.SteamWafWorkarounds).ConfigureAwait(false);
+				ObjectResponse<JsonDocument>? priceHistoryResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<JsonDocument>(request, maxTries: 1, requestOptions: EWebRequestOptions.ReturnClientErrors | EWebRequestOptions.AllowInvalidBodyOnErrors | EWebRequestOptions.SteamWafWorkarounds).ConfigureAwait(false);
 				return priceHistoryResponse?.Content;
 			}).ConfigureAwait(false);
 		}
@@ -223,7 +223,7 @@ namespace BoosterManager {
 					{ "Cookie", "bMarketOptOut=1" }
 				};
 
-				HtmlDocumentResponse? marketListing = await bot.ArchiWebHandler.UrlGetToHtmlDocumentWithSession(request, headers, maxTries: 1, requestOptions: WebBrowser.ERequestOptions.ReturnClientErrors | WebBrowser.ERequestOptions.AllowInvalidBodyOnErrors).ConfigureAwait(false);
+				HtmlDocumentResponse? marketListing = await bot.ArchiWebHandler.UrlGetToHtmlDocumentWithSession(request, headers, maxTries: 1, requestOptions: EWebRequestOptions.ReturnClientErrors | EWebRequestOptions.AllowInvalidBodyOnErrors).ConfigureAwait(false);
 
 				try {
 					MarketListingPageResponse marketListingPage = new MarketListingPageResponse(marketListing?.Content);
@@ -246,7 +246,7 @@ namespace BoosterManager {
 
 			return await ExecuteMarketRequest(async() => {
 				Uri request = new(ArchiWebHandler.SteamCommunityURL, String.Format("/market/itemordershistogram?language=english&currency={0}&item_nameid={1}", currency, nameID));
-				ObjectResponse<JsonDocument>? priceHistogramResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<JsonDocument>(request, maxTries: 1, requestOptions: WebBrowser.ERequestOptions.ReturnClientErrors | WebBrowser.ERequestOptions.AllowInvalidBodyOnErrors).ConfigureAwait(false);
+				ObjectResponse<JsonDocument>? priceHistogramResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<JsonDocument>(request, maxTries: 1, requestOptions: EWebRequestOptions.ReturnClientErrors | EWebRequestOptions.AllowInvalidBodyOnErrors).ConfigureAwait(false);
 
 				return priceHistogramResponse?.Content;
 			}).ConfigureAwait(false);
@@ -266,7 +266,7 @@ namespace BoosterManager {
 					{ "price", price.ToString() }
 				};
 
-				ObjectResponse<JsonDocument>? createListingResponse = await bot.ArchiWebHandler.UrlPostToJsonObjectWithSession<JsonDocument>(request, data: data, referer: referer, maxTries: 1, requestOptions: WebBrowser.ERequestOptions.ReturnClientErrors | WebBrowser.ERequestOptions.AllowInvalidBodyOnErrors | WebBrowser.ERequestOptions.SteamWafWorkarounds).ConfigureAwait(false);
+				ObjectResponse<JsonDocument>? createListingResponse = await bot.ArchiWebHandler.UrlPostToJsonObjectWithSession<JsonDocument>(request, data: data, referer: referer, maxTries: 1, requestOptions: EWebRequestOptions.ReturnClientErrors | EWebRequestOptions.AllowInvalidBodyOnErrors | EWebRequestOptions.SteamWafWorkarounds).ConfigureAwait(false);
 				
 				return createListingResponse?.Content;
 			}).ConfigureAwait(false);
@@ -275,7 +275,7 @@ namespace BoosterManager {
 		internal static async Task<JsonDocument?> GetOrderBook(Bot bot, uint appID, string hashName) {
 			return await ExecuteMarketRequest(async() => {
 				Uri request = new(ArchiWebHandler.SteamCommunityURL, String.Format("/market/orderbook?q=Load&qp=[{0},\"{1}\"]", appID, Uri.EscapeDataString(hashName)));
-				ObjectResponse<JsonDocument>? orderbookResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<JsonDocument>(request, maxTries: 1, requestOptions: WebBrowser.ERequestOptions.ReturnClientErrors | WebBrowser.ERequestOptions.AllowInvalidBodyOnErrors).ConfigureAwait(false);
+				ObjectResponse<JsonDocument>? orderbookResponse = await bot.ArchiWebHandler.UrlGetToJsonObjectWithSession<JsonDocument>(request, maxTries: 1, requestOptions: EWebRequestOptions.ReturnClientErrors | EWebRequestOptions.AllowInvalidBodyOnErrors).ConfigureAwait(false);
 				return orderbookResponse?.Content;
 			}).ConfigureAwait(false);
 		}
@@ -284,7 +284,7 @@ namespace BoosterManager {
 			return await ExecuteMarketRequest(async() => {
 				Uri request = new(ArchiWebHandler.SteamCommunityURL, String.Format("/market/listings/{0}/{1}", appID, Uri.EscapeDataString(hashName)));
 
-				HtmlDocumentResponse? marketListing = await bot.ArchiWebHandler.UrlGetToHtmlDocumentWithSession(request, maxTries: 1, requestOptions: WebBrowser.ERequestOptions.ReturnClientErrors | WebBrowser.ERequestOptions.AllowInvalidBodyOnErrors).ConfigureAwait(false);
+				HtmlDocumentResponse? marketListing = await bot.ArchiWebHandler.UrlGetToHtmlDocumentWithSession(request, maxTries: 1, requestOptions: EWebRequestOptions.ReturnClientErrors | EWebRequestOptions.AllowInvalidBodyOnErrors).ConfigureAwait(false);
 
 				try {
 					// JsonObject marketListingPage = null;
